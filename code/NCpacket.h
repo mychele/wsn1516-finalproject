@@ -1,18 +1,22 @@
 /**
  * This is the header file for NCpacket
  */ 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <vector>
 
 #ifndef NCPACKET
 #define NCPACKET
 
-#define K 32
+#define K_TB_SIZE 32
 #define PAYLOAD_SIZE 1024 //in byte
 
 
 struct NCpacketContainer
 {
 	int header; // 32 bit
-	char payload[PAYLOAD_SIZE]; //1024 byte payload
+	unsigned char payload[PAYLOAD_SIZE]; //1024 byte payload
 };
 
 /**
@@ -32,7 +36,7 @@ public:
 	 * @param an int with the header
 	 * @param a pointer to the payload array
 	 */ 
-	NCpacket(int header, char* payload);
+	NCpacket(int header, unsigned char* payload);
 
 	/**
 	 * Set the header of an NCpacket
@@ -50,19 +54,25 @@ public:
 	 * Set the payload of an NCpacket
 	 * @param a pointer to the char array where the payload is stored
 	 */
-	void setPayload(char *payload);
+	void setPayload(unsigned char *payload);
 
 	/**
 	 * Get the payload of an NCpacket
 	 * @return a pointer to the first entry of the payload
 	 */
-	char* getPayload();	
+	unsigned char* getPayload();	
 
 	/**
 	 * Get the size of the payload of an NCpacket
 	 * @return the payload size
 	 */
 	int getPayloadSize();
+
+	/**
+	 * Get a serialized version of the object
+	 * @return a pointer to a char array
+	 */ 
+	unsigned char* serialize();
 
 };
 
