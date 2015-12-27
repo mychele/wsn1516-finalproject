@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
+#include <ostream>
+
 
 #ifndef NCPACKET
 #define NCPACKET
@@ -16,7 +18,7 @@
 struct NCpacketContainer
 {
 	int header; // 32 bit
-	unsigned char payload[PAYLOAD_SIZE]; //1024 byte payload
+ 	char payload[PAYLOAD_SIZE]; //1024 byte payload
 };
 
 /**
@@ -36,7 +38,7 @@ public:
 	 * @param an int with the header
 	 * @param a pointer to the payload array
 	 */ 
-	NCpacket(int header, unsigned char* payload);
+	NCpacket(int header, char* payload);
 
 	/**
 	 * Set the header of an NCpacket
@@ -48,19 +50,19 @@ public:
 	 * Get the header of an NCpacket
 	 * @return the header
 	 */
-	int getHeader();
+	int getHeader() const;
 
 	/**
 	 * Set the payload of an NCpacket
 	 * @param a pointer to the char array where the payload is stored
 	 */
-	void setPayload(unsigned char *payload);
+	void setPayload (char *payload);
 
 	/**
 	 * Get the payload of an NCpacket
 	 * @return a pointer to the first entry of the payload
 	 */
-	unsigned char* getPayload();	
+	char* getPayload() const;	
 
 	/**
 	 * Get the size of the payload of an NCpacket
@@ -72,7 +74,12 @@ public:
 	 * Get a serialized version of the object
 	 * @return a pointer to a char array
 	 */ 
-	unsigned char* serialize();
+	char* serialize();
+
+	/**
+	 * Overload << operator
+	 */
+	friend std::ostream& operator<<(std::ostream&, const NCpacket&);
 
 };
 
