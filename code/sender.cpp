@@ -24,7 +24,7 @@
 #define MAX_SIZE 10000
 
 
-int sendall(int sockfd_send, unsigned char *send_buffer, int *byte_to_send, addrinfo *p_iter) {
+int sendall(int sockfd_send, char *send_buffer, int *byte_to_send, addrinfo *p_iter) {
 
 	int total_byte_sent = 0;
 	int byte_sent = 0;
@@ -132,10 +132,9 @@ int main(int argc, char const *argv[])
 		return 2;
 	}
 
-	// create input buffer for K packets
-	unsigned char input_buffer[PAYLOAD_SIZE*K_TB_SIZE]; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
 	std::ifstream input_file ("../testfiles/divina_commedia.txt", std::ifstream::binary);
-
+	std::cout << "K " << K_TB_SIZE << "\n";
+	int sentPackets = 0;
 	if(input_file) {
 		// read file size
 		// get length of file:
@@ -144,9 +143,12 @@ int main(int argc, char const *argv[])
 	    // set cursor at the beginning
 	    input_file.seekg (0, input_file.beg);
 
-	    int num_encoding_op = ceil(file_length/(K_TB_SIZE*PAYLOAD_SIZE)); // in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
-	    								// the last one may need padding
-	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op - 1; encoding_op_index++) { 
+	    int num_encoding_op = ceil((float)file_length/(K_TB_SIZE*PAYLOAD_SIZE)); // in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
+	    								// the last one may need padding, provided by calling calloc
+	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) { 
+	    	// create input buffer for K packets
+			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
+			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
 	    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
 	    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
 	    	// encode them
@@ -156,22 +158,32 @@ int main(int argc, char const *argv[])
 	    	if(packetVector.size() > 0) {
 	    		// send these packets
 	    		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
-	    			unsigned char *serializedPacket = pckIt->serialize();
+	    			char *serializedPacket = pckIt->serialize();
 	    			int byte_to_send = PAYLOAD_SIZE + sizeof(int);
 					int byte_sent;
 					if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
 						perror("sender: tx socket");
 						std::cout << "Sent only " << byte_sent << " byte because of an error\n";
 					}
+					free(serializedPacket);
+					sentPackets++;
 	    		}
+	    		packetVector.clear();
 	    	}
-	    }
+	    	// free buffer
+	    	free(input_buffer);
 
+	    	// TODO
+	    	// wait for ACK, it will specify how many packets are needed
+
+	    }
 	}
 	else {
 		std::cout << "error in reading input file";
 		return 2;
 	}
+
+	std::cout << sentPackets <<"\n";
 
 	freeaddrinfo(res_dst);
 
