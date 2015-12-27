@@ -12,7 +12,12 @@
  * This functions returns a vector of NCpackets, it should be extended to account
  * for EV which are currently set to 0
  */
-extern std::vector<NCpacket> memoryToVector(unsigned char *buffer, int size);
+extern std::vector<NCpacket> memoryToVector(char *buffer, int size);
+
+/**
+ * Convert buffer into NCpacket
+ */ 
+extern NCpacket deserialize(char *buffer);
 
 #endif 
 //UTILS_WSN
