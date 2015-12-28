@@ -17,7 +17,7 @@
 
 struct NCpacketContainer
 {
-	int header; // 32 bit
+	unsigned int header; // 32 bit
  	char payload[PAYLOAD_SIZE]; //1024 byte payload
 };
 
@@ -38,19 +38,19 @@ public:
 	 * @param an int with the header
 	 * @param a pointer to the payload array
 	 */ 
-	NCpacket(int header, char* payload);
+	NCpacket(unsigned int header, char* payload);
 
 	/**
 	 * Set the header of an NCpacket
 	 * @param an int containing the 32 bit header
 	 */
-	void setHeader(int header);
+	void setHeader(unsigned int header);
 
 	/**
 	 * Get the header of an NCpacket
 	 * @return the header
 	 */
-	int getHeader() const;
+	unsigned int getHeader() const;
 
 	/**
 	 * Set the payload of an NCpacket
