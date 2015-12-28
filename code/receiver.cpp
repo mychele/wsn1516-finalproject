@@ -26,7 +26,7 @@
 /**
  * Send an ACK to the address in sockaddr_storage
  */
-int sendack(int packets_needed, struct sockaddr_storage sender_addr) {
+int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
 	// get info on sender
 	int status;
 	struct addrinfo ack_hints, *ack_res, *p_iter;
@@ -36,9 +36,9 @@ int sendack(int packets_needed, struct sockaddr_storage sender_addr) {
     char s[INET6_ADDRSTRLEN];
     char p[2];
     inet_ntop(sender_addr.ss_family, get_in_addr((struct sockaddr *)&sender_addr), s, sizeof s);
-    std::cout << "host: " << s;
+    // std::cout << "host: " << s;
     std::string ack_port = std::to_string(ntohs(get_in_port((struct sockaddr *)&sender_addr)));
-	std::cout << "\nport: " << ack_port << "\n";
+	// std::cout << "\nport: " << ack_port << "\n";
     if ((status = getaddrinfo(
     					s, 
     					ack_port.c_str(),
@@ -69,13 +69,11 @@ int sendack(int packets_needed, struct sockaddr_storage sender_addr) {
 	}
 
 	// send ack
-	std::string temp_string = std::to_string(packets_needed);
-	char *ack_buffer = (char *)calloc(sizeof(int), sizeof(char));
-	strcpy(ack_buffer, temp_string.c_str()); 
-	std::cout << ack_buffer << "\n";
+	unsigned char *ack_buffer = (unsigned char *)calloc(sizeof(int), sizeof(char));
+	packu32(ack_buffer, packets_needed);
 	int byte_sent;
 	int byte_to_send = sizeof(int);
-	if((byte_sent = sendall(sockfd_ack, ack_buffer, &byte_to_send, p_iter)) == -1) {
+	if((byte_sent = sendall(sockfd_ack, (char*)ack_buffer, &byte_to_send, p_iter)) == -1) {
 		perror("receiver: ack socket");
 		std::cout << "Sent only " << byte_sent << " byte because of an error\n";
 	}
@@ -182,7 +180,8 @@ int main(int argc, char *argv[])
 				}
 				// send ACK with the number of packets needed
 				// TODO this ACK will specify how many encoded packets are still needed, check when it is optimal to send it
-				sendack(32766, sender_addr);
+				unsigned int packets_needed = 32678;
+				sendack(packets_needed, sender_addr);
 			}
 		}
 		std::cout << received_packets << "\n";

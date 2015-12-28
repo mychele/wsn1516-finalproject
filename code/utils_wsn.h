@@ -41,5 +41,9 @@ extern void *get_in_addr(struct sockaddr *sa);
  */
 extern in_port_t get_in_port(struct sockaddr *sa);
 
+void packu32(unsigned char *buf, unsigned int i);
+
+unsigned int unpacku32(unsigned char *buf);
+
 #endif 
 //UTILS_WSN

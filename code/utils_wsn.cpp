@@ -24,22 +24,18 @@ extern std::vector<NCpacket> memoryToVector(char *buffer, int size) {
 	//std::cout << "In memoryToVector\n";
 	//std::cout << buffer << "\n\n\n";
 	for (int i = 0; i < K_TB_SIZE; i++) {
-		int header = 0;
+		unsigned int header = 50000+1;
 		NCpacket packet;//(header, buffer);
 		packet.setHeader(header);
 		packet.setPayload(buffer);
 		toBeReturned.push_back(packet); //insert at the end, so that the first entry will be the first pck
-		// std::cout << "The packet just built is\n";
-		// std::cout << packet;
 		buffer = buffer + PAYLOAD_SIZE; // move pointer
 	}
 	return toBeReturned;
 }
 
 extern NCpacket deserialize(char *buffer) {
-	//FIXME this does not work properly
-	int header;
-	memcpy(buffer, &header, sizeof(int));
+	unsigned int header = unpacku32((unsigned char*)buffer);
 	NCpacket packet;
 	packet.setHeader(header);
 	packet.setPayload(buffer + sizeof(int));
@@ -82,4 +78,22 @@ extern in_port_t get_in_port(struct sockaddr *sa){
     }
     return (((struct sockaddr_in6*)sa)->sin6_port);
 }
+
+void packu32(unsigned char *buf, unsigned int i) {
+	unsigned int network_order_i = htonl(i);
+	*buf++ = network_order_i >> 24;
+	*buf++ = network_order_i >> 16;
+	*buf++ = network_order_i >> 8;
+	*buf++ = network_order_i;
+}
+
+unsigned int unpacku32(unsigned char *buf)
+{
+	unsigned int i = ((unsigned  int)buf[0]<<24) |
+	                       ((unsigned  int)buf[1]<<16) |
+	                       ((unsigned  int)buf[2]<<8)  |
+	                       buf[3];
+	return ntohl(i);
+}
+
 

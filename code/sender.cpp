@@ -20,15 +20,12 @@
 #include <iterator>
 
 #define RECEIVER_PORT "30000"
-#define SENDER_PORT "30001"
-#define MAX_SIZE 10000
-
 
 int main(int argc, char const *argv[])
 {
 	// read input
-	if (argc != 3) {
-		std::cout << "usage: sender hostname dstname";
+	if (argc != 4) {
+		std::cout << "usage: sender hostname dstname filename";
 		return 2;
 	}
 
@@ -74,7 +71,7 @@ int main(int argc, char const *argv[])
 	// get the port from which packets will be sent
 
 
-	std::ifstream input_file ("../testfiles/landscape.jpg", std::ifstream::binary);
+	std::ifstream input_file (argv[3], std::ifstream::binary);
 	std::cout << "K " << K_TB_SIZE << "\n";
 	int sentPackets = 0;
 	if(input_file) {
@@ -117,15 +114,15 @@ int main(int argc, char const *argv[])
 
 	    	// wait for ACK, it will specify how many packets are needed
 	    	// the socket is already bound
-	    	int packets_needed;
+	    	unsigned int packets_needed;
 	    	if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
 				(struct sockaddr*)&ack_addr, &sizeof_ack_addr))==-1) {
 				// there was an error
 				perror("sender ACK: recvfrom");
 			}
 			else {
-				packets_needed = atoi((char *)ack_buffer); //TODO atoi might not be the best way
-				std::cout << "Packets needed " << packets_needed << "\n";
+				packets_needed = unpacku32((unsigned char *)ack_buffer); // TODO encode and retx the 
+																		 // number of packets specified
 			}
 
 	    }
