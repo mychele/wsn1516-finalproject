@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 				}
 				// send ACK with the number of packets needed
 				// TODO this ACK will specify how many encoded packets are still needed, check when it is optimal to send it
-				unsigned int packets_needed = 32678;
+				unsigned int packets_needed = 0;
 				sendack(packets_needed, sender_addr);
 			}
 		}
