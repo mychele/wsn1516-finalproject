@@ -5,22 +5,22 @@
 all: sender receiver
 
 sender: sender.cpp
-	@clang++ -c -I. NCpacket.cpp
-	@clang++ -c -I. utils_wsn.cpp
-	@clang++ -c -I. $?
-	@clang++ -o sender sender.o NCpacket.o utils_wsn.o
+	@g++ -std=c++11 -c -I. NCpacket.cpp
+	@g++ -std=c++11 -c -I. utils_wsn.cpp
+	@g++ -std=c++11 -c -I. $?
+	@g++ -std=c++11 -o sender sender.o NCpacket.o utils_wsn.o
 
 receiver: receiver.cpp
-	@clang++ -c -I. NCpacket.cpp
-	@clang++ -c -I. utils_wsn.cpp
-	@clang++ -c -I. $?
-	@clang++ -o receiver receiver.o NCpacket.o utils_wsn.o
+	@g++ -std=c++11 -c -I. NCpacket.cpp
+	@g++ -std=c++11 -c -I. utils_wsn.cpp
+	@g++ -std=c++11 -c -I. $?
+	@g++ -std=c++11 -o receiver receiver.o NCpacket.o utils_wsn.o
 
 utils: utils_wsn.cpp
-	@clang++ -c -I. $?
+	@g++ -std=c++11 -c -I. $?
 
 ncpacket: NCpacket.cpp
-	@clang++ -c -I. $?
+	@g++ -std=c++11 -c -I. $?
 
 clear:
 	rm receiver sender *.o
