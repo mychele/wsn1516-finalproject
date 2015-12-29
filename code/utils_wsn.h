@@ -20,6 +20,17 @@
 extern std::vector<NCpacket> memoryToVector(char *buffer, int size);
 
 /**
+ * This function returns a vector of pointer to char arrays of size (hopefully) PAYLOAD_SIZE
+ */
+extern std::vector<char *> memoryToCharVector(char *buffer, int size);
+
+/** 
+ * This function converts the vector<char *> given by memoryToCharVector
+ * into a std::vector<NCpacket>
+ */
+extern std::vector<NCpacket> charVectorToNCVector(std::vector<char *> v);
+
+/**
  * Convert buffer into NCpacket
  */ 
 extern NCpacket deserialize(char *buffer);

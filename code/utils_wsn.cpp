@@ -34,6 +34,33 @@ extern std::vector<NCpacket> memoryToVector(char *buffer, int size) {
 	return toBeReturned;
 }
 
+extern std::vector<char *> memoryToCharVector(char *buffer, int size) {
+	std::vector<char *> toBeReturned;
+	// check if size is as it should be
+	if (size != K_TB_SIZE*PAYLOAD_SIZE) {
+		return toBeReturned;
+	}
+	//std::cout << "In memoryToVector\n";
+	//std::cout << buffer << "\n\n\n";
+	for (int i = 0; i < K_TB_SIZE; i++) {
+		toBeReturned.push_back(buffer); //insert at the end, so that the first entry will be the first pck
+		buffer = buffer + PAYLOAD_SIZE; // move pointer
+	}
+	return toBeReturned;
+}
+
+extern std::vector<NCpacket> charVectorToNCVector(std::vector<char *> v) {
+	std::vector<NCpacket> toBeReturned;
+	for (std::vector<char*>::iterator i = v.begin(); i != v.end(); ++i) {
+		unsigned int header = 50000+1;
+		NCpacket packet;//(header, buffer);
+		packet.setHeader(header);
+		packet.setPayload(*i);
+		toBeReturned.push_back(packet); //insert at the end, so that the first entry will be the first pck
+	}
+	return toBeReturned;
+}
+
 extern NCpacket deserialize(char *buffer) {
 	unsigned int header = unpacku32((unsigned char*)buffer);
 	NCpacket packet;
