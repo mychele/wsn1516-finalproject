@@ -51,14 +51,14 @@ int main(int argc, char const *argv[])
 
 	    	// -------------------------------- decode ----------------------------------------
 	    	// INPUT: a std::vector<NCpacket>
-	    	// OUTPUT: charPointerVector, a vector of pointers to char array (//TODO discuss on this)
+	    	// OUTPUT: charPointerVector named nc_vector, a vector of pointers to char array (//TODO discuss on this)
 
 
 	    	// save to file
 	    	std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
 			if (output_file.is_open()) {
-				for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
-					output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
+				for(std::vector<char *>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
+					output_file.write(*v_iter, PAYLOAD_SIZE);
 				}
 				output_file.close();
 				nc_vector.clear();
