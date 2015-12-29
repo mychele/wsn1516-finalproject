@@ -152,7 +152,7 @@ void binary_to_char(char* output_data, mat_GF2& X)
         output_data[q]=static_cast<char>(bits.to_ulong());
 }
 
-int binary_to_unsigned_int(mat_GF2& X)
+unsigned int binary_to_unsigned_int(mat_GF2& X)
 {
     bitset<32> bits;
     bits.reset();
@@ -168,7 +168,7 @@ int binary_to_unsigned_int(mat_GF2& X)
             else
                 bits[s]=1;
             s++;
-            if (s%8==0)
+            if (s%32==0)
             {
                 cout<<bits<<endl;
                 out=static_cast<unsigned int>(bits.to_ulong());

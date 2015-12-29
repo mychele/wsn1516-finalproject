@@ -51,5 +51,5 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload);
 
 vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data);
 
-int binary_to_unsigned_int(mat_GF2& X);
+unsigned int binary_to_unsigned_int(mat_GF2& X);
 #endif
