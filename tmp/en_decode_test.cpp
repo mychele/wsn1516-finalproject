@@ -23,7 +23,7 @@
 int main(int argc, char const *argv[])
 {
 	// read file
-	std::ifstream input_file (argv[3], std::ifstream::binary);
+	std::ifstream input_file (argv[1], std::ifstream::binary);
 	std::cout << "K " << K_TB_SIZE << "\n";
 	if(input_file) {
 		// read file size
@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
 
 
 	    	// save to file
-	    	std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
+	    	std::ofstream output_file (argv[2], std::ios::out | std::ios::app | std::ios::binary);
 			if (output_file.is_open()) {
 				for(std::vector<char *>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
 					output_file.write(*v_iter, PAYLOAD_SIZE);
