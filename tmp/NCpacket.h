@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <vector>
 #include <ostream>
-#include<NTL/ZZ.h>
-#include<NTL/vector.h>
-#include<NTL/GF2X.h>
-#include<NTL/GF2.h>
-#include<NTL/mat_GF2.h>
+#include <NTL/ZZ.h>
+#include <NTL/vector.h>
+#include <NTL/GF2X.h>
+#include <NTL/GF2.h>
+#include <NTL/mat_GF2.h>
 
 #ifndef NCPACKET
 #define NCPACKET
@@ -100,12 +100,6 @@ public:
 	 * @return mat_GF2 with binary representation of header
 	 */
     mat_GF2 getBinaryHeader();
-
-	/**
-	 * Get binary version of payload
-	 * @return mat_GF2 with binary representation of payload
-	 */
-    mat_GF2 getBinaryPayload();
 
 	/**
 	 * Overload << operator

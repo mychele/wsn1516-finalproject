@@ -78,18 +78,14 @@ NCpacket::serialize() {
 
 mat_GF2
 NCpacket::getBinaryHeader() {
-
-//add code here
-
+	mat_GF2 binaryHeader;
+	binaryHeader.SetDims(1, K_TB_SIZE);
+	for(int i = 0; i < K_TB_SIZE; i++) {
+		unsigned char bit = (unsigned char)((packet.header >> (i)) & 1) + '0';
+		binaryHeader[0][i] = bit;
+	}
+	return binaryHeader;
 }
-
-mat_GF2
-NCpacket::getBinaryPayload() {
-
-// add code here
-
-}
-
 
 std::ostream& operator<<(std::ostream &strm, const NCpacket &packet_ext) {
 	const char *payload_pointer = packet_ext.getPayload();
