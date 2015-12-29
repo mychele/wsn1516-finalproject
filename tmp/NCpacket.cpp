@@ -7,7 +7,7 @@
 #include <ostream>
 #include "utils_wsn.h"
 #include <bitset>
-
+#include "functions.h"
 // TODO: find a safer way to handle the payload array (for example check size!)
 
 NCpacket::NCpacket() {
@@ -22,17 +22,23 @@ NCpacket::NCpacket(unsigned int header, char* payload) {
 
 NCpacket::NCpacket(vector<char*>& data) {
     mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE);
-    char
+    char *tmp;
+    XOR_encode(encoding_vector, data, tmp);
+    memcpy(packet.payload, tmp, PAYLOAD_SIZE);
+    packet.header=binary_to_unsigned_int(encoding_vector);
 }
 
 
+// useless if encode/decode with chars
+
 NCpacket::NCpacket(mat_GF2& binary_data) {
-    mat_GF2 binary_payload=header*binary_data;
-    char *p=payload;
+    mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE);
+    mat_GF2 binary_payload=encoding_vector*binary_data;
+    char *p;
     binary_to_char(p,binary_data);
     NCpacketContainer packet = NCpacketContainer();
-	packet.header = header;
-	memcpy(packet.payload, payload, PAYLOAD_SIZE);
+	packet.header = binary_to_unsigned_int(encoding_vector);
+	memcpy(packet.payload, p, PAYLOAD_SIZE);
 }
 
 void

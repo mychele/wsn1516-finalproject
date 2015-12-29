@@ -154,7 +154,7 @@ void binary_to_char(char* output_data, mat_GF2& X)
 
 int binary_to_unsigned_int(mat_GF2& X)
 {
-bitset<32> bits;
+    bitset<32> bits;
     bits.reset();
     int s=0;
     int q=0;
@@ -195,7 +195,7 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
             if (X[0][i]==1)
             {
                 char* pyl=data.at(i);
-                sum=sum & pyl[j];
+                sum=sum ^ pyl[j];
             }
         }
         out_payload[j]=sum;
@@ -204,22 +204,27 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
     }
 }
 
-void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
+vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
 {
-
-    char* first=data.at(0);
-    for (int j=0; j<sizeof(first)/sizeof(first[0]); j++)
+    char* first=encoded_data.at(0);
+    vector<char*> out;
+    for (int i=0; i<X.NumRows(); i++)
     {
-        char sum=0;
-        for (int i=0; i<X.NumCols(); i++)
+        char* tmp_decoded;
+        for (int h=0; h<sizeof(first)/sizeof(first[0]); h++)
         {
-            if (X[0][i]==1)
+            char sum=0;
+            for (int j=0; j<X.NumCols(); j++)
             {
-                char* pyl=data.at(i);
-                sum=sum ^ pyl[j];
+                if (X[i][j]==1)
+                {
+                    char* pyl=encoded_data.at(i);
+                    sum=sum ^ pyl[h];
+                }
+                tmp_decoded[j]=sum;
             }
         }
-        out_payload[j]=sum;
+        out.at(i)=tmp_decoded;
     }
 }
 

@@ -24,7 +24,7 @@ mat_GF2 decoded_data(mat_GF2& _encoded_data_matrix,mat_GF2& inverse_matrix);
 // write matrix (the output of the default write functon: cout<<matrix; is unreadable)
 // id_append=1 iff there's and identity matrix appended (divide matrix and identity using ||), otherwise 0
 void write_matrix(mat_GF2& X, bool id_appended);
-// find the pseudo inverse using Gaussian-Jordan elimination
+// truncates the matrix resulting from Gaussian-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
 mat_GF2 pseudo_inverse(mat_GF2& X, int const matrix_rank);
 
 //LITTLE ENDIAN order: successive elements of the matrix are stored into progressively significant bits starting from the least significant
@@ -48,6 +48,8 @@ void binary_to_char(char* output_data, mat_GF2& X);
     */
 
 void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload);
+
+vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data);
 
 int binary_to_unsigned_int(mat_GF2& X);
 #endif

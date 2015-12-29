@@ -158,12 +158,12 @@ int main()
     binary_to_char(p, data);
     cout<<payload[0]<<endl;
     cout<<payload[0]+'0'<<endl;
-    cout<<"integer"<<endl;
+    /*cout<<"integer"<<endl;
     mat_GF2 prova;
     prova.SetDims(1,32);
     for (int i=0; i<32; i++)
         prova[0][i]=data[0][i];
     cout<<prova<<endl;
-    cout<<binary_to_unsigned_int(prova)<<endl;
+    cout<<binary_to_unsigned_int(prova)<<endl;*/
     return 1;
 }

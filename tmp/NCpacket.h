@@ -41,9 +41,16 @@ public:
 
     /**
 	 * Public constructor
+	 * USELESS IF ENCODE/DECODE WITH CHARS
 	 * @param a GF2 matrix with binary represenation of data
 	 */
     NCpacket(mat_GF2& binary_data);
+
+    /**
+	 * Public constructor
+	 * @param a vector of pointers to char arrays (raw data)
+	 */
+    NCpacket(vector<char*>& data);
 
 	/**
 	 * Public constructor
