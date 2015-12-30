@@ -28,11 +28,14 @@ NCpacket::NCpacket(vector<char*> data)
     mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE);
     cout<<"ok3.2\n";
     char *tmp=(char*)malloc(sizeof(char));   //needs to be preallocated
+    // MP: così preallochi 1 byte... a cosa ti serve? e perché non lo passi come 
+    // return di XOR_encode?
     XOR_encode(encoding_vector, data, tmp);
     cout<<"size of tmp:"<<sizeof(tmp)<<", sizeof char "<<sizeof(char)<<endl;
     cout<<"payload size "<<PAYLOAD_SIZE<<endl;
     cout<<"ok3.3\n";
     memcpy(packet.payload, tmp, sizeof(tmp)); //size: sizeof(temp) instead of PAYLOAD_SIZE
+                                              //MP: dovrebbero essere uguali!!
     cout<<"ok3.4\n";
     packet.header=binary_to_unsigned_int(encoding_vector);
 }
