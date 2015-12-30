@@ -59,6 +59,7 @@ int main(int argc, const char *argv[])
                 cout<<"ok3\n";
                 NCpacket nc=NCpacket(charPointerVector);
                 cout<<"ok4\n";
+                // MP: qui crei due volti il pacchetto? è solo per debug?
                 encoded_packets.push_back(NCpacket(charPointerVector));
             }
             // free buffer
