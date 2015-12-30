@@ -37,15 +37,15 @@
 using namespace std;
 using namespace NTL;
 
-
+                                                        
 int packet_decoder(std::vector<NCpacket> packetVector, char *argv[])
 {
-    int const K=10; //K?
-    int N=6; //size of packetVector?
-    const int m=15; //m?
+    int const K=10; //K? // MP: visto che hai incluso NCpacket, puoi usare K_TB_SIZE (32)
+    int N=6; //size of packetVector? // MP: packetVector.size();
+    const int m=15; //m? // MP: PAYLOAD_SIZE definita in NCpacket
     mat_GF2 data_enc;
-    data_enc.SetDims(N,m);
-    mat_GF2 M;
+    data_enc.SetDims(N,m); // MP: questa poi non la usi più, forse si può togliere?
+    mat_GF2 M; // MP: M è la matrice con gli encoding vector? Usare nomi più estesi a volte aiuta il debug!
     M.SetDims(N,K);
     int i=0;
     std::vector<char*> encoded_payloads;
@@ -68,6 +68,7 @@ int packet_decoder(std::vector<NCpacket> packetVector, char *argv[])
     //index of last nonzero row
     int last_nonzero=N-1;
     int flag_nonzero=0;
+    // MP: da qui in poi dovrebbe funzionare, l'avevi testato no?
     do
     {
         flag_nonzero=0;
@@ -104,12 +105,23 @@ int packet_decoder(std::vector<NCpacket> packetVector, char *argv[])
         decoded_data=XOR_decode(M_inv, encoded_payloads);
 
         //write file
-        // open file for the first time
-        int DATA_SIZE=decoded_data.size()*sizeof(decoded_data.at(0));
+        // open file for the first time         
+        int DATA_SIZE=decoded_data.size()*sizeof(decoded_data.at(0)); // MP: dovrebbe essere K_TB_SIZE*PAYLOAD_SIZE giusto?
+                                // MP: il nome file non è il secondo argomento di input della funzione?
+                                // perché argv[1]?
         std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
         if (output_file.is_open())
         {
-            output_file.write(decoded_data.at(0),DATA_SIZE);
+            // MP: ho paura che così si scrive il primo elemento di decoded_data, 
+            // che va ad occupare DATA_SIZE, quindi più di quello che dovrebbe occupare
+            // Non sono sicuro che gli altri elementi di std::vector siano contigui in 
+            // memoria al primo
+            // la cosa più sicura secondo me è 
+            // for(std::vector<*char>::iterator pckIt = decoded_data.begin(); pckIt != decoded_data.end(); ++pckIt)
+            // {
+            //     output_file.write(decoded_data.at(0),PAYLOAD_SIZE);
+            // }
+            // // output_file.write(decoded_data.at(0),DATA_SIZE);
             output_file.close();
         }
         else

@@ -224,14 +224,18 @@ vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
 {
     cout<<"ok5.51\n";
     char* first=encoded_data.at(0);
-    int payload_length=sizeof(first)/sizeof(first[0]);
+    int payload_length=sizeof(first)/sizeof(first[0]);// MP: PAYLOAD_SIZE è fisso
+                                                       // a 1024, se includi NCpacket.h
+                                                       // puoi dire semplicemente
+                                                       // int payload_length = PAYLOAD_SIZE
     vector<char*> out;
     cout<<"ok5.52\n";
     char* tmp_decoded=(char *)malloc(sizeof(char)*payload_length);
     cout<<"numrows of decoding matrix: "<<X.NumRows()<<endl;
     for (int i=0; i<X.NumRows(); i++)
     {
-        for (int h=0; h<payload_length; h++)
+        for (int h=0; h<payload_length; h++) // MP: anche qui invertirei il ciclo in h e quello in j
+                                             // e controllerei il risultato dello xor..
         {
             cout<<"ok5.53\n";
             char sum=0;
