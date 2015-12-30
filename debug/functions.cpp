@@ -187,9 +187,17 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
 {
     cout<<"ok3.21\n";
     char* first=data.at(0);
-    int payload_length=sizeof(first)/sizeof(first[0]);
+    int payload_length=sizeof(first)/sizeof(first[0]); // MP: PAYLOAD_SIZE è fisso
+                                                       // a 1024, se includi NCpacket.h
+                                                       // puoi dire semplicemente
+                                                       // int payload_length = PAYLOAD_SIZE
+    // MP: potresti inizializzare qui char* out_payload e passarlo come return alla fine,
+    // non si può?
     out_payload=(char *)malloc(sizeof(char)*payload_length);
     char sum;
+    // MP: io invertirei i due cicli, cioè prima ciclo sui pacchetti di cui devo fare lo XOR
+    // e all'interno per ognuno faccio lo XOR di tutto il pacchetto.. in questo modo 
+    // char* pyl=data.at(i) viene chiamato solo una volta per pacchetto!
     for (int j=0; j<payload_length; j++)
     {
         cout<<"ok3.22\n";
@@ -201,11 +209,11 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
                 cout<<"ok3.23\n";
                 char* pyl=data.at(i);
                 cout<<"ok3.24\n";
-                sum=sum ^ pyl[j];
+                sum=sum ^ pyl[j]; 
                 cout<<"ok3.25\n";
             }
         }
-
+        // MP: hai provato a controllare se il risultato dello XOR è corretto? 
         cout<<"ok3.26\n";
         out_payload[j]=sum;
     }
