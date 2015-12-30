@@ -16,7 +16,7 @@
 #define NCPACKET
 
 #define K_TB_SIZE 32
-#define PAYLOAD_SIZE 8 //in byte
+#define PAYLOAD_SIZE 1024 //in byte
 
 using namespace std;
 using namespace NTL;

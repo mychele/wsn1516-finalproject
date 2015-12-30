@@ -41,12 +41,10 @@ using namespace NTL;
 int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
 {
     cout<<"ok5.1\n";
-    int const K=32; //K?
-    int N=6; //size of packetVector?
-    N=K;
-    const int m=15; //m?
+    int N=K_TB_SIZE; //size of packetVector?
+    int K=K_TB_SIZE;
     mat_GF2 M;
-    M.SetDims(32,32);
+    M.SetDims(N,K);
     int i=0;
     std::vector<char*> encoded_payloads;
     std::vector<char*> decoded_data;
@@ -58,11 +56,12 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
         for (int s=0; s<K; s++)
         {
             M[i][s]=tmp_ev[0][s];
-            cout<<"i= "<<i<<"; s= "<<s<<endl;
         }
-        cout<<pckIt->getPayload()<<endl;
-        cout<<"payload size: "<<sizeof(pckIt->getPayload())<<endl;
+        cout<<">>>>>>>>>EV of packet "<<i<<" is:"<<endl;
+        write_matrix(tmp_ev,0);
+        printf(">>>>>>>>>>>payload of packet %d is: %s\n",i, pckIt->getPayload());
         encoded_payloads.push_back(pckIt->getPayload());
+
         i++;
     }
     cout<<"ok5.21\n";
@@ -106,27 +105,37 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
             }
 
         }
-        cout<<"ok7.1\n";
+        write_matrix(M_id,1);
+        i=0;
+        for(std::vector<char*>::iterator pckIt = encoded_payloads.begin(); pckIt != encoded_payloads.end(); ++pckIt)
+        {
+
+            printf("????????????????payload of encoded packet %d is: %s\n",i, encoded_payloads.at(i));
+            i++;
+        }
         mat_GF2 M_inv=pseudo_inverse(M_id, last_nonzero+1);
-        cout<<"ok7.2\n";
+        write_matrix(M_inv,0);
+        cout<<"last nonzero+1= "<<last_nonzero+1<<endl;
         decoded_data=XOR_decode(M_inv, encoded_payloads);
+        i=0;
+        for(std::vector<char*>::iterator pckIt = decoded_data.begin(); pckIt != decoded_data.end(); ++pckIt)
+        {
+
+            printf("????????????????payload of decoded packet %d is: %s\n",i, decoded_data.at(i));
+            i++;
+        }
         cout<<"ok7.3\n";
         //write file
         // open file for the first time
-        int DATA_SIZE=decoded_data.size()*sizeof(decoded_data.at(0));
         cout<<"ok7.4\n";
         std::ofstream output_file (filename, std::ios::out | std::ios::app | std::ios::binary);
         cout<<"ok7.5\n";
         if (output_file.is_open())
         {
             cout<<"ok7.6\n";
-            cout<<"size of element of decoded data: "<<sizeof(decoded_data.at(0))<<"; nb of elts: "<<decoded_data.size()<<" => data size: "<<DATA_SIZE<<endl;
-            int y=0;
             for(std::vector<char *>::iterator v_iter = decoded_data.begin(); v_iter != decoded_data.end(); ++v_iter)
             {
-                output_file.write(*v_iter, DATA_SIZE);
-                cout<<"iteration: "<<y<<endl;
-                y++;
+                output_file.write(*v_iter, PAYLOAD_SIZE);
             }
             cout<<"ok7.65\n";
             output_file.close();

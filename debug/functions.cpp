@@ -1,5 +1,6 @@
 #include "functions.h"
 #include <bitset>
+#include "NCpacket.h"
 
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c)
 {
@@ -187,37 +188,39 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
 {
     cout<<"ok3.21\n";
     char* first=data.at(0);
-    int payload_length=sizeof(first)/sizeof(first[0]); // MP: PAYLOAD_SIZE è fisso
+    int payload_length=sizeof(*first)/sizeof(first[0]); // MP: PAYLOAD_SIZE è fisso
                                                        // a 1024, se includi NCpacket.h
                                                        // puoi dire semplicemente
                                                        // int payload_length = PAYLOAD_SIZE
     // MP: potresti inizializzare qui char* out_payload e passarlo come return alla fine,
     // non si può?
-    out_payload=(char *)malloc(sizeof(char)*payload_length);
+    payload_length=PAYLOAD_SIZE;
     char sum;
     // MP: io invertirei i due cicli, cioè prima ciclo sui pacchetti di cui devo fare lo XOR
-    // e all'interno per ognuno faccio lo XOR di tutto il pacchetto.. in questo modo 
+    // e all'interno per ognuno faccio lo XOR di tutto il pacchetto.. in questo modo
     // char* pyl=data.at(i) viene chiamato solo una volta per pacchetto!
+    cout<<"payload length: "<<payload_length<<endl;
+    //out_payload=(char *)calloc(payload_length,sizeof(char*));
     for (int j=0; j<payload_length; j++)
     {
-        cout<<"ok3.22\n";
         sum=0;
         for (int i=0; i<X.NumCols(); i++)
         {
             if (X[0][i]==1)
             {
-                cout<<"ok3.23\n";
+                //cout<<"ok3.23\n";
                 char* pyl=data.at(i);
-                cout<<"ok3.24\n";
-                sum=sum ^ pyl[j]; 
-                cout<<"ok3.25\n";
+                sum=sum ^ pyl[j];
             }
+            //printf("data at %d: %s\n",i,data.at(i));
         }
-        // MP: hai provato a controllare se il risultato dello XOR è corretto? 
-        cout<<"ok3.26\n";
+        // MP: hai provato a controllare se il risultato dello XOR è corretto?
+        //cout<<"ok3.26\n";
         out_payload[j]=sum;
+        //cout<<"j= "<<j<<endl;
     }
     cout<<"ok3.28\n";
+    printf("out_payload: %s\n", out_payload);
 }
 
 vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
@@ -228,32 +231,29 @@ vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
                                                        // a 1024, se includi NCpacket.h
                                                        // puoi dire semplicemente
                                                        // int payload_length = PAYLOAD_SIZE
+    payload_length=PAYLOAD_SIZE;
     vector<char*> out;
     cout<<"ok5.52\n";
-    char* tmp_decoded=(char *)malloc(sizeof(char)*payload_length);
+    char* tmp_decoded=(char *)calloc(payload_length, sizeof(char));
     cout<<"numrows of decoding matrix: "<<X.NumRows()<<endl;
     for (int i=0; i<X.NumRows(); i++)
     {
+        out.push_back((char *)calloc(payload_length, sizeof(char)));
         for (int h=0; h<payload_length; h++) // MP: anche qui invertirei il ciclo in h e quello in j
                                              // e controllerei il risultato dello xor..
         {
-            cout<<"ok5.53\n";
             char sum=0;
             for (int j=0; j<X.NumCols(); j++)
             {
                 if (X[i][j]==1)
                 {
-                    char* pyl=encoded_data.at(i);
+                    char* pyl=encoded_data.at(j);
                     sum=sum ^ pyl[h];
                 }
-                cout<<"ok5.54\n";
-                tmp_decoded[j]=sum;
-                cout<<"ok5.55\n";
+                tmp_decoded[h]=sum;
             }
         }
-        cout<<"ok5.56\n";
-        out.push_back(tmp_decoded);
-        cout<<"ok5.57\n";
+        memcpy(out.at(i), tmp_decoded, payload_length);
     }
     cout<<"ok5.58\n";
     return out;
