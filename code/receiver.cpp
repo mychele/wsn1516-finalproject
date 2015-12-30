@@ -18,10 +18,23 @@
 #include <ctgmath>
 #include <vector>
 #include <iterator>
-
+#include <chrono>
+#include <future>
+#include <thread>
+#include <random>
 
 #define RECEIVER_PORT "30000"
 #define BACKLOG 10
+
+/**
+ * Struct used as return type of receivePacket
+ */
+struct ReceiveReturn
+{
+	NCpacket packet;
+	struct sockaddr_storage sender_addr;
+	int rec_bytes;
+};
 
 /**
  * Send an ACK to the address in sockaddr_storage
@@ -80,8 +93,39 @@ int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
 	return byte_sent;
 }
 
+/** 
+ * Receive a packet from sockfd and return the NCpacket, the sender address
+ * and the number of bytes received
+ */
+struct ReceiveReturn receivePacket (int sockfd) {
+	int rec_bytes = 0;
+	NCpacket packet;
+	// create receive buffer
+	void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+	struct sockaddr_storage sender_addr;
+	socklen_t sizeof_sender_addr = sizeof sender_addr;
+	if((rec_bytes = recvfrom(sockfd, receive_buffer, PAYLOAD_SIZE+sizeof(int), 0, 
+		(struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1) {
+		// there was an error
+		perror("receiver: recvfrom");
+	} else {
+		packet = deserialize((char *)receive_buffer);
+	}
+	ReceiveReturn toBeReturned = ReceiveReturn();
+	toBeReturned.sender_addr = sender_addr;
+	toBeReturned.packet = packet;
+	toBeReturned.rec_bytes = rec_bytes;
+	return toBeReturned;
+}
+
 int main(int argc, char *argv[])
 {
+	// for testing and simulation
+	std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(0, 1); // define the range
+    double PER = 0.1; // packet error rate
+
 	struct addrinfo hints, *res, *p_iter;
 	struct sockaddr_storage sender_addr;
     int status;
@@ -134,57 +178,87 @@ int main(int argc, char *argv[])
 
 	std::vector<NCpacket> nc_vector;
 	int rec_bytes;
-	socklen_t sizeof_sender_addr = sizeof sender_addr;
-	// create receive buffer
-	void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+	
 	// open file for the first time
 	std::ofstream output_file (argv[1], std::ios::out | std::ios::binary);
 	if (output_file.is_open()) {
 		output_file.close();
 	}
-	int received_packets = 0;
+	int total_received_packets = 0;
+	// timeout value
+	std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
 	// find a conditions so that rx knows it has received the whole txed file
 	while(true) {
-		if((rec_bytes = recvfrom(sockfd, receive_buffer, PAYLOAD_SIZE+sizeof(int), 0, 
-			(struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1) {
-			// there was an error
-			perror("receiver: recvfrom");
-		}
-		else
-		{
-			received_packets++;
-			char s[INET6_ADDRSTRLEN];
-			// std::cout << "Receiver: got packet from " << 
-			// 	inet_ntop(sender_addr.ss_family, get_in_addr((struct sockaddr *)&sender_addr), s, sizeof s) <<"\n";
-			// deserialize and save NCpacket into a vector
-			char *data = (char *)receive_buffer;
-			NCpacket packet = deserialize(data);
-			nc_vector.push_back(packet);
-			
-			//check if K_TB_SIZE packets were received
-			// TODO when using the encoding/decoding it is not guaranteed that K_TB_SIZE will be reached
-			if(nc_vector.size() == K_TB_SIZE) {
-				// decode
-				// if decoding was successful, store packets' payload in file
-				std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
-				if (output_file.is_open()) {
-					for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
-						output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
-					}
-					output_file.close();
-					nc_vector.clear();
-				}
-				else {
-					std::cout << "Error in opening output_file";
-					return 2;
-				}
-				// send ACK with the number of packets needed
-				// TODO this ACK will specify how many encoded packets are still needed, check when it is optimal to send it
-				unsigned int packets_needed = 0;
+		int received_packets = 0;
+		int packets_needed = K_TB_SIZE;
+		while (packets_needed > 0) {
+			// ------------------receive or timeout-------------------
+			// TODO consider if the timeout at receiver is redundant
+			// create promise
+	    	std::packaged_task<ReceiveReturn(int)> waitForPacket(&receivePacket);
+	    	// get future
+	    	std::future<ReceiveReturn> received_future = waitForPacket.get_future();
+	    	// schedule on another thread
+	    	std::thread th_packet(std::move(waitForPacket), sockfd);
+	    	// check for timeout
+	    	if(received_future.wait_for(timeout_span) == std::future_status::timeout) {
+	    		// a timeout has occurred, no packet was received for too long
+	    		// and this group of packets was not decoded yet
+	    		// send an ack to solicit the retransmission of new packets
+	    		// TODO consider if it is better to send K_TB_SIZE or less packets
+	    		std::cout << "No packets for too long, retx\n";
+	    		unsigned int packets_needed = K_TB_SIZE;
 				sendack(packets_needed, sender_addr);
+	    	}
+	    	else {
+	    		int received_byte;
+	    		ReceiveReturn received = received_future.get();
+	    		if (received.rec_bytes == -1) {
+	    			// do not store the packet in vector, since there was an error
+	    		} else {
+	    			received_packets++;
+	    			nc_vector.push_back(received.packet);
+	    			sender_addr = received.sender_addr;
+	    		}
+	    	}
+	    	th_packet.detach(); // clean up
+
+	    	//------------------------------
+			if(received_packets >= K_TB_SIZE) {
+				// try to decode and update packets needed
+				// TODO ----------------------------- decoding ------------------------
+				// TODO remove this and move it to a packet level when decoding is in place
+				// this simulates an error and drops K_TB_SIZE packets, when decoding is used
+				// it will be possible to drop a single packet
+				double prob = distr(eng);
+				if (prob < PER) {
+					nc_vector.clear();
+					packets_needed = K_TB_SIZE;
+					received_packets = 0;
+				} else {
+					packets_needed = 0;
+					if (packets_needed == 0) {
+						// TODO remove this store to file when decoding is in place
+						// if decoding was successful, store packets' payload in file
+						std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
+						if (output_file.is_open()) {
+							for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
+								output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
+							}
+							output_file.close();
+							nc_vector.clear();
+						}
+						else {
+							std::cout << "Error in opening output_file";
+							return 2;
+						}
+					}
+				}
+				sendack(packets_needed, sender_addr); 
 			}
 		}
-		std::cout << received_packets << "\n";
+		total_received_packets += received_packets;
+		std::cout << total_received_packets << "\n";
 	}
 
 	close(sockfd);

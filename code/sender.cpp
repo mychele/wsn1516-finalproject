@@ -149,13 +149,13 @@ int main(int argc, char const *argv[])
 		    		// a timeout has occurred, no ACK was received
 		    		// retransmit!
 		    		// TODO consider if it is better to send K_TB_SIZE or less packets
-		    		std::cout << "No ACK, retx\n";
+		    		//std::cout << "No ACK, retx\n";
 		    		packets_needed = K_TB_SIZE;
 		    	}
 		    	else {
 		    		// retransmit the number of packets specified
 		    		packets_needed = packets_needed_future.get();
-		    		std::cout << "Packets needed " << packets_needed << "\n";
+		    		//std::cout << "Packets needed " << packets_needed << "\n";
 		    	}
 		    	th_ACK.detach(); // clean up
 	    	} while (packets_needed != 0);
