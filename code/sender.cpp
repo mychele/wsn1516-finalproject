@@ -18,8 +18,55 @@
 #include <ctgmath>
 #include <vector>
 #include <iterator>
+#include <chrono>
+#include <future>
+#include <thread>
 
 #define RECEIVER_PORT "30000"
+
+int sendPackets(char* input_buffer, int packetNumber, int sockfd_send, struct addrinfo *p_iter) {
+	// TODO when encoding is in place, just create packetNumber packets. For now create K_TB_SIZE
+	// packets and send packetNumber 
+	int sentPackets = 0;
+	std::vector<NCpacket> packetVector = memoryToVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
+	if(packetVector.size() > 0) {
+		// send these packets
+		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
+			char *serializedPacket = pckIt->serialize();
+			int byte_to_send = PAYLOAD_SIZE + sizeof(int);
+			int byte_sent;
+			if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
+				perror("sender: tx socket");
+				std::cout << "Sent only " << byte_sent << " byte because of an error\n";
+			}
+			free(serializedPacket);
+			sentPackets++;
+		}
+		packetVector.clear();
+	}
+	return sentPackets;
+}
+
+int receiveACK(int sockfd_send) {
+	// things needed to receive ACKs
+	int ack_rec_bytes;
+	int packets_needed;
+	// create receive buffer
+	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
+
+	if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
+		NULL, 0))==-1) {
+		// there was an error
+		perror("sender ACK: recvfrom");
+		packets_needed = -1;
+	}
+	else {
+		packets_needed = unpacku32((unsigned char *)ack_buffer); 
+	}
+	free(ack_buffer);
+	return packets_needed;
+}
+
 
 int main(int argc, char const *argv[])
 {
@@ -32,13 +79,6 @@ int main(int argc, char const *argv[])
 	// useful structs and variables
 	struct addrinfo *p_iter, dst, *res_dst;
 	int status;
-
-	// things needed to receive ACKs
-	int ack_rec_bytes;
-	struct sockaddr_storage ack_addr;
-	socklen_t sizeof_ack_addr = sizeof ack_addr;
-	// create receive buffer
-	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
 
 	// create socket in order to send data to receiver
 	memset(&dst, 0, sizeof dst);
@@ -74,6 +114,8 @@ int main(int argc, char const *argv[])
 	std::ifstream input_file (argv[3], std::ifstream::binary);
 	std::cout << "K " << K_TB_SIZE << "\n";
 	int sentPackets = 0;
+	// timeout value
+	std::chrono::milliseconds timeout_span(100);
 	if(input_file) {
 		// read file size
 		// get length of file:
@@ -90,41 +132,35 @@ int main(int argc, char const *argv[])
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
 	    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
 	    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
-	    	// encode them
-	    	// the encoding operation should return a std::vector of NCpackets
-	    	// send them
-	    	std::vector<NCpacket> packetVector = memoryToVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
-	    	if(packetVector.size() > 0) {
-	    		// send these packets
-	    		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
-	    			char *serializedPacket = pckIt->serialize();
-	    			int byte_to_send = PAYLOAD_SIZE + sizeof(int);
-					int byte_sent;
-					if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
-						perror("sender: tx socket");
-						std::cout << "Sent only " << byte_sent << " byte because of an error\n";
-					}
-					free(serializedPacket);
-					sentPackets++;
-	    		}
-	    		packetVector.clear();
-	    	}
+	    	unsigned int packets_needed = K_TB_SIZE; // TODO change this to N
+	    	do {
+		    	// encode and send them
+		    	sentPackets += sendPackets(input_buffer, packets_needed, sockfd_send, p_iter);
+
+		    	// wait for ACK, it will specify how many packets are needed
+		    	// create promise
+		    	std::packaged_task<int(int)> waitForACK(&receiveACK);
+		    	// get future
+		    	std::future<int> packets_needed_future = waitForACK.get_future();
+		    	// schedule on another thread
+		    	std::thread th_ACK(std::move(waitForACK), sockfd_send);
+		    	// check for timeout
+		    	if(packets_needed_future.wait_for(timeout_span) == std::future_status::timeout) {
+		    		// a timeout has occurred, no ACK was received
+		    		// retransmit!
+		    		// TODO consider if it is better to send K_TB_SIZE or less packets
+		    		std::cout << "No ACK, retx\n";
+		    		packets_needed = K_TB_SIZE;
+		    	}
+		    	else {
+		    		// retransmit the number of packets specified
+		    		packets_needed = packets_needed_future.get();
+		    		std::cout << "Packets needed " << packets_needed << "\n";
+		    	}
+		    	th_ACK.detach(); // clean up
+	    	} while (packets_needed != 0);
 	    	// free buffer
 	    	free(input_buffer);
-
-	    	// wait for ACK, it will specify how many packets are needed
-	    	// the socket is already bound
-	    	unsigned int packets_needed;
-	    	if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
-				(struct sockaddr*)&ack_addr, &sizeof_ack_addr))==-1) {
-				// there was an error
-				perror("sender ACK: recvfrom");
-			}
-			else {
-				packets_needed = unpacku32((unsigned char *)ack_buffer); // TODO encode and retx the 
-																		 // number of packets specified
-			}
-
 	    }
 	}
 	else {
