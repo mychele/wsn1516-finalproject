@@ -91,8 +91,8 @@ int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
 		perror("receiver: ack socket");
 		std::cout << "Sent only " << byte_sent << " byte because of an error\n";
 	}
-	return byte_sent;
 	close(sockfd_ack);
+	return byte_sent;
 }
 
 /** 
