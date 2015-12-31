@@ -41,7 +41,7 @@ using namespace NTL;
 int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
 {
     cout<<"ok5.1\n";
-    int N=K_TB_SIZE; //size of packetVector?
+    int N=K_TB_SIZE+20; //size of packetVector?
     int K=K_TB_SIZE;
     mat_GF2 M;
     M.SetDims(N,K);
