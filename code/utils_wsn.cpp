@@ -65,7 +65,8 @@ extern NCpacket deserialize(char *buffer) {
 	unsigned int header = unpacku32((unsigned char*)buffer);
 	NCpacket packet;
 	packet.setHeader(header);
-	packet.setPayload(buffer + sizeof(int));
+	packet.setBlockID(*(buffer + sizeof(int)));
+	packet.setPayload(buffer + sizeof(int) + sizeof(char));
 	//std::cout << packet << "\n";
 	return packet;
 }

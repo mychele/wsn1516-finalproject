@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
 	// timeout value
 	std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
 	// find a conditions so that rx knows it has received the whole txed file
+	unsigned char rx_block_ID = 0;
 	while(true) {
 		int received_packets = 0;
 		int packets_needed = K_TB_SIZE;
@@ -217,9 +218,11 @@ int main(int argc, char *argv[])
 	    		if (received.rec_bytes == -1) {
 	    			// do not store the packet in vector, since there was an error
 	    		} else {
-	    			received_packets++;
-	    			nc_vector.push_back(received.packet);
-	    			sender_addr = received.sender_addr;
+	    			if(received.packet.getBlockID() == rx_block_ID) {
+		    			nc_vector.push_back(received.packet);
+		    			sender_addr = received.sender_addr;
+		    			received_packets++;
+	    			}
 	    		}
 	    	}
 	    	th_packet.detach(); // clean up
@@ -227,7 +230,6 @@ int main(int argc, char *argv[])
 	    	//------------------------------
 			if(received_packets >= K_TB_SIZE) {
 				// try to decode and update packets needed
-				// TODO ----------------------------- decoding ------------------------
 				packets_needed = packet_decoder(nc_vector, argv[1]);
 				std::cout << "packets_needed " << packets_needed << "\n";
 				// TODO remove this and move it to a packet level when decoding is in place
@@ -238,25 +240,8 @@ int main(int argc, char *argv[])
 				// 	nc_vector.clear();
 				// 	packets_needed = K_TB_SIZE;
 				// 	received_packets = 0;
-				// } else {
-				// 	packets_needed = 0;
-				// 	if (packets_needed == 0) {
-				// 		// TODO remove this store to file when decoding is in place
-				// 		// if decoding was successful, store packets' payload in file
-				// 		std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
-				// 		if (output_file.is_open()) {
-				// 			for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
-				// 				output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
-				// 			}
-				// 			output_file.close();
-				// 			nc_vector.clear();
-				// 		}
-				// 		else {
-				// 			std::cout << "Error in opening output_file";
-				// 			return 2;
-				// 		}
-				// 	}
-				// }
+				// } 
+				rx_block_ID = (packets_needed == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
 				sendack(packets_needed, sender_addr); 
 			}
 		}

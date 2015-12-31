@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <limits.h>
 #include <iostream>
 #include <istream>
 #include <fstream>
@@ -24,12 +25,13 @@
 
 #define RECEIVER_PORT "30000"
 
-int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, struct addrinfo *p_iter) {
+int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, 
+	struct addrinfo *p_iter, unsigned char block_ID) {
 	int sentPackets = 0;
 	// encoding of packetNumber packets
 	std::vector<NCpacket> packetVector;
 	for (int enc_pck = 0; enc_pck < packetNumber; enc_pck++) {
-        NCpacket nc = NCpacket(input_vector);
+        NCpacket nc = NCpacket(input_vector, block_ID);
         packetVector.push_back(nc);
     }
 
@@ -131,6 +133,7 @@ int main(int argc, char const *argv[])
 	    int num_encoding_op = ceil((float)file_length/(K_TB_SIZE*PAYLOAD_SIZE)); // in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) { 
+	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
 	    	// create input buffer for K packets
 			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
@@ -140,7 +143,7 @@ int main(int argc, char const *argv[])
 	    	unsigned int packets_needed = K_TB_SIZE; // TODO change this to N
 	    	do {
 		    	// encode and send them
-		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter);
+		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
 
 		    	// wait for ACK, it will specify how many packets are needed
 		    	// create promise

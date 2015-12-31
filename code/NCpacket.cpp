@@ -15,14 +15,15 @@ NCpacket::NCpacket()
     NCpacketContainer packet = NCpacketContainer();
 }
 
-NCpacket::NCpacket(unsigned int header, char* payload)
+NCpacket::NCpacket(unsigned int header, unsigned char block_ID, char* payload)
 {
     NCpacketContainer packet = NCpacketContainer();
     packet.header = header;
+    packet.block_ID = block_ID;
     memcpy(packet.payload, payload, PAYLOAD_SIZE);
 }
 
-NCpacket::NCpacket(vector<char*> data)
+NCpacket::NCpacket(vector<char*> data, unsigned char block_ID)
 {
     // create encoding vector
     mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE);
@@ -32,6 +33,7 @@ NCpacket::NCpacket(vector<char*> data)
     // store payload and ev
     memcpy(packet.payload, tmp, PAYLOAD_SIZE); 
     packet.header=binary_to_unsigned_int(encoding_vector);
+    packet.block_ID = block_ID;
      //write_matrix(encoding_vector,0);
 }
 
@@ -67,12 +69,25 @@ NCpacket::getPayloadSize()
     return PAYLOAD_SIZE;
 }
 
+void 
+NCpacket::setBlockID (unsigned char block_ID)
+{
+    packet.block_ID = block_ID;
+}
+
+unsigned char 
+NCpacket::getBlockID () const 
+{
+    return packet.block_ID;
+}
+
 char*
 NCpacket::serialize()
 {
     char* returnPointer = (char *) calloc(sizeof(NCpacket), sizeof(char));
     packu32((unsigned char*)returnPointer, packet.header);
-    memcpy(returnPointer + sizeof(unsigned int), (char*)packet.payload, PAYLOAD_SIZE);
+    *(returnPointer + sizeof(unsigned int)) = packet.block_ID;
+    memcpy(returnPointer + sizeof(unsigned int) + sizeof(char), (char*)packet.payload, PAYLOAD_SIZE);
     return returnPointer;
 }
 

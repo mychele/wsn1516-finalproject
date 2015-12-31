@@ -25,6 +25,7 @@ using namespace NTL;
 struct NCpacketContainer
 {
 	unsigned int header; // 32 bit
+	unsigned char block_ID; // 8 bit
  	char payload[PAYLOAD_SIZE]; //1024 byte payload
 };
 
@@ -44,14 +45,14 @@ public:
 	 * Public constructor
 	 * @param a vector of pointers to char arrays (raw data)
 	 */
-    NCpacket(vector<char*> data);
+    NCpacket(vector<char*> data, unsigned char block_ID);
 
 	/**
 	 * Public constructor
 	 * @param an int with the header
 	 * @param a pointer to the payload array
 	 */
-	NCpacket(unsigned int header, char* payload);
+	NCpacket(unsigned int header, unsigned char block_ID, char* payload);
 
 	/**
 	 * Set the header of an NCpacket
@@ -82,6 +83,18 @@ public:
 	 * @return the payload size
 	 */
 	int getPayloadSize();
+
+	/**
+	 * Set the block_ID of an NCpacket
+	 * @param an unsigned char with block_ID
+	 */
+	void setBlockID (unsigned char block_ID);
+
+	/**
+	 * Get the block_ID of an NCpacket
+	 * @return an unsigned char with block_ID
+	 */
+	unsigned char getBlockID () const;
 
 	/**
 	 * Get a serialized version of the object

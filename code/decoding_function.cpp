@@ -137,7 +137,7 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
     }
     // cout<<"ok7.7\n";
     // cout<<"inside function: remaining= "<<remaining<<endl;
-    decoded_data.clear()
+    decoded_data.clear();
     return remaining;
 }
 
