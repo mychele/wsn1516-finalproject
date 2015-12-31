@@ -24,11 +24,15 @@
 
 #define RECEIVER_PORT "30000"
 
-int sendPackets(char* input_buffer, int packetNumber, int sockfd_send, struct addrinfo *p_iter) {
-	// TODO when encoding is in place, just create packetNumber packets. For now create K_TB_SIZE
-	// packets and send packetNumber 
+int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, struct addrinfo *p_iter) {
 	int sentPackets = 0;
-	std::vector<NCpacket> packetVector = memoryToVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
+	// encoding of packetNumber packets
+	std::vector<NCpacket> packetVector;
+	for (int enc_pck = 0; enc_pck < packetNumber; enc_pck++) {
+        NCpacket nc = NCpacket(input_vector);
+        packetVector.push_back(nc);
+    }
+
 	if(packetVector.size() > 0) {
 		// send these packets
 		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
@@ -115,7 +119,7 @@ int main(int argc, char const *argv[])
 	std::cout << "K " << K_TB_SIZE << "\n";
 	int sentPackets = 0;
 	// timeout value
-	std::chrono::milliseconds timeout_span(100);
+	std::chrono::milliseconds timeout_span(1000);
 	if(input_file) {
 		// read file size
 		// get length of file:
@@ -132,10 +136,11 @@ int main(int argc, char const *argv[])
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
 	    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
 	    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
+	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	unsigned int packets_needed = K_TB_SIZE; // TODO change this to N
 	    	do {
 		    	// encode and send them
-		    	sentPackets += sendPackets(input_buffer, packets_needed, sockfd_send, p_iter);
+		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter);
 
 		    	// wait for ACK, it will specify how many packets are needed
 		    	// create promise
@@ -149,7 +154,7 @@ int main(int argc, char const *argv[])
 		    		// a timeout has occurred, no ACK was received
 		    		// retransmit!
 		    		// TODO consider if it is better to send K_TB_SIZE or less packets
-		    		//std::cout << "No ACK, retx\n";
+		    		std::cout << "No ACK, retx\n";
 		    		packets_needed = K_TB_SIZE;
 		    	}
 		    	else {

@@ -1,12 +1,16 @@
 /**
  * This is the header file for NCpacket
- */ 
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
 #include <ostream>
-
+#include <NTL/ZZ.h>
+#include <NTL/vector.h>
+#include <NTL/GF2X.h>
+#include <NTL/GF2.h>
+#include <NTL/mat_GF2.h>
 
 #ifndef NCPACKET
 #define NCPACKET
@@ -14,6 +18,9 @@
 #define K_TB_SIZE 32
 #define PAYLOAD_SIZE 1024 //in byte
 
+using std::vector;
+using std::bitset;
+using namespace NTL;
 
 struct NCpacketContainer
 {
@@ -33,11 +40,17 @@ public:
 
 	NCpacket();
 
+    /**
+	 * Public constructor
+	 * @param a vector of pointers to char arrays (raw data)
+	 */
+    NCpacket(vector<char*> data);
+
 	/**
 	 * Public constructor
 	 * @param an int with the header
 	 * @param a pointer to the payload array
-	 */ 
+	 */
 	NCpacket(unsigned int header, char* payload);
 
 	/**
@@ -62,7 +75,7 @@ public:
 	 * Get the payload of an NCpacket
 	 * @return a pointer to the first entry of the payload
 	 */
-	char* getPayload() const;	
+	char* getPayload() const;
 
 	/**
 	 * Get the size of the payload of an NCpacket
@@ -73,8 +86,14 @@ public:
 	/**
 	 * Get a serialized version of the object
 	 * @return a pointer to a char array
-	 */ 
+	 */
 	char* serialize();
+
+	/**
+	 * Get binary version of header
+	 * @return mat_GF2 with binary representation of header
+	 */
+    mat_GF2 getBinaryHeader();
 
 	/**
 	 * Overload << operator
@@ -83,5 +102,5 @@ public:
 
 };
 
-#endif 
+#endif
 //NCPACKET

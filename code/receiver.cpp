@@ -22,6 +22,7 @@
 #include <future>
 #include <thread>
 #include <random>
+#include "decoding_function.h"
 
 #define RECEIVER_PORT "30000"
 #define BACKLOG 10
@@ -91,6 +92,7 @@ int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
 		std::cout << "Sent only " << byte_sent << " byte because of an error\n";
 	}
 	return byte_sent;
+	close(sockfd_ack);
 }
 
 /** 
@@ -193,7 +195,6 @@ int main(int argc, char *argv[])
 		int packets_needed = K_TB_SIZE;
 		while (packets_needed > 0) {
 			// ------------------receive or timeout-------------------
-			// TODO consider if the timeout at receiver is redundant
 			// create promise
 	    	std::packaged_task<ReceiveReturn(int)> waitForPacket(&receivePacket);
 	    	// get future
@@ -204,11 +205,11 @@ int main(int argc, char *argv[])
 	    	if(received_future.wait_for(timeout_span) == std::future_status::timeout) {
 	    		// a timeout has occurred, no packet was received for too long
 	    		// and this group of packets was not decoded yet
-	    		// send an ack to solicit the retransmission of new packets
-	    		// TODO consider if it is better to send K_TB_SIZE or less packets
-	    		std::cout << "No packets for too long, retx\n";
-	    		unsigned int packets_needed = K_TB_SIZE;
-				sendack(packets_needed, sender_addr);
+	    		// the sender will timeout and retransmit automatically before this timer expires
+	    		std::cout << "No packets for too long, stop execution\n";
+	    		th_packet.detach();
+	    		close(sockfd);
+	    		return 2;
 	    	}
 	    	else {
 	    		int received_byte;
@@ -227,36 +228,39 @@ int main(int argc, char *argv[])
 			if(received_packets >= K_TB_SIZE) {
 				// try to decode and update packets needed
 				// TODO ----------------------------- decoding ------------------------
+				packets_needed = packet_decoder(nc_vector, argv[1]);
+				std::cout << "packets_needed " << packets_needed << "\n";
 				// TODO remove this and move it to a packet level when decoding is in place
 				// this simulates an error and drops K_TB_SIZE packets, when decoding is used
 				// it will be possible to drop a single packet
-				double prob = distr(eng);
-				if (prob < PER) {
-					nc_vector.clear();
-					packets_needed = K_TB_SIZE;
-					received_packets = 0;
-				} else {
-					packets_needed = 0;
-					if (packets_needed == 0) {
-						// TODO remove this store to file when decoding is in place
-						// if decoding was successful, store packets' payload in file
-						std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
-						if (output_file.is_open()) {
-							for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
-								output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
-							}
-							output_file.close();
-							nc_vector.clear();
-						}
-						else {
-							std::cout << "Error in opening output_file";
-							return 2;
-						}
-					}
-				}
+				// double prob = distr(eng);
+				// if (prob < PER) {
+				// 	nc_vector.clear();
+				// 	packets_needed = K_TB_SIZE;
+				// 	received_packets = 0;
+				// } else {
+				// 	packets_needed = 0;
+				// 	if (packets_needed == 0) {
+				// 		// TODO remove this store to file when decoding is in place
+				// 		// if decoding was successful, store packets' payload in file
+				// 		std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
+				// 		if (output_file.is_open()) {
+				// 			for(std::vector<NCpacket>::iterator v_iter = nc_vector.begin(); v_iter != nc_vector.end(); ++v_iter) {
+				// 				output_file.write((char *)v_iter->getPayload(), PAYLOAD_SIZE);
+				// 			}
+				// 			output_file.close();
+				// 			nc_vector.clear();
+				// 		}
+				// 		else {
+				// 			std::cout << "Error in opening output_file";
+				// 			return 2;
+				// 		}
+				// 	}
+				// }
 				sendack(packets_needed, sender_addr); 
 			}
 		}
+		nc_vector.clear();
 		total_received_packets += received_packets;
 		std::cout << total_received_packets << "\n";
 	}
