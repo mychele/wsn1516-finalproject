@@ -1,17 +1,15 @@
 //http://www.shoup.net/ntl/
 
 #include <iostream>
-#include<stdio.h>
-#include<math.h>
-#include<stdlib.h>
-#include<fcntl.h>
-#include<unistd.h>
-#include<NTL/ZZ.h>
-#include<NTL/vector.h>
-#include<NTL/GF2X.h>
-#include<NTL/GF2.h>
-#include "Packet.h"
-#include "functions.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <NTL/ZZ.h>
+#include <NTL/vector.h>
+#include <NTL/GF2X.h>
+#include <NTL/GF2.h>
 #include <bitset>
 #include <stdio.h>
 #include <iostream>

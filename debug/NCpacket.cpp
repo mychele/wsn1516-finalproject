@@ -7,7 +7,6 @@
 #include <ostream>
 #include "utils_wsn.h"
 #include <bitset>
-#include "functions.h"
 // TODO: find a safer way to handle the payload array (for example check size!)
 
 NCpacket::NCpacket()
