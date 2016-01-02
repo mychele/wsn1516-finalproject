@@ -39,7 +39,7 @@ int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_se
 		// send these packets
 		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
 			char *serializedPacket = pckIt->serialize();
-			int byte_to_send = PAYLOAD_SIZE + sizeof(int);
+			int byte_to_send = pckIt->getInfoSizeNCpacket();
 			int byte_sent;
 			if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
 				perror("sender: tx socket");

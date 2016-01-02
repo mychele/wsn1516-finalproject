@@ -81,10 +81,16 @@ NCpacket::getBlockID () const
     return packet.block_ID;
 }
 
+unsigned int 
+NCpacket::getInfoSizeNCpacket() const 
+{
+    return sizeof(packet.payload) + sizeof(packet.header) + sizeof(packet.block_ID);
+}
+
 char*
 NCpacket::serialize()
 {
-    char* returnPointer = (char *) calloc(sizeof(NCpacket), sizeof(char));
+    char* returnPointer = (char *) calloc(this->getInfoSizeNCpacket(), sizeof(char));
     packu32((unsigned char*)returnPointer, packet.header);
     *(returnPointer + sizeof(unsigned int)) = packet.block_ID;
     memcpy(returnPointer + sizeof(unsigned int) + sizeof(char), (char*)packet.payload, PAYLOAD_SIZE);

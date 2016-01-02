@@ -103,10 +103,11 @@ struct ReceiveReturn receivePacket (int sockfd) {
 	int rec_bytes = 0;
 	NCpacket packet;
 	// create receive buffer
+	// TODO create this buffer just once
 	void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
 	struct sockaddr_storage sender_addr;
 	socklen_t sizeof_sender_addr = sizeof sender_addr;
-	if((rec_bytes = recvfrom(sockfd, receive_buffer, PAYLOAD_SIZE+sizeof(int), 0, 
+	if((rec_bytes = recvfrom(sockfd, receive_buffer, packet.getInfoSizeNCpacket(), 0, 
 		(struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1) {
 		// there was an error
 		perror("receiver: recvfrom");
@@ -117,6 +118,7 @@ struct ReceiveReturn receivePacket (int sockfd) {
 	toBeReturned.sender_addr = sender_addr;
 	toBeReturned.packet = packet;
 	toBeReturned.rec_bytes = rec_bytes;
+	free(receive_buffer);
 	return toBeReturned;
 }
 

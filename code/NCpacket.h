@@ -84,6 +84,14 @@ public:
 	 */
 	int getPayloadSize();
 
+	/** 
+	 * Get the size of the useful information to be transmitted
+	 * It may be different from sizeof(NCpacket) because of
+	 * the host using memory in chunks of 4 byte
+	 * @return the size of the information to be transmitted
+	 */
+	unsigned int getInfoSizeNCpacket() const;
+
 	/**
 	 * Set the block_ID of an NCpacket
 	 * @param an unsigned char with block_ID
