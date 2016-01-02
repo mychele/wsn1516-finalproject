@@ -99,12 +99,10 @@ int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
  * Receive a packet from sockfd and return the NCpacket, the sender address
  * and the number of bytes received
  */
-struct ReceiveReturn receivePacket (int sockfd) {
+struct ReceiveReturn receivePacket (int sockfd, void* receive_buffer) {
 	int rec_bytes = 0;
 	NCpacket packet;
-	// create receive buffer
-	// TODO create this buffer just once
-	void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+	// create the structure that will be filled with the sender address
 	struct sockaddr_storage sender_addr;
 	socklen_t sizeof_sender_addr = sizeof sender_addr;
 	if((rec_bytes = recvfrom(sockfd, receive_buffer, packet.getInfoSizeNCpacket(), 0, 
@@ -118,7 +116,6 @@ struct ReceiveReturn receivePacket (int sockfd) {
 	toBeReturned.sender_addr = sender_addr;
 	toBeReturned.packet = packet;
 	toBeReturned.rec_bytes = rec_bytes;
-	free(receive_buffer);
 	return toBeReturned;
 }
 
@@ -193,17 +190,19 @@ int main(int argc, char *argv[])
 	std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
 	// find a conditions so that rx knows it has received the whole txed file
 	unsigned char rx_block_ID = 0;
+	// create receive buffer
+	void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
 	while(true) {
 		int received_packets = 0;
 		int packets_needed = K_TB_SIZE;
 		while (packets_needed > 0) {
 			// ------------------receive or timeout-------------------
 			// create promise
-	    	std::packaged_task<ReceiveReturn(int)> waitForPacket(&receivePacket);
+	    	std::packaged_task<ReceiveReturn(int, void*)> waitForPacket(&receivePacket);
 	    	// get future
 	    	std::future<ReceiveReturn> received_future = waitForPacket.get_future();
 	    	// schedule on another thread
-	    	std::thread th_packet(std::move(waitForPacket), sockfd);
+	    	std::thread th_packet(std::move(waitForPacket), sockfd, receive_buffer);
 	    	// check for timeout
 	    	if(received_future.wait_for(timeout_span) == std::future_status::timeout) {
 	    		// a timeout has occurred, no packet was received for too long
@@ -252,6 +251,7 @@ int main(int argc, char *argv[])
 		std::cout << total_received_packets << "\n";
 	}
 
+	free(receive_buffer);
 	close(sockfd);
 
 	return 0;
