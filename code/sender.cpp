@@ -25,6 +25,8 @@
 
 #define RECEIVER_PORT "30000"
 
+typedef std::pair<int, unsigned char> ackPayload;
+
 int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, 
 	struct addrinfo *p_iter, unsigned char block_ID) {
 	int sentPackets = 0;
@@ -53,10 +55,11 @@ int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_se
 	return sentPackets;
 }
 
-int receiveACK(int sockfd_send) {
+ackPayload receiveACK(int sockfd_send) {
 	// things needed to receive ACKs
 	int ack_rec_bytes;
 	int packets_needed;
+	unsigned char ack_block_ID;
 	// create receive buffer
 	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
 
@@ -67,10 +70,13 @@ int receiveACK(int sockfd_send) {
 		packets_needed = -1;
 	}
 	else {
-		packets_needed = unpacku32((unsigned char *)ack_buffer); 
+		unsigned char *receive_buffer = (unsigned char*)ack_buffer;
+		packets_needed = unpacku32(receive_buffer); 
+		ack_block_ID = *(receive_buffer + sizeof(int));
 	}
 	free(ack_buffer);
-	return packets_needed;
+	ackPayload toBeReturned(packets_needed, ack_block_ID);
+	return toBeReturned;
 }
 
 
@@ -121,7 +127,8 @@ int main(int argc, char const *argv[])
 	std::cout << "K " << K_TB_SIZE << "\n";
 	int sentPackets = 0;
 	// timeout value
-	std::chrono::milliseconds timeout_span(1000);
+	// TODO adapt this value to the time needed to receive an ACK in case of success
+	std::chrono::milliseconds timeout_span(200);
 	if(input_file) {
 		// read file size
 		// get length of file:
@@ -132,24 +139,29 @@ int main(int argc, char const *argv[])
 
 	    int num_encoding_op = ceil((float)file_length/(K_TB_SIZE*PAYLOAD_SIZE)); // in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
+	    int packet_needed_per_block_ID[UCHAR_MAX];
+
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) { 
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
+	    	unsigned char ack_block_ID;
 	    	// create input buffer for K packets
 			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
 	    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
 	    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
-	    	unsigned int packets_needed = K_TB_SIZE; // TODO change this to N
+	    	// TODO change this to N, and decide N
+	    	unsigned int packets_needed = K_TB_SIZE+10; 
+	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	do {
 		    	// encode and send them
 		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
 
 		    	// wait for ACK, it will specify how many packets are needed
 		    	// create promise
-		    	std::packaged_task<int(int)> waitForACK(&receiveACK);
+		    	std::packaged_task<ackPayload(int)> waitForACK(&receiveACK);
 		    	// get future
-		    	std::future<int> packets_needed_future = waitForACK.get_future();
+		    	std::future<ackPayload> packets_needed_future = waitForACK.get_future();
 		    	// schedule on another thread
 		    	std::thread th_ACK(std::move(waitForACK), sockfd_send);
 		    	// check for timeout
@@ -162,11 +174,13 @@ int main(int argc, char const *argv[])
 		    	}
 		    	else {
 		    		// retransmit the number of packets specified
-		    		packets_needed = packets_needed_future.get();
-		    		//std::cout << "Packets needed " << packets_needed << "\n";
+		    		ackPayload ack = packets_needed_future.get();
+		    		packets_needed = ack.first;
+		    		ack_block_ID =ack.second;
+		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 		    	}
 		    	th_ACK.detach(); // clean up
-	    	} while (packets_needed != 0);
+	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
 	    	// free buffer
 	    	free(input_buffer);
 	    }

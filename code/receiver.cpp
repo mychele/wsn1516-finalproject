@@ -40,7 +40,7 @@ struct ReceiveReturn
 /**
  * Send an ACK to the address in sockaddr_storage
  */
-int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
+int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr_storage sender_addr) {
 	// get info on sender
 	int status;
 	struct addrinfo ack_hints, *ack_res, *p_iter;
@@ -83,10 +83,11 @@ int sendack(unsigned int packets_needed, struct sockaddr_storage sender_addr) {
 	}
 
 	// send ack
-	unsigned char *ack_buffer = (unsigned char *)calloc(sizeof(int), sizeof(char));
+	int byte_to_send = sizeof(int) + sizeof(char);
+	unsigned char *ack_buffer = (unsigned char *)calloc(byte_to_send, sizeof(char));
 	packu32(ack_buffer, packets_needed);
+	*(ack_buffer + sizeof(int)) = block_ID;
 	int byte_sent;
-	int byte_to_send = sizeof(int);
 	if((byte_sent = sendall(sockfd_ack, (char*)ack_buffer, &byte_to_send, p_iter)) == -1) {
 		perror("receiver: ack socket");
 		std::cout << "Sent only " << byte_sent << " byte because of an error\n";
@@ -220,30 +221,28 @@ int main(int argc, char *argv[])
 	    			// do not store the packet in vector, since there was an error
 	    		} else {
 	    			if(received.packet.getBlockID() == rx_block_ID) {
-		    			nc_vector.push_back(received.packet);
-		    			sender_addr = received.sender_addr;
+						// this simulates an error and drops the packets
+						double prob = distr(eng);
+						if (prob > PER) {
+							nc_vector.push_back(received.packet);
+							sender_addr = received.sender_addr;
+						} 
 		    			received_packets++;
+	    			} else {
+	    				// send ack to tell that this blockID was received correctly
+	    				sendack(0, received.packet.getBlockID(), sender_addr);
 	    			}
 	    		}
 	    	}
 	    	th_packet.detach(); // clean up
 
 	    	//------------------------------
-			if(received_packets >= K_TB_SIZE) {
+			if(nc_vector.size() >= K_TB_SIZE) {
 				// try to decode and update packets needed
 				packets_needed = packet_decoder(nc_vector, argv[1]);
 				std::cout << "packets_needed " << packets_needed << "\n";
-				// TODO remove this and move it to a packet level when decoding is in place
-				// this simulates an error and drops K_TB_SIZE packets, when decoding is used
-				// it will be possible to drop a single packet
-				// double prob = distr(eng);
-				// if (prob < PER) {
-				// 	nc_vector.clear();
-				// 	packets_needed = K_TB_SIZE;
-				// 	received_packets = 0;
-				// } 
+				sendack(packets_needed, rx_block_ID, sender_addr); 
 				rx_block_ID = (packets_needed == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
-				sendack(packets_needed, sender_addr); 
 			}
 		}
 		nc_vector.clear();
