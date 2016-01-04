@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 				rx_block_ID = (packets_needed == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
 			}
 		}
-		std::cout << "Decoded blockID (-1) " << rx_block_ID << "\n";
+		std::cout << "Decoded blockID (-1) " << (int)rx_block_ID << "\n";
 		nc_vector.clear();
 		total_received_packets += received_packets;
 		std::cout << total_received_packets << "\n";
