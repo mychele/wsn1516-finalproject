@@ -27,6 +27,18 @@
 
 typedef std::pair<int, unsigned char> ackPayload;
 
+void timeConversion(std::chrono::milliseconds &d, timeval &tv )
+{
+  std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
+  if( usec <= std::chrono::microseconds(0) )
+    tv.tv_sec = tv.tv_usec = 0;
+  else
+  {
+    tv.tv_sec = usec.count()/1000000;
+    tv.tv_usec = usec.count()%1000000;
+  }
+}
+
 int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, 
 	struct addrinfo *p_iter, unsigned char block_ID) {
 	int sentPackets = 0;
@@ -55,29 +67,46 @@ int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_se
 	return sentPackets;
 }
 
-ackPayload receiveACK(int sockfd_send) {
+ackPayload receiveACK(int sockfd_send, std::chrono::milliseconds timeout) {
 	// things needed to receive ACKs
 	int ack_rec_bytes;
 	int packets_needed;
 	unsigned char ack_block_ID;
 	// create receive buffer
 	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
-
-	if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
-		NULL, 0))==-1) {
-		// there was an error
-		perror("sender ACK: recvfrom");
-		packets_needed = -1;
-	}
-	else {
-		unsigned char *receive_buffer = (unsigned char*)ack_buffer;
-		packets_needed = unpacku32(receive_buffer); 
-		ack_block_ID = *(receive_buffer + sizeof(int));
-	}
-	free(ack_buffer);
+	// select things
+	struct timeval tv;
+    timeConversion(timeout, tv);
+    fd_set readfds; 
+    FD_ZERO(&readfds);
+    FD_SET(sockfd_send, &readfds);
+	int select_ret = select(32, &readfds, NULL, NULL, &tv);
+	if (select_ret > 0) {
+        // socket has pending data to read
+        if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
+			NULL, 0))==-1) {
+			// there was an error
+			perror("sender ACK: recvfrom");
+			packets_needed = -1;
+		}
+		else {
+			unsigned char *receive_buffer = (unsigned char*)ack_buffer;
+			packets_needed = unpacku32(receive_buffer); 
+			ack_block_ID = *(receive_buffer + sizeof(int));
+		}
+    }
+    else if (select_ret == 0) { // timeout!
+        packets_needed = -1;
+        ack_block_ID = 0;
+    } else {
+		packets_needed = -2;
+        ack_block_ID = 0;
+    }
+    free(ack_buffer);
 	ackPayload toBeReturned(packets_needed, ack_block_ID);
 	return toBeReturned;
 }
+
 
 
 int main(int argc, char const *argv[])
@@ -159,11 +188,11 @@ int main(int argc, char const *argv[])
 
 		    	// wait for ACK, it will specify how many packets are needed
 		    	// create promise
-		    	std::packaged_task<ackPayload(int)> waitForACK(&receiveACK);
+		    	std::packaged_task<ackPayload(int, std::chrono::milliseconds)> waitForACK(&receiveACK);
 		    	// get future
 		    	std::future<ackPayload> packets_needed_future = waitForACK.get_future();
 		    	// schedule on another thread
-		    	std::thread th_ACK(std::move(waitForACK), sockfd_send);
+		    	std::thread th_ACK(std::move(waitForACK), sockfd_send, timeout_span);
 		    	// check for timeout
 		    	if(packets_needed_future.wait_for(timeout_span) == std::future_status::timeout) {
 		    		// a timeout has occurred, no ACK was received
@@ -176,10 +205,10 @@ int main(int argc, char const *argv[])
 		    		// retransmit the number of packets specified
 		    		ackPayload ack = packets_needed_future.get();
 		    		packets_needed = ack.first;
-		    		ack_block_ID =ack.second;
+		    		ack_block_ID = ack.second;
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 		    	}
-		    	th_ACK.detach(); // clean up
+		    	th_ACK.join(); // clean up
 	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
 	    	// free buffer
 	    	free(input_buffer);

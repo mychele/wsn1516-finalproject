@@ -241,11 +241,11 @@ int main(int argc, char *argv[])
 			if(nc_vector.size() >= K_TB_SIZE) {
 				// try to decode and update packets needed
 				packets_needed = packet_decoder(nc_vector, argv[1]);
-				std::cout << "packets_needed " << packets_needed << "\n";
 				sendack(packets_needed, rx_block_ID, sender_addr); 
 				rx_block_ID = (packets_needed == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
 			}
 		}
+		std::cout << "Decoded blockID (-1) " << rx_block_ID << "\n";
 		nc_vector.clear();
 		total_received_packets += received_packets;
 		std::cout << total_received_packets << "\n";
