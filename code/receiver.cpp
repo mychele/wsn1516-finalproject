@@ -23,6 +23,7 @@
 #include <thread>
 #include <random>
 #include "decoding_function.h"
+#include <limits.h>
 
 #define RECEIVER_PORT "30000"
 #define BACKLOG 10

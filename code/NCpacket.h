@@ -11,6 +11,7 @@
 #include <NTL/GF2X.h>
 #include <NTL/GF2.h>
 #include <NTL/mat_GF2.h>
+#include <bitset>
 
 #ifndef NCPACKET
 #define NCPACKET
