@@ -27,7 +27,7 @@
 
 typedef std::pair<int, unsigned char> ackPayload;
 
-void timeConversion(std::chrono::milliseconds &d, timeval &tv )
+void timeConversion(std::chrono::nanoseconds &d, timeval &tv )
 {
   std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
   if( usec <= std::chrono::microseconds(0) )
@@ -67,7 +67,7 @@ int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_se
 	return sentPackets;
 }
 
-ackPayload receiveACK(int sockfd_send, std::chrono::milliseconds timeout) {
+ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	// things needed to receive ACKs
 	int ack_rec_bytes;
 	int packets_needed;
@@ -157,7 +157,7 @@ int main(int argc, char const *argv[])
 	int sentPackets = 0;
 	// timeout value
 	// TODO adapt this value to the time needed to receive an ACK in case of success
-	std::chrono::milliseconds timeout_span(200);
+	auto timeout_span = std::chrono::nanoseconds(200);
 	if(input_file) {
 		// read file size
 		// get length of file:
@@ -185,10 +185,11 @@ int main(int argc, char const *argv[])
 	    	do {
 		    	// encode and send them
 		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
-
+		    	// start measuring time to correctly receive an ACK
+		    	auto tx_begin = std::chrono::high_resolution_clock::now();
 		    	// wait for ACK, it will specify how many packets are needed
 		    	// create promise
-		    	std::packaged_task<ackPayload(int, std::chrono::milliseconds)> waitForACK(&receiveACK);
+		    	std::packaged_task<ackPayload(int, std::chrono::nanoseconds)> waitForACK(&receiveACK);
 		    	// get future
 		    	std::future<ackPayload> packets_needed_future = waitForACK.get_future();
 		    	// schedule on another thread
@@ -200,6 +201,8 @@ int main(int argc, char const *argv[])
 		    		// TODO consider if it is better to send K_TB_SIZE or less packets
 		    		std::cout << "No ACK, retx\n";
 		    		packets_needed = K_TB_SIZE;
+		    		// increase timeout
+		    		timeout_span += std::chrono::nanoseconds(100000);
 		    	}
 		    	else {
 		    		// retransmit the number of packets specified
@@ -207,6 +210,9 @@ int main(int argc, char const *argv[])
 		    		packets_needed = ack.first;
 		    		ack_block_ID = ack.second;
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
+		    		// change timeout_span dynamically only when an ACK is received after a tx
+		    		auto tx_end = std::chrono::high_resolution_clock::now();
+		    		timeout_span = std::chrono::duration_cast<std::chrono::nanoseconds>(tx_end-tx_begin);
 		    	}
 		    	th_ACK.join(); // clean up
 	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
