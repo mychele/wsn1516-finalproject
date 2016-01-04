@@ -27,8 +27,6 @@
 #include <vector>
 #include <iterator>
 #include "decoding_function.h"
-
-//using namespace std;
 using namespace NTL;
 
 int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
@@ -48,14 +46,12 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
         {
             M[i][s]=tmp_ev[0][s];
         }
-        //write_matrix(tmp_ev,0);
         encoded_payloads.push_back(pckIt->getPayload());
         i++;
     }
     mat_GF2 M_id;
     M_id=append_identity(M);
     gauss(M_id);
-    //write_matrix(M_id,1);
     //index of last nonzero row
     int last_nonzero=N-1;
     int flag_nonzero=0;
@@ -71,7 +67,6 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
             last_nonzero--;
         else break;
     } while (last_nonzero>=0);
-    //cout<<"ok5.3\n";
 
     int remaining=K-1-last_nonzero;
     if (remaining==0)
@@ -92,41 +87,16 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
             }
 
         }
-        //write_matrix(M_id,1);
-        // i=0;
-        // for(std::vector<char*>::iterator pckIt = encoded_payloads.begin(); pckIt != encoded_payloads.end(); ++pckIt)
-        // {
-
-        //     printf("????????????????payload of encoded packet %d is: %s\n",i, encoded_payloads.at(i));
-        //     i++;
-        // }
         mat_GF2 M_inv=pseudo_inverse(M_id, last_nonzero+1);
-        //write_matrix(M_inv,0);
-        //cout<<"last nonzero+1= "<<last_nonzero+1<<endl;
         decoded_data=XOR_decode(M_inv, encoded_payloads);
-        // i=0;
-        // for(std::vector<char*>::iterator pckIt = decoded_data.begin(); pckIt != decoded_data.end(); ++pckIt)
-        // {
-
-        //     printf("????????????????payload of decoded packet %d is: %s\n",i, decoded_data.at(i));
-        //     i++;
-        // }
-        // cout<<"ok7.3\n";
-        //write file
-        // open file for the first time
-        // cout<<"ok7.4\n";
         std::ofstream output_file (filename, std::ios::out | std::ios::app | std::ios::binary);
-        // cout<<"ok7.5\n";
         if (output_file.is_open())
         {
-            // cout<<"ok7.6\n";
             for(std::vector<char *>::iterator v_iter = decoded_data.begin(); v_iter != decoded_data.end(); ++v_iter)
             {
                 output_file.write(*v_iter, PAYLOAD_SIZE);
             }
-            // cout<<"ok7.65\n";
             output_file.close();
-            // cout<<"ok7.66\n";
         }
         else
         {
@@ -135,8 +105,6 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
         }
 
     }
-    // cout<<"ok7.7\n";
-    // cout<<"inside function: remaining= "<<remaining<<endl;
     decoded_data.clear();
     return remaining;
 }
