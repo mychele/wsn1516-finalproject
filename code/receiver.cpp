@@ -207,7 +207,8 @@ int main(int argc, char *argv[])
     int total_received_packets = 0;
     // timeout value
     std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
-    // find a conditions so that rx knows it has received the whole txed file
+    unsigned int file_length; // file length in byte
+    bool first_rx = 1;
     unsigned char rx_block_ID = 0;
     // create receive buffer
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
@@ -270,16 +271,36 @@ int main(int argc, char *argv[])
             if(nc_vector.size() >= K_TB_SIZE)
             {
                 // try to decode and update packets needed
-                decoded_info= packet_decoder(nc_vector);
+                decoded_info = packet_decoder(nc_vector);
                 // if decode is successful, write
                 if (decoded_info.first==0)
                 {
+                	std::vector<char *>::iterator v_iter = decoded_info.second.begin();
                     std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
                     if (output_file.is_open())
                     {
-                        for(std::vector<char *>::iterator v_iter = decoded_info.second.begin(); v_iter != decoded_info.second.end(); ++v_iter)
+                    	if(first_rx) {
+                    		char* first_payload = *v_iter;
+                    		// store file length
+                    		file_length = unpacku32((unsigned char*) first_payload);
+                    		// write the useful payload
+                    		output_file.write(first_payload + sizeof(file_length), 
+                    								PAYLOAD_SIZE - sizeof(file_length));
+                    		file_length -= PAYLOAD_SIZE - sizeof(file_length);
+                    		v_iter++;
+                    		first_rx = 0;
+                    	}
+                        for(; v_iter != decoded_info.second.end(); ++v_iter)
                         {
-                            output_file.write(*v_iter, PAYLOAD_SIZE);
+                        	if(file_length >= PAYLOAD_SIZE) {
+                            	output_file.write(*v_iter, PAYLOAD_SIZE);
+                            	file_length -= PAYLOAD_SIZE;
+                        	} else if (file_length > 0) { // write last chunck
+                        		output_file.write(*v_iter, file_length);
+                        		file_length = 0;
+                        	} else {
+                        		// do nothing!
+                        	}
                         }
                         output_file.close();
                     }
