@@ -29,8 +29,10 @@
 #include "decoding_function.h"
 using namespace NTL;
 
-int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
+packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
 {
+
+    packetNeededAndVector out;
     int N=packetVector.size();
     int K=K_TB_SIZE;
     mat_GF2 M;
@@ -66,7 +68,8 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
         if (flag_nonzero==0)
             last_nonzero--;
         else break;
-    } while (last_nonzero>=0);
+    }
+    while (last_nonzero>=0);
 
     int remaining=K-1-last_nonzero;
     if (remaining==0)
@@ -89,24 +92,12 @@ int packet_decoder(std::vector<NCpacket> packetVector, const char* filename)
         }
         mat_GF2 M_inv=pseudo_inverse(M_id, last_nonzero+1);
         decoded_data=XOR_decode(M_inv, encoded_payloads);
-        std::ofstream output_file (filename, std::ios::out | std::ios::app | std::ios::binary);
-        if (output_file.is_open())
-        {
-            for(std::vector<char *>::iterator v_iter = decoded_data.begin(); v_iter != decoded_data.end(); ++v_iter)
-            {
-                output_file.write(*v_iter, PAYLOAD_SIZE);
-            }
-            output_file.close();
-        }
-        else
-        {
-            std::cout << "Error in opening output_file";
-            return 2;
-        }
 
     }
-    decoded_data.clear();
-    return remaining;
+    out.first=remaining;
+    out.second=decoded_data;
+    decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)
+    return out;
 }
 
 

@@ -7,6 +7,8 @@
 
 using namespace NTL;
 
-int packet_decoder(std::vector<NCpacket> packetVector, const char* filename);
+typedef std::pair<int, std::vector<char*>> packetNeededAndVector ;
+
+packetNeededAndVector  packet_decoder(std::vector<NCpacket> packetVector);
 
 #endif
