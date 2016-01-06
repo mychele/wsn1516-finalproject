@@ -162,11 +162,12 @@ int main(int argc, char const *argv[])
 		// read file size
 		// get length of file:
 	    input_file.seekg (0, input_file.end);
-	    int file_length = input_file.tellg();
+	    unsigned int file_length = input_file.tellg(); // 4 byte
 	    // set cursor at the beginning
 	    input_file.seekg (0, input_file.beg);
-
-	    int num_encoding_op = ceil((float)file_length/(K_TB_SIZE*PAYLOAD_SIZE)); // in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
+	    												//include file size
+	    int num_encoding_op = ceil((float)(file_length+sizeof(file_length))/(K_TB_SIZE*PAYLOAD_SIZE)); 
+	    								// in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
 	    int packet_needed_per_block_ID[UCHAR_MAX];
 
@@ -176,8 +177,15 @@ int main(int argc, char const *argv[])
 	    	// create input buffer for K packets
 			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
-	    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
-	    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
+			if(encoding_op_index == 0) { // first transmission
+				// store file size in the first 4 byte
+				packu32((unsigned char*) input_buffer, file_length);
+				// read K_TB_SIZE*PAYLOAD_SIZE - sizeof(unsigned int) byte
+				input_file.read((char *)input_buffer + sizeof(file_length), PAYLOAD_SIZE*K_TB_SIZE - sizeof(file_length));
+			} else {
+		    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
+		    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
+		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	// TODO change this to N, and decide N
 	    	unsigned int packets_needed = K_TB_SIZE+10; 
