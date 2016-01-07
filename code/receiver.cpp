@@ -212,11 +212,15 @@ int main(int argc, char *argv[])
     unsigned char rx_block_ID = 0;
     // create receive buffer
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+    double total_time_decoding_block=0;
+    int num_blocks=0;
     while(true)
     {
         int received_packets = 0;
         packetNeededAndVector decoded_info;  //pair: first is int containing needed packets; second is vector<char*> with decoded data
         decoded_info.first = K_TB_SIZE;
+        std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
+        start_block_decoding = std::chrono::system_clock::now();
         while (decoded_info.first > 0)
         {
             // ------------------receive or timeout-------------------
@@ -271,36 +275,47 @@ int main(int argc, char *argv[])
             if(nc_vector.size() >= K_TB_SIZE)
             {
                 // try to decode and update packets needed
+                std::chrono::time_point<std::chrono::system_clock> start_packet_decoder, end_packet_decoder;
+                start_packet_decoder = std::chrono::system_clock::now();
                 decoded_info = packet_decoder(nc_vector);
+                end_packet_decoder = std::chrono::system_clock::now();
+                std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
+                std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";
                 // if decode is successful, write
                 if (decoded_info.first==0)
                 {
-                	std::vector<char *>::iterator v_iter = decoded_info.second.begin();
+                    std::vector<char *>::iterator v_iter = decoded_info.second.begin();
                     std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
                     if (output_file.is_open())
                     {
-                    	if(first_rx) {
-                    		char* first_payload = *v_iter;
-                    		// store file length
-                    		file_length = unpacku32((unsigned char*) first_payload);
-                    		// write the useful payload
-                    		output_file.write(first_payload + sizeof(file_length), 
-                    								PAYLOAD_SIZE - sizeof(file_length));
-                    		file_length -= PAYLOAD_SIZE - sizeof(file_length);
-                    		v_iter++;
-                    		first_rx = 0;
-                    	}
+                        if(first_rx)
+                        {
+                            char* first_payload = *v_iter;
+                            // store file length
+                            file_length = unpacku32((unsigned char*) first_payload);
+                            // write the useful payload
+                            output_file.write(first_payload + sizeof(file_length),
+                                              PAYLOAD_SIZE - sizeof(file_length));
+                            file_length -= PAYLOAD_SIZE - sizeof(file_length);
+                            v_iter++;
+                            first_rx = 0;
+                        }
                         for(; v_iter != decoded_info.second.end(); ++v_iter)
                         {
-                        	if(file_length >= PAYLOAD_SIZE) {
-                            	output_file.write(*v_iter, PAYLOAD_SIZE);
-                            	file_length -= PAYLOAD_SIZE;
-                        	} else if (file_length > 0) { // write last chunck
-                        		output_file.write(*v_iter, file_length);
-                        		file_length = 0;
-                        	} else {
-                        		// do nothing!
-                        	}
+                            if(file_length >= PAYLOAD_SIZE)
+                            {
+                                output_file.write(*v_iter, PAYLOAD_SIZE);
+                                file_length -= PAYLOAD_SIZE;
+                            }
+                            else if (file_length > 0)     // write last chunck
+                            {
+                                output_file.write(*v_iter, file_length);
+                                file_length = 0;
+                            }
+                            else
+                            {
+                                // do nothing!
+                            }
                         }
                         output_file.close();
                     }
@@ -316,7 +331,13 @@ int main(int argc, char *argv[])
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
         }
+        end_block_decoding = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
         std::cout << "Decoded blockID (-1) " << (int)rx_block_ID << "\n";
+        std::cout << "Elapsed time to decode blockID " << (int)rx_block_ID << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";
+        total_time_decoding_block += elapsed_seconds_block_decoding.count();
+        num_blocks++;
+        std::cout << "Average block decoding time up to now ("<<num_blocks<<" blocs): " << (double)total_time_decoding_block/num_blocks << "s \n";
         nc_vector.clear();
         total_received_packets += received_packets;
         std::cout << total_received_packets << "\n";

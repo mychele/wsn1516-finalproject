@@ -9,12 +9,12 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <stdlib.h>  
+#include <stdlib.h>
 #include <string>
 #include <cstring>
 #include "unistd.h"
 #include "NCpacket.h"
-#include "utils_wsn.h" 
+#include "utils_wsn.h"
 #include <cmath>
 #include <ctgmath>
 #include <vector>
@@ -39,7 +39,7 @@ void timeConversion(std::chrono::nanoseconds &d, timeval &tv )
   }
 }
 
-int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send, 
+int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send,
 	struct addrinfo *p_iter, unsigned char block_ID) {
 	int sentPackets = 0;
 	// encoding of packetNumber packets
@@ -77,13 +77,13 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	// select things
 	struct timeval tv;
     timeConversion(timeout, tv);
-    fd_set readfds; 
+    fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(sockfd_send, &readfds);
 	int select_ret = select(32, &readfds, NULL, NULL, &tv);
 	if (select_ret > 0) {
         // socket has pending data to read
-        if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0, 
+        if((ack_rec_bytes = recvfrom(sockfd_send, ack_buffer, 2*sizeof(int), 0,
 			NULL, 0))==-1) {
 			// there was an error
 			perror("sender ACK: recvfrom");
@@ -91,7 +91,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 		}
 		else {
 			unsigned char *receive_buffer = (unsigned char*)ack_buffer;
-			packets_needed = unpacku32(receive_buffer); 
+			packets_needed = unpacku32(receive_buffer);
 			ack_block_ID = *(receive_buffer + sizeof(int));
 		}
     }
@@ -135,7 +135,7 @@ int main(int argc, char const *argv[])
 	// send input
 	for (p_iter = res_dst; p_iter != NULL; p_iter = p_iter->ai_next) {
 		// create a socket
-		if((sockfd_send = socket(p_iter->ai_family, p_iter->ai_socktype, 
+		if((sockfd_send = socket(p_iter->ai_family, p_iter->ai_socktype,
 			p_iter->ai_protocol)) == -1) {
 			// there was an error, try with the next one
 			perror("sender: tx socket");
@@ -166,12 +166,12 @@ int main(int argc, char const *argv[])
 	    // set cursor at the beginning
 	    input_file.seekg (0, input_file.beg);
 	    												//include file size
-	    int num_encoding_op = ceil((float)(file_length+sizeof(file_length))/(K_TB_SIZE*PAYLOAD_SIZE)); 
+	    int num_encoding_op = ceil((float)(file_length+sizeof(file_length))/(K_TB_SIZE*PAYLOAD_SIZE));
 	    								// in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
 	    int packet_needed_per_block_ID[UCHAR_MAX];
 
-	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) { 
+	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) {
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
 	    	unsigned char ack_block_ID;
 	    	// create input buffer for K packets
@@ -188,7 +188,7 @@ int main(int argc, char const *argv[])
 		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	// TODO change this to N, and decide N
-	    	unsigned int packets_needed = K_TB_SIZE+10; 
+	    	unsigned int packets_needed = K_TB_SIZE+10;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	do {
 		    	// encode and send them
