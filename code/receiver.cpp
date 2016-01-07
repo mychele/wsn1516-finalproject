@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     struct addrinfo hints, *res, *p_iter;
     struct sockaddr_storage sender_addr;
     int status;
-
+    int FILE_LENGTH;
     if (argc != 2)
     {
         std::cout << "usage: receiver filename\n";
@@ -207,6 +207,7 @@ int main(int argc, char *argv[])
     int total_received_packets = 0;
     // timeout value
     std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
+    std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;;
     unsigned int file_length; // file length in byte
     bool first_rx = 1;
     unsigned char rx_block_ID = 0;
@@ -214,13 +215,15 @@ int main(int argc, char *argv[])
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
     double total_time_decoding_block=0;
     int num_blocks=0;
-    while(true)
+    bool file_complete=false;
+    start_file_rx = std::chrono::system_clock::now();  //not sure of the position...
+    while(!file_complete)
     {
         int received_packets = 0;
         packetNeededAndVector decoded_info;  //pair: first is int containing needed packets; second is vector<char*> with decoded data
         decoded_info.first = K_TB_SIZE;
         std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
-        start_block_decoding = std::chrono::system_clock::now();
+        start_block_decoding = std::chrono::system_clock::now();  //not sure of the position...
         while (decoded_info.first > 0)
         {
             // ------------------receive or timeout-------------------
@@ -275,7 +278,7 @@ int main(int argc, char *argv[])
             if(nc_vector.size() >= K_TB_SIZE)
             {
                 // try to decode and update packets needed
-                std::chrono::time_point<std::chrono::system_clock> start_packet_decoder, end_packet_decoder;
+                std::chrono::time_point<std::chrono::system_clock>
                 start_packet_decoder = std::chrono::system_clock::now();
                 decoded_info = packet_decoder(nc_vector);
                 end_packet_decoder = std::chrono::system_clock::now();
@@ -292,7 +295,8 @@ int main(int argc, char *argv[])
                         {
                             char* first_payload = *v_iter;
                             // store file length
-                            file_length = unpacku32((unsigned char*) first_payload);
+                            FILE_LENGTH = unpacku32((unsigned char*) first_payload);
+                            file_length=FILE_LENGTH;
                             // write the useful payload
                             output_file.write(first_payload + sizeof(file_length),
                                               PAYLOAD_SIZE - sizeof(file_length));
@@ -314,7 +318,7 @@ int main(int argc, char *argv[])
                             }
                             else
                             {
-                                // do nothing!
+                                file_complete=true;
                             }
                         }
                         output_file.close();
@@ -337,15 +341,17 @@ int main(int argc, char *argv[])
         std::cout << "Elapsed time to decode blockID " << (int)rx_block_ID << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";
         total_time_decoding_block += elapsed_seconds_block_decoding.count();
         num_blocks++;
-        std::cout << "Average block decoding time up to now ("<<num_blocks<<" blocs): " << (double)total_time_decoding_block/num_blocks << "s \n";
         nc_vector.clear();
         total_received_packets += received_packets;
         std::cout << total_received_packets << "\n";
     }
-
+    end_file_rx_and_decoding= std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
+    std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_block/num_blocks << "s \n";
+    std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
     free(receive_buffer);
     close(sockfd);
-
+    std:cout <<"File successfully received and decoded!! :-)\n";
     return 0;
 
 }
