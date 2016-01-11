@@ -31,7 +31,7 @@ extern std::vector<NCpacket> memoryToVector(char *buffer, int size);
  */
 extern std::vector<char *> memoryToCharVector(char *buffer, int size);
 
-/** 
+/**
  * This function converts the vector<char *> given by memoryToCharVector
  * into a std::vector<NCpacket>
  */
@@ -72,12 +72,12 @@ unsigned int unpacku32(unsigned char *buf);
 
 
 // randomly initialize with binary numbers and existing matrix
-void rand_initialize_matrix(mat_GF2& X, int const r, int const c);
+void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed);
 // create a randomly initialized matrix
-mat_GF2 rand_create_matrix(int const r, int const c);
+mat_GF2 rand_create_matrix(int const r, int const c, int const seed);
 // randomly creata data (not encoded) matrix
 //K=number of packets, m=bits per packet
-mat_GF2 rand_create_data(int const K, int const m);
+mat_GF2 rand_create_data(int const K, int const m, int const seed);
 //append identity matrix to an existing matrix
 mat_GF2 append_identity(mat_GF2& X);
 // given a data matrix of and an encoding matrix, give endcoded data

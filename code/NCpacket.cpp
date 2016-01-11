@@ -26,13 +26,13 @@ NCpacket::NCpacket(unsigned int header, unsigned char block_ID, char* payload)
 NCpacket::NCpacket(vector<char*> data, unsigned char block_ID)
 {
     // create encoding vector
-    mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE);
+    packet.header=rand();
+    mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE,packet.header);
     char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
     // create payload
     XOR_encode(encoding_vector, data, tmp);
     // store payload and ev
-    memcpy(packet.payload, tmp, PAYLOAD_SIZE); 
-    packet.header=binary_to_unsigned_int(encoding_vector);
+    memcpy(packet.payload, tmp, PAYLOAD_SIZE);
     packet.block_ID = block_ID;
      //write_matrix(encoding_vector,0);
 }
@@ -69,20 +69,20 @@ NCpacket::getPayloadSize()
     return PAYLOAD_SIZE;
 }
 
-void 
+void
 NCpacket::setBlockID (unsigned char block_ID)
 {
     packet.block_ID = block_ID;
 }
 
-unsigned char 
-NCpacket::getBlockID () const 
+unsigned char
+NCpacket::getBlockID () const
 {
     return packet.block_ID;
 }
 
-unsigned int 
-NCpacket::getInfoSizeNCpacket() const 
+unsigned int
+NCpacket::getInfoSizeNCpacket() const
 {
     return sizeof(packet.payload) + sizeof(packet.header) + sizeof(packet.block_ID);
 }
@@ -100,14 +100,7 @@ NCpacket::serialize()
 mat_GF2
 NCpacket::getBinaryHeader()
 {
-    mat_GF2 binaryHeader;
-    binaryHeader.SetDims(1, K_TB_SIZE);
-    for(int i = 0; i < K_TB_SIZE; i++)
-    {
-        unsigned char bit = (unsigned char)((packet.header >> (i)) & 1) + '0';
-        binaryHeader[0][i] = bit;
-    }
-    return binaryHeader;
+    return rand_create_matrix(1,K_TB_SIZE,packet.header);
 }
 
 std::ostream& operator<<(std::ostream &strm, const NCpacket &packet_ext)

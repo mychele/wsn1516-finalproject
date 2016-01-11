@@ -44,6 +44,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     {
         mat_GF2 tmp_ev;
         tmp_ev=pckIt->getBinaryHeader();
+        //cout<<"seed :"<<pckIt->getHeader()<<"\n";
         for (int s=0; s<K; s++)
         {
             M[i][s]=tmp_ev[0][s];
@@ -96,6 +97,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     }
     out.first=remaining;
     out.second=decoded_data;
+    //cout<<"still "<<remaining<<" needed packets\n";
     decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)
     return out;
 }

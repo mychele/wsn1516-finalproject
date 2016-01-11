@@ -141,8 +141,9 @@ unsigned int unpacku32(unsigned char *buf)
     return ntohl(i);
 }
 
-void rand_initialize_matrix(mat_GF2& X, int const r, int const c)
+void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed)
 {
+    srand(seed);
     char n;
     for (int i=0; i<r; i++)
     {
@@ -154,17 +155,17 @@ void rand_initialize_matrix(mat_GF2& X, int const r, int const c)
     }
 
 }
-mat_GF2 rand_create_matrix(int const r, int const c)
+mat_GF2 rand_create_matrix(int const r, int const c, int const seed)
 {
     mat_GF2 out_matrix;
     out_matrix.SetDims(r,c);
-    rand_initialize_matrix(out_matrix,r,c);
+    rand_initialize_matrix(out_matrix,r,c,seed);
     return out_matrix;
 }
 
-mat_GF2 rand_create_data(int const K, int const m)
+mat_GF2 rand_create_data(int const K, int const m, int const seed)
 {
-    return rand_create_matrix(K,m);
+    return rand_create_matrix(K,m,seed);
 }
 
 mat_GF2 append_identity(mat_GF2& X)

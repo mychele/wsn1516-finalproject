@@ -111,6 +111,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 
 int main(int argc, char const *argv[])
 {
+	srand(time(NULL));
 	// read input
 	if (argc != 4) {
 		std::cout << "usage: sender hostname dstname filename";
@@ -188,7 +189,8 @@ int main(int argc, char const *argv[])
 		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	// TODO change this to N, and decide N
-	    	unsigned int packets_needed = K_TB_SIZE+10;
+	    	int const N=K_TB_SIZE+10;
+	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	do {
 		    	// encode and send them
@@ -208,7 +210,7 @@ int main(int argc, char const *argv[])
 		    		// retransmit!
 		    		// TODO consider if it is better to send K_TB_SIZE or less packets
 		    		std::cout << "No ACK, retx\n";
-		    		packets_needed = K_TB_SIZE;
+		    		packets_needed = K_TB_SIZE+10;
 		    		// increase timeout
 		    		timeout_span += std::chrono::nanoseconds(100000);
 		    	}

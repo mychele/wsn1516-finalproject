@@ -16,7 +16,7 @@
 #ifndef NCPACKET
 #define NCPACKET
 
-#define K_TB_SIZE 32
+#define K_TB_SIZE 64
 #define PAYLOAD_SIZE 1024 //in byte
 
 using std::vector;
@@ -85,7 +85,7 @@ public:
 	 */
 	int getPayloadSize();
 
-	/** 
+	/**
 	 * Get the size of the useful information to be transmitted
 	 * It may be different from sizeof(NCpacket) because of
 	 * the host using memory in chunks of 4 byte
