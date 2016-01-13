@@ -11,6 +11,8 @@
 #include <NTL/mat_GF2.h>
 #include <bitset>
 #include <vector>
+#include <chrono>
+
 
 
 #ifndef UTILS_WSN
@@ -69,6 +71,11 @@ void packu32(unsigned char *buf, unsigned int i);
  * from char array to unsigned int
  */
 unsigned int unpacku32(unsigned char *buf);
+
+/**
+ * from std::chrono::nanoseconds to timeval
+ */
+timeval timeConversion(std::chrono::nanoseconds d);
 
 
 // randomly initialize with binary numbers and existing matrix

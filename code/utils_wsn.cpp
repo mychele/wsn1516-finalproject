@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <bitset>
+#include <chrono>
 
 
 // this function will be extended in order to consider also EV
@@ -141,6 +142,20 @@ unsigned int unpacku32(unsigned char *buf)
     return ntohl(i);
 }
 
+struct timeval timeConversion(std::chrono::nanoseconds d)
+{
+	struct timeval tv;
+	std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
+	if( usec <= std::chrono::microseconds(0) )
+	tv.tv_sec = tv.tv_usec = 0;
+	else
+	{
+	tv.tv_sec = usec.count()/1000000;
+	tv.tv_usec = usec.count()%1000000;
+	}
+	return tv;
+}
+
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed)
 {
     srand(seed);
@@ -155,6 +170,7 @@ void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed
     }
 
 }
+
 mat_GF2 rand_create_matrix(int const r, int const c, int const seed)
 {
     mat_GF2 out_matrix;
