@@ -27,18 +27,6 @@
 
 typedef std::pair<int, unsigned char> ackPayload;
 
-void timeConversion(std::chrono::nanoseconds &d, timeval &tv )
-{
-  std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
-  if( usec <= std::chrono::microseconds(0) )
-    tv.tv_sec = tv.tv_usec = 0;
-  else
-  {
-    tv.tv_sec = usec.count()/1000000;
-    tv.tv_usec = usec.count()%1000000;
-  }
-}
-
 int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send,
 	struct addrinfo *p_iter, unsigned char block_ID) {
 	int sentPackets = 0;
@@ -75,8 +63,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	// create receive buffer
 	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
 	// select things
-	struct timeval tv;
-    timeConversion(timeout, tv);
+	struct timeval tv = timeConversion(timeout);
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(sockfd_send, &readfds);
@@ -150,20 +137,20 @@ int main(int argc, char const *argv[])
 		return 2;
 	}
 
-	// get the port from which packets will be sent
-
-
 	std::ifstream input_file (argv[3], std::ifstream::binary);
 	std::cout << "K " << K_TB_SIZE << "\n";
+	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
 	int sentPackets = 0;
 	// timeout value
-	// TODO adapt this value to the time needed to receive an ACK in case of success
-	auto timeout_span = std::chrono::nanoseconds(200);
+	// TODO adapt this value to let the sender respond to a deadlock (if no ACK received)
+	auto timeout_span = std::chrono::seconds(10);
+	unsigned int file_length;
+	start_file_tx = std::chrono::system_clock::now();
 	if(input_file) {
 		// read file size
 		// get length of file:
 	    input_file.seekg (0, input_file.end);
-	    unsigned int file_length = input_file.tellg(); // 4 byte
+	    file_length = input_file.tellg(); // 4 byte
 	    // set cursor at the beginning
 	    input_file.seekg (0, input_file.beg);
 	    												//include file size
@@ -189,7 +176,7 @@ int main(int argc, char const *argv[])
 		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	// TODO change this to N, and decide N
-	    	int const N=K_TB_SIZE+10;
+	    	int const N=K_TB_SIZE+5;
 	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	do {
@@ -210,9 +197,7 @@ int main(int argc, char const *argv[])
 		    		// retransmit!
 		    		// TODO consider if it is better to send K_TB_SIZE or less packets
 		    		std::cout << "No ACK, retx\n";
-		    		packets_needed = K_TB_SIZE+10;
-		    		// increase timeout
-		    		timeout_span += std::chrono::nanoseconds(100000);
+		    		packets_needed = N;
 		    	}
 		    	else {
 		    		// retransmit the number of packets specified
@@ -222,7 +207,6 @@ int main(int argc, char const *argv[])
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 		    		// change timeout_span dynamically only when an ACK is received after a tx
 		    		auto tx_end = std::chrono::high_resolution_clock::now();
-		    		timeout_span = std::chrono::duration_cast<std::chrono::nanoseconds>(tx_end-tx_begin);
 		    	}
 		    	th_ACK.join(); // clean up
 	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
@@ -234,8 +218,14 @@ int main(int argc, char const *argv[])
 		std::cout << "error in reading input file";
 		return 2;
 	}
+	end_file_tx = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_file_tx = end_file_tx-start_file_tx;
 
-	std::cout << sentPackets <<"\n";
+	std::cout << "packet_sent = " << sentPackets <<"\n";
+	std::cout << "packet_in_file = " << file_length/PAYLOAD_SIZE + 1 << "\n"; // it does not consider the zero padding of the last block
+	std::cout << "elapsed time = " << elapsed_seconds_file_tx.count() << "s\n";
+	std::cout << "goodput = " << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
+	std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
 
 	freeaddrinfo(res_dst);
 	// close socket
