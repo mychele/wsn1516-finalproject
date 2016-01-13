@@ -26,7 +26,7 @@
 #include <limits.h>
 
 #define RECEIVER_PORT "30000"
-#define BACKLOG 10
+#define BACKLOG 100
 
 /**
  * Struct used as return type of receivePacket
@@ -60,7 +60,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
                       ack_port.c_str(),
                       &ack_hints, &ack_res)) != 0)
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        fprintf(stderr, "ACK getaddrinfo: %s\n", gai_strerror(status));
         return 2;
     }
 
@@ -103,49 +103,25 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
     return byte_sent;
 }
 
-/**
- * Receive a packet from sockfd and return the NCpacket, the sender address
- * and the number of bytes received
- */
-struct ReceiveReturn receivePacket (int sockfd, void* receive_buffer)
-{
-    int rec_bytes = 0;
-    NCpacket packet;
-    // create the structure that will be filled with the sender address
-    struct sockaddr_storage sender_addr;
-    socklen_t sizeof_sender_addr = sizeof sender_addr;
-    if((rec_bytes = recvfrom(sockfd, receive_buffer, packet.getInfoSizeNCpacket(), 0,
-                             (struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1)
-    {
-        // there was an error
-        perror("receiver: recvfrom");
-    }
-    else
-    {
-        packet = deserialize((char *)receive_buffer);
-    }
-    ReceiveReturn toBeReturned = ReceiveReturn();
-    toBeReturned.sender_addr = sender_addr;
-    toBeReturned.packet = packet;
-    toBeReturned.rec_bytes = rec_bytes;
-    return toBeReturned;
-}
 
 int main(int argc, char *argv[])
 {
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(0, 1); // define the range
-    double PER = 0.1; // packet error rate
+    std::uniform_real_distribution<double> distr(0.0, 1.0); // define the range
+    double PER; // packet error rate
+    PER = (argc < 3) ? 0 : atof(argv[2]); // assign argv[2] or 0 if argv[2] not provided
 
     struct addrinfo hints, *res, *p_iter;
     struct sockaddr_storage sender_addr;
+	socklen_t sizeof_sender_addr = sizeof sender_addr;
+
     int status;
     int FILE_LENGTH;
-    if (argc != 2)
+    if (argc < 2)
     {
-        std::cout << "usage: receiver filename\n";
+        std::cout << "usage: receiver filename (PER) with PER optional, default to 0\n";
         return 2;
     }
 
@@ -153,10 +129,11 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    // TODO localhost or this computer!!
+    // hints.ai_flags = AI_PASSIVE;
+    // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
     if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;
     }
     // at this point res is a linked structure filled with useful data
@@ -193,9 +170,10 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    printf("Ready to communicate\n");
+    std::cout << "Ready to communicate, PER = " << PER << " K_TB_SIZE = " << K_TB_SIZE << "\n";
 
     std::vector<NCpacket> nc_vector;
+    nc_vector.clear();
     int rec_bytes;
 
     // open file for the first time
@@ -204,22 +182,30 @@ int main(int argc, char *argv[])
     {
         output_file.close();
     }
+
+    // stats
     int total_received_packets = 0;
-    // timeout value
-    std::chrono::seconds timeout_span(100); // to ultimately avoid deadlock
-    std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;;
-    unsigned int file_length; // file length in byte
-    bool first_rx = 1;
-    unsigned char rx_block_ID = 0;
-    // create receive buffer
-    void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+    std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;
     double total_time_decoding_block=0;
     int num_blocks=0;
+
+    // useful variables
+    unsigned int file_length; // file length in byte
+    bool first_block_rx = 1;
+    bool first_packet_rx = 1;
+    unsigned char rx_block_ID = 0;
     bool file_complete=false;
-    start_file_rx = std::chrono::system_clock::now();  //not sure of the position...
+    // create receive buffer
+    void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
+    // variables for socket select call
+    // timeout value
+    std::chrono::milliseconds timeout_span(100); // to ultimately avoid deadlock
+	struct timeval tv = timeConversion(timeout_span);
+
     while(!file_complete)
     {
         int received_packets = 0;
+        int packets_needed;
         packetNeededAndVector decoded_info;  //pair: first is int containing needed packets; second is vector<char*> with decoded data
         decoded_info.first = K_TB_SIZE;
         std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
@@ -227,52 +213,61 @@ int main(int argc, char *argv[])
         while (decoded_info.first > 0)
         {
             // ------------------receive or timeout-------------------
-            // create promise
-            std::packaged_task<ReceiveReturn(int, void*)> waitForPacket(&receivePacket);
-            // get future
-            std::future<ReceiveReturn> received_future = waitForPacket.get_future();
-            // schedule on another thread
-            std::thread th_packet(std::move(waitForPacket), sockfd, receive_buffer);
-            // check for timeout
-            if(received_future.wait_for(timeout_span) == std::future_status::timeout)
-            {
-                // a timeout has occurred, no packet was received for too long
-                // and this group of packets was not decoded yet
-                // the sender will timeout and retransmit automatically before this timer expires
-                std::cout << "No packets for too long, stop execution\n";
-                th_packet.detach();
-                close(sockfd);
-                return 2;
-            }
-            else
-            {
-                int received_byte;
-                ReceiveReturn received = received_future.get();
-                if (received.rec_bytes == -1)
-                {
-                    // do not store the packet in vector, since there was an error
-                }
-                else
-                {
-                    if(received.packet.getBlockID() == rx_block_ID)
+            NCpacket packet;
+        	int rec_bytes = 0;
+        	fd_set readfds;
+		    FD_ZERO(&readfds);
+		    FD_SET(sockfd, &readfds);
+			int select_ret = select(32, &readfds, NULL, NULL, &tv);
+			if (select_ret > 0) {
+				if(first_packet_rx == 1) {
+					first_packet_rx = 0;
+					// TODO consider if here is fine, just after the reception of firt packet
+					start_file_rx = std::chrono::system_clock::now();  //not sure of the position...
+				}
+				// TODO update the timeout in a more intelligent way 
+		        // socket has pending data to read
+		        if((rec_bytes = recvfrom(sockfd, receive_buffer, packet.getInfoSizeNCpacket(), 0,
+		                             (struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1)
+			    {
+			        // there was an error
+			        perror("receiver: recvfrom");
+			    }
+			    else
+			    {
+			        packet = deserialize((char *)receive_buffer);
+			        if(packet.getBlockID() == rx_block_ID)
                     {
                         // this simulates an error and drops the packets
                         double prob = distr(eng);
-                        if (prob > PER)
+                        if (prob >= PER) // TODO consider if this should be moved at if(select > 0) and TEST IT!!
                         {
-                            nc_vector.push_back(received.packet);
-                            sender_addr = received.sender_addr;
+                            nc_vector.push_back(packet);
+                            received_packets++;
                         }
-                        received_packets++;
                     }
                     else
                     {
                         // send ack to tell that this blockID was received correctly
-                        sendack(0, received.packet.getBlockID(), sender_addr);
+                        sendack(0, packet.getBlockID(), sender_addr);
                     }
-                }
-            }
-            th_packet.detach(); // clean up
+			    }
+		    }
+		    else if (select_ret == 0) { // timeout!
+            	if(!first_packet_rx) {
+	                // a timeout has occurred, no packet was received for too long
+	                // and this group of packets was not decoded yet
+	                // tell the sender how many packets are needed 
+	                std::cout << "No packets for too long, send ACK\n";
+	                if(nc_vector.size() < K_TB_SIZE) {
+	                	sendack(K_TB_SIZE - nc_vector.size(), rx_block_ID, sender_addr);
+	                } else { // packets_needed was surely initialized
+						sendack(packets_needed, rx_block_ID, sender_addr);
+	                }
+            	}
+		    } else {
+				// do nothing, there was an error
+		    }
 
             //------------------------------
             if(nc_vector.size() >= K_TB_SIZE)
@@ -291,7 +286,7 @@ int main(int argc, char *argv[])
                     std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
                     if (output_file.is_open())
                     {
-                        if(first_rx)
+                        if(first_block_rx)
                         {
                             char* first_payload = *v_iter;
                             // store file length
@@ -302,7 +297,8 @@ int main(int argc, char *argv[])
                                               PAYLOAD_SIZE - sizeof(file_length));
                             file_length -= PAYLOAD_SIZE - sizeof(file_length);
                             v_iter++;
-                            first_rx = 0;
+                            first_block_rx = 0;
+
                         }
                         for(; v_iter != decoded_info.second.end(); ++v_iter)
                         {
@@ -331,6 +327,7 @@ int main(int argc, char *argv[])
 
                     decoded_info.second.clear();
                 }
+                packets_needed = decoded_info.first;
                 sendack(decoded_info.first, rx_block_ID, sender_addr);
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
