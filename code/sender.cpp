@@ -63,7 +63,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	// create receive buffer
 	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
 	// select things
-	struct timeval tv = timeConversion(timeout);
+	struct timeval tv = timeConversion(std::chrono::duration_cast<std::chrono::microseconds>(timeout));
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(sockfd_send, &readfds);

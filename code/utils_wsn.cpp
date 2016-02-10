@@ -142,7 +142,7 @@ unsigned int unpacku32(unsigned char *buf)
     return ntohl(i);
 }
 
-struct timeval timeConversion(std::chrono::nanoseconds d)
+struct timeval timeConversion(std::chrono::microseconds d)
 {
 	struct timeval tv;
 	std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);

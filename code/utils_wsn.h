@@ -75,7 +75,7 @@ unsigned int unpacku32(unsigned char *buf);
 /**
  * from std::chrono::nanoseconds to timeval
  */
-timeval timeConversion(std::chrono::nanoseconds d);
+timeval timeConversion(std::chrono::microseconds d);
 
 
 // randomly initialize with binary numbers and existing matrix

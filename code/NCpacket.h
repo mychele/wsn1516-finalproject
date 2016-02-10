@@ -16,7 +16,7 @@
 #ifndef NCPACKET
 #define NCPACKET
 
-#define K_TB_SIZE 64
+#define K_TB_SIZE 16
 #define PAYLOAD_SIZE 1024 //in byte
 
 using std::vector;

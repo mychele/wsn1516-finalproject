@@ -24,6 +24,7 @@
 #include <random>
 #include "decoding_function.h"
 #include <limits.h>
+#include "timecounter.h"
 
 #define RECEIVER_PORT "30000"
 #define BACKLOG 100
@@ -188,6 +189,8 @@ int main(int argc, char *argv[])
     std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;
     double total_time_decoding_block=0;
     int num_blocks=0;
+    std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
+
 
     // useful variables
     unsigned int file_length; // file length in byte
@@ -199,17 +202,32 @@ int main(int argc, char *argv[])
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
     // variables for socket select call
     // timeout value
-    std::chrono::milliseconds timeout_span(100); // to ultimately avoid deadlock
-	struct timeval tv = timeConversion(timeout_span);
+    std::chrono::microseconds timeout_span(std::chrono::milliseconds(100)); // to ultimately avoid deadlock
+    TimeCounter packetGapCounter(timeout_span);
+    TimeCounter rrtCounter(timeout_span);
+	struct timeval tv = timeConversion(packetGapCounter.get());
+
+	// minimum value for a time_point, used for comparisons
+	std::chrono::time_point<std::chrono::system_clock> min_val = std::chrono::system_clock::time_point::min();
+	// time_point for the reception of the last packet
+	std::chrono::time_point<std::chrono::system_clock> last_packet_rx = min_val;
+	// time_point for the tx of the ack, used to estimate RTT and timeout in case 
+	std::chrono::time_point<std::chrono::system_clock> ack_packet_tx = min_val;
+	std::chrono::microseconds packet_elapsed_time;
+	std::chrono::microseconds rtt_elapsed_time;
+	// flag which is set to 1 when the receiver has sent an ack and waits for a reply
+	bool ack_flag = 0;
+	int total_received_dropped_packets = 0;
+	int received_packets = 0;
+	int dropped_packets = 0;
 
     while(!file_complete)
     {
-        int received_packets = 0;
+    	received_packets = 0;
         int packets_needed;
         packetNeededAndVector decoded_info;  //pair: first is int containing needed packets; second is vector<char*> with decoded data
         decoded_info.first = K_TB_SIZE;
-        std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
-        start_block_decoding = std::chrono::system_clock::now();  //not sure of the position...
+        
         while (decoded_info.first > 0)
         {
             // ------------------receive or timeout-------------------
@@ -218,14 +236,19 @@ int main(int argc, char *argv[])
         	fd_set readfds;
 		    FD_ZERO(&readfds);
 		    FD_SET(sockfd, &readfds);
+		    if (!ack_flag) { // consider as timeout the estimated gap between packets
+		    	tv = timeConversion(packetGapCounter.get()); // use a new estimate to initialize the timeout
+			} else { // consider as timeout the RTT estimate
+				tv = timeConversion(rrtCounter.get());
+			}
 			int select_ret = select(32, &readfds, NULL, NULL, &tv);
 			if (select_ret > 0) {
 				if(first_packet_rx == 1) {
 					first_packet_rx = 0;
 					// TODO consider if here is fine, just after the reception of firt packet
-					start_file_rx = std::chrono::system_clock::now();  //not sure of the position...
+					start_file_rx = std::chrono::system_clock::now();
+					start_block_decoding = std::chrono::system_clock::now();  
 				}
-				// TODO update the timeout in a more intelligent way 
 		        // socket has pending data to read
 		        if((rec_bytes = recvfrom(sockfd, receive_buffer, packet.getInfoSizeNCpacket(), 0,
 		                             (struct sockaddr*)&sender_addr, &sizeof_sender_addr))==-1)
@@ -235,22 +258,40 @@ int main(int argc, char *argv[])
 			    }
 			    else
 			    {
-			        packet = deserialize((char *)receive_buffer);
-			        if(packet.getBlockID() == rx_block_ID)
-                    {
-                        // this simulates an error and drops the packets
-                        double prob = distr(eng);
-                        if (prob >= PER) // TODO consider if this should be moved at if(select > 0) and TEST IT!!
-                        {
+			    	// this simulates an error and drops the packets
+			    	total_received_dropped_packets++;
+	                double prob = distr(eng);
+			    	if (prob >= PER)
+				    {
+				    	// compute elapsed time 
+				    	if(!ack_flag) { // update the elapsed between the reception of two packets
+					    	if (last_packet_rx > min_val) {
+					    		packet_elapsed_time = std::chrono::system_clock::now() - last_packet_rx;
+					    		packetGapCounter.update(packet_elapsed_time);
+					    	}
+					    	last_packet_rx = std::chrono::system_clock::now();
+				    	} else {
+				    		if (ack_packet_tx > min_val) {
+					    		rtt_elapsed_time = std::chrono::system_clock::now() - ack_packet_tx;
+					    		rrtCounter.update(rtt_elapsed_time);
+					    	}
+					    	// TODO check when ack_flag should be set to 0 again
+					    	ack_flag = 0;
+				    	}
+				        packet = deserialize((char *)receive_buffer);
+				        if(packet.getBlockID() == rx_block_ID)
+	                    {
                             nc_vector.push_back(packet);
                             received_packets++;
-                        }
-                    }
-                    else
-                    {
-                        // send ack to tell that this blockID was received correctly
-                        sendack(0, packet.getBlockID(), sender_addr);
-                    }
+	                    }
+	                    else
+	                    {
+	                        // send ack to tell that this blockID was received correctly
+	                        sendack(0, packet.getBlockID(), sender_addr);
+	                    }
+                	} else {
+                		dropped_packets++;
+                	}
 			    }
 		    }
 		    else if (select_ret == 0) { // timeout!
@@ -258,12 +299,16 @@ int main(int argc, char *argv[])
 	                // a timeout has occurred, no packet was received for too long
 	                // and this group of packets was not decoded yet
 	                // tell the sender how many packets are needed 
+            		last_packet_rx = min_val; // do not update packetGapCounter with invalid values
 	                std::cout << "No packets for too long, send ACK\n";
+	                ack_packet_tx = std::chrono::system_clock::now();
 	                if(nc_vector.size() < K_TB_SIZE) {
 	                	sendack(K_TB_SIZE - nc_vector.size(), rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
 						sendack(packets_needed, rx_block_ID, sender_addr);
 	                }
+	                ack_flag = 1;
+	                std::cout << "Current RTT estimate " << rrtCounter.get().count()/1000 << " ms \n";
             	}
 		    } else {
 				// do nothing, there was an error
@@ -272,13 +317,16 @@ int main(int argc, char *argv[])
             //------------------------------
             if(nc_vector.size() >= K_TB_SIZE)
             {
+            	ack_flag = 0; // TODO check when to set ack_flag back to 1
+            	last_packet_rx = min_val; // when decoding, do not update the time between packet reception
+            	ack_packet_tx = min_val;
                 // try to decode and update packets needed
                 std::chrono::time_point<std::chrono::system_clock>
                 start_packet_decoder = std::chrono::system_clock::now();
                 decoded_info = packet_decoder(nc_vector);
                 end_packet_decoder = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
-                std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";
+                //std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";
                 // if decode is successful, write
                 if (decoded_info.first==0)
                 {
@@ -341,6 +389,7 @@ int main(int argc, char *argv[])
         nc_vector.clear();
         total_received_packets += received_packets;
         std::cout << total_received_packets << "\n";
+        start_block_decoding = std::chrono::system_clock::now();  
     }
     end_file_rx_and_decoding= std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
@@ -348,7 +397,10 @@ int main(int argc, char *argv[])
     std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
     free(receive_buffer);
     close(sockfd);
-    std:cout <<"File successfully received and decoded!! :-)\n";
+    std::cout << "File successfully received and decoded!! :-)\n";
+    std::cout << "Total received packets " << total_received_dropped_packets << " dropped packets " << dropped_packets 
+    					<< " received packets " << total_received_packets << "\n";
+
     return 0;
 
 }
