@@ -220,6 +220,7 @@ int main(int argc, char *argv[])
 	int total_received_dropped_packets = 0;
 	int received_packets = 0;
 	int dropped_packets = 0;
+	int const N=K_TB_SIZE+5;
 
     while(!file_complete)
     {
@@ -275,7 +276,6 @@ int main(int argc, char *argv[])
 					    		rtt_elapsed_time = std::chrono::system_clock::now() - ack_packet_tx;
 					    		rrtCounter.update(rtt_elapsed_time);
 					    	}
-					    	// TODO check when ack_flag should be set to 0 again
 					    	ack_flag = 0;
 				    	}
 				        packet = deserialize((char *)receive_buffer);
@@ -300,11 +300,15 @@ int main(int argc, char *argv[])
 	                // and this group of packets was not decoded yet
 	                // tell the sender how many packets are needed 
             		last_packet_rx = min_val; // do not update packetGapCounter with invalid values
-	                std::cout << "No packets for too long, send ACK\n";
+	                std::cout << "No packets for too long, send ACK for block " << (int)rx_block_ID << "\n";
 	                ack_packet_tx = std::chrono::system_clock::now();
-	                if(nc_vector.size() < K_TB_SIZE) {
-	                	sendack(K_TB_SIZE - nc_vector.size(), rx_block_ID, sender_addr);
+	                if(nc_vector.size() < N) {
+	                	std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";
+	                	// I was expecting N packets, but I got just nc_vector.size()
+	                	// A rough estimate of PER is 
+	                	sendack(N - nc_vector.size(), rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
+	                	std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";
 						sendack(packets_needed, rx_block_ID, sender_addr);
 	                }
 	                ack_flag = 1;
@@ -315,9 +319,8 @@ int main(int argc, char *argv[])
 		    }
 
             //------------------------------
-            if(nc_vector.size() >= K_TB_SIZE)
+            if(nc_vector.size() >= N)
             {
-            	ack_flag = 0; // TODO check when to set ack_flag back to 1
             	last_packet_rx = min_val; // when decoding, do not update the time between packet reception
             	ack_packet_tx = min_val;
                 // try to decode and update packets needed
@@ -376,13 +379,15 @@ int main(int argc, char *argv[])
                     decoded_info.second.clear();
                 }
                 packets_needed = decoded_info.first;
+                std::cout << "Sendack after decoding, packets_needed " << decoded_info.first << "\n";
                 sendack(decoded_info.first, rx_block_ID, sender_addr);
+                ack_flag = 1;
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
         }
         end_block_decoding = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
-        std::cout << "Decoded blockID (-1) " << (int)rx_block_ID << "\n";
+        std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";
         std::cout << "Elapsed time to decode blockID " << (int)rx_block_ID << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";
         total_time_decoding_block += elapsed_seconds_block_decoding.count();
         num_blocks++;

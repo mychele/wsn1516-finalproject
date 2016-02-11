@@ -91,6 +91,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
     }
     free(ack_buffer);
 	ackPayload toBeReturned(packets_needed, ack_block_ID);
+	std::cout << "Ack received, send " << packets_needed << " packets for block " << (int)ack_block_ID << "\n";
 	return toBeReturned;
 }
 
@@ -161,6 +162,7 @@ int main(int argc, char const *argv[])
 
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) {
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
+	    	std::cout << "Increased block_ID " << (int) block_ID << "\n";
 	    	unsigned char ack_block_ID;
 	    	// create input buffer for K packets
 			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
@@ -195,7 +197,6 @@ int main(int argc, char const *argv[])
 		    	if(packets_needed_future.wait_for(timeout_span) == std::future_status::timeout) {
 		    		// a timeout has occurred, no ACK was received
 		    		// retransmit!
-		    		// TODO consider if it is better to send K_TB_SIZE or less packets
 		    		std::cout << "No ACK, retx\n";
 		    		packets_needed = N;
 		    	}
