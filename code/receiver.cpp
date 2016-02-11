@@ -107,6 +107,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 
 int main(int argc, char *argv[])
 {
+	bool verb = 0;
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
@@ -205,6 +206,7 @@ int main(int argc, char *argv[])
     std::chrono::microseconds timeout_span(std::chrono::milliseconds(100)); // to ultimately avoid deadlock
     TimeCounter packetGapCounter(timeout_span);
     TimeCounter rrtCounter(timeout_span);
+    TimeCounter newBlockRttCounter(timeout_span);
 	struct timeval tv = timeConversion(packetGapCounter.get());
 
 	// minimum value for a time_point, used for comparisons
@@ -217,6 +219,7 @@ int main(int argc, char *argv[])
 	std::chrono::microseconds rtt_elapsed_time;
 	// flag which is set to 1 when the receiver has sent an ack and waits for a reply
 	bool ack_flag = 0;
+	bool new_block_flag = 0;
 	int total_received_dropped_packets = 0;
 	int received_packets = 0;
 	int dropped_packets = 0;
@@ -237,10 +240,12 @@ int main(int argc, char *argv[])
         	fd_set readfds;
 		    FD_ZERO(&readfds);
 		    FD_SET(sockfd, &readfds);
-		    if (!ack_flag) { // consider as timeout the estimated gap between packets
+		    if (!ack_flag && !new_block_flag) { // consider as timeout the estimated gap between packets
 		    	tv = timeConversion(packetGapCounter.get()); // use a new estimate to initialize the timeout
-			} else { // consider as timeout the RTT estimate
+			} else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
 				tv = timeConversion(rrtCounter.get());
+			} else if (new_block_flag) {
+				tv = timeConversion(10*rrtCounter.get());
 			}
 			int select_ret = select(32, &readfds, NULL, NULL, &tv);
 			if (select_ret > 0) {
@@ -283,6 +288,7 @@ int main(int argc, char *argv[])
 	                    {
                             nc_vector.push_back(packet);
                             received_packets++;
+                            new_block_flag = 0;
 	                    }
 	                    else
 	                    {
@@ -300,19 +306,19 @@ int main(int argc, char *argv[])
 	                // and this group of packets was not decoded yet
 	                // tell the sender how many packets are needed 
             		last_packet_rx = min_val; // do not update packetGapCounter with invalid values
-	                std::cout << "No packets for too long, send ACK for block " << (int)rx_block_ID << "\n";
+            		if (verb) {std::cout << "No packets for too long, send ACK for block " << (int)rx_block_ID << "\n";}
 	                ack_packet_tx = std::chrono::system_clock::now();
 	                if(nc_vector.size() < N) {
-	                	std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";
+	                	if (verb) {std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";}
 	                	// I was expecting N packets, but I got just nc_vector.size()
 	                	// A rough estimate of PER is 
 	                	sendack(N - nc_vector.size(), rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
-	                	std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";
+	                	if (verb) {std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";}
 						sendack(packets_needed, rx_block_ID, sender_addr);
 	                }
 	                ack_flag = 1;
-	                std::cout << "Current RTT estimate " << rrtCounter.get().count()/1000 << " ms \n";
+	                if (verb) {std::cout << "Current RTT estimate " << (double)rrtCounter.get().count()/1000 << " ms \n";}
             	}
 		    } else {
 				// do nothing, there was an error
@@ -379,21 +385,21 @@ int main(int argc, char *argv[])
                     decoded_info.second.clear();
                 }
                 packets_needed = decoded_info.first;
-                std::cout << "Sendack after decoding, packets_needed " << decoded_info.first << "\n";
                 sendack(decoded_info.first, rx_block_ID, sender_addr);
                 ack_flag = 1;
+                new_block_flag = 1;
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
         }
         end_block_decoding = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
-        std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";
-        std::cout << "Elapsed time to decode blockID " << (int)rx_block_ID << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";
+        if (verb) {std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";}
+        if (verb) {std::cout << "Elapsed time to decode blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";}
         total_time_decoding_block += elapsed_seconds_block_decoding.count();
         num_blocks++;
         nc_vector.clear();
         total_received_packets += received_packets;
-        std::cout << total_received_packets << "\n";
+        if (verb) {std::cout << total_received_packets << "\n";} else {std::cout << total_received_packets << "\r";}
         start_block_decoding = std::chrono::system_clock::now();  
     }
     end_file_rx_and_decoding= std::chrono::system_clock::now();
@@ -403,8 +409,11 @@ int main(int argc, char *argv[])
     free(receive_buffer);
     close(sockfd);
     std::cout << "File successfully received and decoded!! :-)\n";
+    std::cout << "Stats on packets" << "\n";
     std::cout << "Total received packets " << total_received_dropped_packets << " dropped packets " << dropped_packets 
     					<< " received packets " << total_received_packets << "\n";
+    std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
+    std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
 
     return 0;
 

@@ -91,7 +91,6 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
     }
     free(ack_buffer);
 	ackPayload toBeReturned(packets_needed, ack_block_ID);
-	std::cout << "Ack received, send " << packets_needed << " packets for block " << (int)ack_block_ID << "\n";
 	return toBeReturned;
 }
 
@@ -162,8 +161,7 @@ int main(int argc, char const *argv[])
 
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) {
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
-	    	std::cout << "Increased block_ID " << (int) block_ID << "\n";
-	    	unsigned char ack_block_ID;
+	    	unsigned char ack_block_ID = block_ID+1;
 	    	// create input buffer for K packets
 			char *input_buffer; //PAYLOAD_SIZE and K_TB_SIZE are defined in NCpacket.h
 			input_buffer = (char *)calloc(PAYLOAD_SIZE*K_TB_SIZE, sizeof(char));
@@ -181,9 +179,12 @@ int main(int argc, char const *argv[])
 	    	int const N=K_TB_SIZE+5;
 	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
+	    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
 	    	do {
-		    	// encode and send them
-		    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
+	    		if (ack_block_ID == block_ID) { // if the ACK just received is for this block
+		    		// encode and send them
+		    		sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
+		    	}
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();
 		    	// wait for ACK, it will specify how many packets are needed
