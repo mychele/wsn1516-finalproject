@@ -81,10 +81,11 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
             {
                 if (M_id[i][j]==1)
                 {
-                    for (int s=0; s<M_id.NumCols(); s++)
-                    {
-                        M_id[i][s]=M_id[i][s]+M_id[j][s];
-                    }
+                    M_id[i] += M_id[j];
+                    // for (int s=0; s<M_id.NumCols(); s++)
+                    // {
+                    //     M_id[i][s]=M_id[i][s]+M_id[j][s];
+                    // }
 
                 }
 
