@@ -27,7 +27,7 @@
 #include "timecounter.h"
 
 #define RECEIVER_PORT "30000"
-#define BACKLOG 100
+#define BACKLOG 10
 
 /**
  * Struct used as return type of receivePacket
@@ -224,6 +224,7 @@ int main(int argc, char *argv[])
 	int received_packets = 0;
 	int dropped_packets = 0;
 	int const N=K_TB_SIZE+5;
+    double PER_estimate = 0;
 
     while(!file_complete)
     {
@@ -309,10 +310,17 @@ int main(int argc, char *argv[])
             		if (verb) {std::cout << "No packets for too long, send ACK for block " << (int)rx_block_ID << "\n";}
 	                ack_packet_tx = std::chrono::system_clock::now();
 	                if(nc_vector.size() < N) {
+                        packets_needed = N - nc_vector.size();
 	                	if (verb) {std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";}
 	                	// I was expecting N packets, but I got just nc_vector.size()
 	                	// A rough estimate of PER is 
-	                	sendack(N - nc_vector.size(), rx_block_ID, sender_addr);
+                        // PER_estimate = (double)(N - nc_vector.size())/N;
+                        // packets_needed = std::ceil((N - nc_vector.size())/(1-PER_estimate));
+                        // if (verb) {
+                        //     std::cout << "PER_estimate = " << PER_estimate << "\n";
+                        //     std::cout << "packets_needed after PER estimation = " << packets_needed << "\n";
+                        // }
+	                	sendack(packets_needed, rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
 	                	if (verb) {std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";}
 						sendack(packets_needed, rx_block_ID, sender_addr);
@@ -330,8 +338,7 @@ int main(int argc, char *argv[])
             	last_packet_rx = min_val; // when decoding, do not update the time between packet reception
             	ack_packet_tx = min_val;
                 // try to decode and update packets needed
-                std::chrono::time_point<std::chrono::system_clock>
-                start_packet_decoder = std::chrono::system_clock::now();
+                std::chrono::time_point<std::chrono::system_clock> start_packet_decoder = std::chrono::system_clock::now();
                 decoded_info = packet_decoder(nc_vector);
                 end_packet_decoder = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
@@ -384,8 +391,9 @@ int main(int argc, char *argv[])
 
                     decoded_info.second.clear();
                 }
-                packets_needed = decoded_info.first;
-                sendack(decoded_info.first, rx_block_ID, sender_addr);
+                packets_needed = std::ceil((decoded_info.first)/(1-PER_estimate));
+                if(verb) {std::cout << "packets_needed = " << packets_needed << "\n";}
+                sendack(packets_needed, rx_block_ID, sender_addr);
                 ack_flag = 1;
                 new_block_flag = 1;
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;

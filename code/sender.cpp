@@ -141,10 +141,15 @@ int main(int argc, char const *argv[])
 	std::cout << "K " << K_TB_SIZE << "\n";
 	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
 	int sentPackets = 0;
+	double PER_estimate = 0;
+	double alpha = 0.9;
 	// timeout value
 	// TODO adapt this value to let the sender respond to a deadlock (if no ACK received)
 	auto timeout_span = std::chrono::seconds(10);
 	unsigned int file_length;
+	// TODO change this to N, and decide N
+	int const N=K_TB_SIZE+5;
+
 	start_file_tx = std::chrono::system_clock::now();
 	if(input_file) {
 		// read file size
@@ -175,15 +180,13 @@ int main(int argc, char const *argv[])
 		    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
 		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
-	    	// TODO change this to N, and decide N
-	    	int const N=K_TB_SIZE+5;
 	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
-	    	sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
+	    	sentPackets += sendPackets(input_vector, std::ceil(packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
 	    	do {
 	    		if (ack_block_ID == block_ID) { // if the ACK just received is for this block
 		    		// encode and send them
-		    		sentPackets += sendPackets(input_vector, packets_needed, sockfd_send, p_iter, block_ID);
+		    		sentPackets += sendPackets(input_vector, std::ceil(packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
 		    	}
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();
@@ -206,6 +209,11 @@ int main(int argc, char const *argv[])
 		    		ackPayload ack = packets_needed_future.get();
 		    		packets_needed = ack.first;
 		    		ack_block_ID = ack.second;
+		    		if(packet_needed_per_block_ID[(int)ack_block_ID] == N) { // only for the first TX of each block
+		    			// I sent N*(1-PER) packets, packets_needed were not received -> estimate PER
+		    			PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((N/(1 - PER_estimate))) + alpha*PER_estimate;
+		    			//std::cout << "PER_estimate " << PER_estimate << "\n";
+		    		}
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 		    		// change timeout_span dynamically only when an ACK is received after a tx
 		    		auto tx_end = std::chrono::high_resolution_clock::now();
