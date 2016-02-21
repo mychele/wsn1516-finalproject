@@ -133,9 +133,9 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    // hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE;
     // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
-    if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
+    if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {
         fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;
@@ -244,11 +244,11 @@ int main(int argc, char *argv[])
 		    FD_ZERO(&readfds);
 		    FD_SET(sockfd, &readfds);
 		    if (!ack_flag && !new_block_flag) { // consider as timeout the estimated gap between packets
-		    	tv = timeConversion(packetGapCounter.get()); // use a new estimate to initialize the timeout
+		    	tv = timeConversion(10*packetGapCounter.get()); // use a new estimate to initialize the timeout
 			} else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
-				tv = timeConversion(rrtCounter.get());
-			} else if (new_block_flag) {
 				tv = timeConversion(10*rrtCounter.get());
+			} else if (new_block_flag) {
+				tv = timeConversion(1000*rrtCounter.get());
 			}
 			int select_ret = select(32, &readfds, NULL, NULL, &tv);
 			if (select_ret > 0) {
@@ -349,9 +349,11 @@ int main(int argc, char *argv[])
                             // store file length
                             FILE_LENGTH = unpacku32((unsigned char*) first_payload);
                             file_length=FILE_LENGTH;
+                            if(verb) {std::cout << "file_length " << file_length << "\n";}
                             // write the useful payload
                             output_file.write(first_payload + sizeof(file_length),
                                               PAYLOAD_SIZE - sizeof(file_length));
+                            if(verb) {std::cout << "file_length size " << sizeof(file_length) << "\n";}
                             file_length -= PAYLOAD_SIZE - sizeof(file_length);
                             v_iter++;
                             first_block_rx = 0;
