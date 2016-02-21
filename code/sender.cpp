@@ -151,6 +151,7 @@ int main(int argc, char const *argv[])
 	// timeout value
 	// TODO adapt this value to let the sender respond to a deadlock (if no ACK received)
 	auto timeout_span = std::chrono::seconds(10);
+	bool PER_mode = 0;
 	unsigned int file_length;
 	int const N=K_TB_SIZE+5;
 
@@ -188,12 +189,12 @@ int main(int argc, char const *argv[])
 	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] <<"\n";}
-	    	packet_sent_per_block_ID[block_ID] = sendPackets(input_vector, std::ceil((double)packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
+	    	packet_sent_per_block_ID[block_ID] = sendPackets(input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID);
 	    	do {
 	    		if (ack_block_ID == block_ID) { // if the ACK just received is for this block
 		    		// encode and send them
 		    		if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] << "\n";}
-		    		packet_sent_per_block_ID[block_ID] += sendPackets(input_vector, std::ceil((double)packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
+		    		packet_sent_per_block_ID[block_ID] += sendPackets(input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID);
 		    	}
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();

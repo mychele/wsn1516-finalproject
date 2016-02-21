@@ -17,7 +17,7 @@
 #define NCPACKET
 
 #define K_TB_SIZE 16
-#define PAYLOAD_SIZE 8192 //in byte
+#define PAYLOAD_SIZE 1024 //in byte
 
 using std::vector;
 using std::bitset;
