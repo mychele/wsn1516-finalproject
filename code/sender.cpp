@@ -98,6 +98,8 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 
 int main(int argc, char const *argv[])
 {
+	bool verb = 0;
+
 	srand(time(NULL));
 	// read input
 	if (argc != 4) {
@@ -141,13 +143,15 @@ int main(int argc, char const *argv[])
 	std::cout << "K " << K_TB_SIZE << "\n";
 	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
 	int sentPackets = 0;
+	double PPoverhead = 0;
 	double PER_estimate = 0;
+	bool no_history = 1;
 	double alpha = 0.9;
+	int PPO_history = 100;
 	// timeout value
 	// TODO adapt this value to let the sender respond to a deadlock (if no ACK received)
 	auto timeout_span = std::chrono::seconds(10);
 	unsigned int file_length;
-	// TODO change this to N, and decide N
 	int const N=K_TB_SIZE+5;
 
 	start_file_tx = std::chrono::system_clock::now();
@@ -163,6 +167,7 @@ int main(int argc, char const *argv[])
 	    								// in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
 	    int packet_needed_per_block_ID[UCHAR_MAX];
+	    int packet_sent_per_block_ID[UCHAR_MAX];
 
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) {
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
@@ -182,11 +187,13 @@ int main(int argc, char const *argv[])
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	unsigned int packets_needed = N;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
-	    	sentPackets += sendPackets(input_vector, std::ceil(packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
+	    	if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] <<"\n";}
+	    	packet_sent_per_block_ID[block_ID] = sendPackets(input_vector, std::ceil((double)packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
 	    	do {
 	    		if (ack_block_ID == block_ID) { // if the ACK just received is for this block
 		    		// encode and send them
-		    		sentPackets += sendPackets(input_vector, std::ceil(packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
+		    		if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] << "\n";}
+		    		packet_sent_per_block_ID[block_ID] += sendPackets(input_vector, std::ceil((double)packets_needed/(1-PER_estimate)), sockfd_send, p_iter, block_ID);
 		    	}
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();
@@ -209,12 +216,14 @@ int main(int argc, char const *argv[])
 		    		ackPayload ack = packets_needed_future.get();
 		    		packets_needed = ack.first;
 		    		ack_block_ID = ack.second;
-		    		if(packet_needed_per_block_ID[(int)ack_block_ID] == N) { // only for the first TX of each block
+	    			if(verb){std::cout << "receive ack for " << (int)ack_block_ID << " with packets_needed " << packets_needed << "\n";}
+	    			if(packet_needed_per_block_ID[(int)ack_block_ID] >= N) { // only for the first TX of each block
 		    			// I sent N*(1-PER) packets, packets_needed were not received -> estimate PER
-		    			PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((N/(1 - PER_estimate))) + alpha*PER_estimate;
-		    			//std::cout << "PER_estimate " << PER_estimate << "\n";
+		    			PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((packet_needed_per_block_ID[(int)ack_block_ID]/(1 - PER_estimate))) + alpha*PER_estimate;
+		    			if(verb) {std::cout << "PER_estimate " << PER_estimate << "\n";}
 		    		}
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
+
 		    		// change timeout_span dynamically only when an ACK is received after a tx
 		    		auto tx_end = std::chrono::high_resolution_clock::now();
 		    	}
@@ -222,6 +231,38 @@ int main(int argc, char const *argv[])
 	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
 	    	// free buffer
 	    	free(input_buffer);
+	    	sentPackets += packet_sent_per_block_ID[block_ID];
+
+	    	// the following code only measures the PER, it does not have influence on the number of packet sent
+	    	if(no_history) { // not enough packets yet to create an history
+	    		int total_sent = 0;
+	    		for(int block_index = 0; block_index <= (int)block_ID; ++block_index) {
+	    			total_sent += packet_sent_per_block_ID[block_index];
+	    		}
+	    		PPoverhead = (double)total_sent/(block_ID+1);
+	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
+	    		no_history = (block_ID >= PPO_history) ? 0 : 1;
+	    	} else {
+	    		int total_sent = 0;
+	    		if(block_ID - PPO_history >= 0) {
+	    			for(int block_index = block_ID; block_index > (int)block_ID - PPO_history; --block_index) {
+	    				//std::cout << "block_index " << block_index << "\n";
+	    				total_sent += packet_sent_per_block_ID[block_index];
+	    			}
+	    		} else {
+	    			for(int block_index = block_ID; block_index >= 0; --block_index) {
+	    				//std::cout << "block_index " << block_index << "\n";
+	    				total_sent += packet_sent_per_block_ID[block_index];
+	    			}
+	    			for(int block_index = UCHAR_MAX - 1; block_index > UCHAR_MAX + (block_ID - PPO_history); --block_index) {
+	    				//std::cout << "block_index " << block_index << "\n";
+	    				total_sent += packet_sent_per_block_ID[block_index];
+	    			}
+	    		}
+	    		PPoverhead = (double)total_sent/(PPO_history);
+	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
+	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
+	    	}
 	    }
 	}
 	else {

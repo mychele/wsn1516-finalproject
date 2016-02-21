@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
     // variables for socket select call
     // timeout value
-    std::chrono::microseconds timeout_span(std::chrono::milliseconds(100)); // to ultimately avoid deadlock
+    std::chrono::microseconds timeout_span(std::chrono::milliseconds(50)); // initial value
     TimeCounter packetGapCounter(timeout_span);
     TimeCounter rrtCounter(timeout_span);
     TimeCounter newBlockRttCounter(timeout_span);
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 				    	// compute elapsed time 
 				    	if(!ack_flag) { // update the elapsed between the reception of two packets
 					    	if (last_packet_rx > min_val) {
-					    		packet_elapsed_time = std::chrono::system_clock::now() - last_packet_rx;
+					    		packet_elapsed_time = std::chrono::microseconds(std::chrono::system_clock::now() - last_packet_rx);
 					    		packetGapCounter.update(packet_elapsed_time);
 					    	}
 					    	last_packet_rx = std::chrono::system_clock::now();
@@ -312,14 +312,6 @@ int main(int argc, char *argv[])
 	                if(nc_vector.size() < N) {
                         packets_needed = N - nc_vector.size();
 	                	if (verb) {std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";}
-	                	// I was expecting N packets, but I got just nc_vector.size()
-	                	// A rough estimate of PER is 
-                        // PER_estimate = (double)(N - nc_vector.size())/N;
-                        // packets_needed = std::ceil((N - nc_vector.size())/(1-PER_estimate));
-                        // if (verb) {
-                        //     std::cout << "PER_estimate = " << PER_estimate << "\n";
-                        //     std::cout << "packets_needed after PER estimation = " << packets_needed << "\n";
-                        // }
 	                	sendack(packets_needed, rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
 	                	if (verb) {std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";}
