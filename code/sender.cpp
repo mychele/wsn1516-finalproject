@@ -107,9 +107,13 @@ int main(int argc, char const *argv[])
 		return 2;
 	}
 
+	// -------------------------------------------- Socket creation ----------------------------------------------
+
 	// useful structs and variables
 	struct addrinfo *p_iter, dst, *res_dst;
 	int status;
+	unsigned int file_length;
+	int const N=K_TB_SIZE+5;
 
 	// create socket in order to send data to receiver
 	memset(&dst, 0, sizeof dst);
@@ -138,25 +142,25 @@ int main(int argc, char const *argv[])
 		std::cout << "sender: unable to create send socket\n";
 		return 2;
 	}
-
-	std::ifstream input_file (argv[3], std::ifstream::binary);
-	std::cout << "K " << K_TB_SIZE << "\n";
-	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
+	
+	// -------------------------------------------- PER estimation variables ----------------------------------------
 	int sentPackets = 0;
 	double PPoverhead = 0;
 	double PER_estimate = 0;
 	bool no_history = 1;
-	double alpha = 0.9;
-	int PPO_history = 100;
-	// timeout value
-	// TODO adapt this value to let the sender respond to a deadlock (if no ACK received)
-	auto timeout_span = std::chrono::seconds(10);
+	int PPO_history = 150;
 	bool PER_mode = 0;
-	unsigned int file_length;
-	int const N=K_TB_SIZE+5;
+	double alpha = 0.1;
 
-	start_file_tx = std::chrono::system_clock::now();
+	// -------------------------------------------- Chrono and timeout values ---------------------------------------
+	auto timeout_span = std::chrono::seconds(10);
+	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
+	
+	// -------------------------------------------- Open input file ----------------------------------------------
+	std::ifstream input_file (argv[3], std::ifstream::binary);
 	if(input_file) {
+		std::cout << "K " << K_TB_SIZE << "\n";
+		start_file_tx = std::chrono::system_clock::now();
 		// read file size
 		// get length of file:
 	    input_file.seekg (0, input_file.end);
@@ -164,12 +168,13 @@ int main(int argc, char const *argv[])
 	    // set cursor at the beginning
 	    input_file.seekg (0, input_file.beg);
 	    												//include file size
-	    int num_encoding_op = ceil((float)(file_length+sizeof(file_length))/(K_TB_SIZE*PAYLOAD_SIZE));
+	    int num_encoding_op = std::ceil((float)(file_length+sizeof(file_length))/(K_TB_SIZE*PAYLOAD_SIZE));
 	    								// in TB of size K_TB_SIZE*PAYLOAD_SIZE byte
 	    								// the last one may need padding, provided by calling calloc
 	    int packet_needed_per_block_ID[UCHAR_MAX];
 	    int packet_sent_per_block_ID[UCHAR_MAX];
 
+	    // ---------------------------------------------- cycle until the whole file is sent -------------------------------
 	    for(int encoding_op_index = 0; encoding_op_index < num_encoding_op; encoding_op_index++) {
 	    	unsigned char block_ID = (char) (encoding_op_index%UCHAR_MAX);
 	    	unsigned char ack_block_ID = block_ID+1;
@@ -218,10 +223,13 @@ int main(int argc, char const *argv[])
 		    		packets_needed = ack.first;
 		    		ack_block_ID = ack.second;
 	    			if(verb){std::cout << "receive ack for " << (int)ack_block_ID << " with packets_needed " << packets_needed << "\n";}
-	    			if(packet_needed_per_block_ID[(int)ack_block_ID] >= N) { // only for the first TX of each block
-		    			// I sent N*(1-PER) packets, packets_needed were not received -> estimate PER
-		    			PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((packet_needed_per_block_ID[(int)ack_block_ID]/(1 - PER_estimate))) + alpha*PER_estimate;
-		    			if(verb) {std::cout << "PER_estimate " << PER_estimate << "\n";}
+	    			// if(packet_needed_per_block_ID[(int)ack_block_ID] >= N) { // only for the first TX of each block
+		    		// 	// I sent N*(1-PER) packets, packets_needed were not received -> estimate PER
+		    		// 	PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((packet_needed_per_block_ID[(int)ack_block_ID]/(1 - PER_estimate))) + alpha*PER_estimate;
+		    		// 	if(verb) {std::cout << "PER_estimate " << PER_estimate << "\n";}
+		    		// }
+		    		if(packets_needed == 0 && packet_needed_per_block_ID[(int)ack_block_ID] == 0) { // this block was already ACKED as completed!
+		    			packet_sent_per_block_ID[ack_block_ID]--;
 		    		}
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 
@@ -241,7 +249,9 @@ int main(int argc, char const *argv[])
 	    			total_sent += packet_sent_per_block_ID[block_index];
 	    		}
 	    		PPoverhead = (double)total_sent/(block_ID+1);
+	    		PER_estimate = alpha*(1 - (double)N/PPoverhead) + (1-alpha)*PER_estimate;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
+	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    		no_history = (block_ID >= PPO_history) ? 0 : 1;
 	    	} else {
 	    		int total_sent = 0;
@@ -261,6 +271,7 @@ int main(int argc, char const *argv[])
 	    			}
 	    		}
 	    		PPoverhead = (double)total_sent/(PPO_history);
+	    		PER_estimate = alpha*(1 - (double)N/PPoverhead) + (1-alpha)*PER_estimate;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
 	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    	}
@@ -278,6 +289,8 @@ int main(int argc, char const *argv[])
 	std::cout << "elapsed time = " << elapsed_seconds_file_tx.count() << "s\n";
 	std::cout << "goodput = " << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
 	std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
+
+	std::cout << "PER_estimate = " << PER_estimate << "\n";
 
 	freeaddrinfo(res_dst);
 	// close socket
