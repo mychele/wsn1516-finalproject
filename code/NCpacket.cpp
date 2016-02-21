@@ -107,6 +107,9 @@ std::ostream& operator<<(std::ostream &strm, const NCpacket &packet_ext)
 {
     const char *payload_pointer = packet_ext.getPayload();
     int header_pck = packet_ext.getHeader();
-    std::string payload_string(payload_pointer, PAYLOAD_SIZE);
-    return strm << "\nNCpacket:\nheader = " << header_pck;// << "\npayload:\n" << payload_string << "\n";
+    strm << "\nNCpacket:\nheader = " << header_pck; 
+    for(int i = 0; i < PAYLOAD_SIZE; i++) {
+        strm << (int)payload_pointer[i] << "\n";
+    }
+    return strm;
 }

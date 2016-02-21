@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <bitset>
 #include <chrono>
+#include <random>
 
 
 // this function will be extended in order to consider also EV
@@ -158,17 +159,15 @@ struct timeval timeConversion(std::chrono::microseconds d)
 
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed)
 {
-    srand(seed);
-    char n;
+    std::mt19937 eng(seed); // seed the generator
+    // TODO a good practice is to use a distribution, however they are not consistent in different OS
     for (int i=0; i<r; i++)
     {
         for (int j=0; j<c; j++)
         {
-            n=rand()%2;
-            X[i][j]=n;
+            X[i][j]=eng()%2;
         }
     }
-
 }
 
 mat_GF2 rand_create_matrix(int const r, int const c, int const seed)
