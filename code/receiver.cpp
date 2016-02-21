@@ -108,6 +108,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 int main(int argc, char *argv[])
 {
 	bool verb = 0;
+
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
@@ -115,6 +116,7 @@ int main(int argc, char *argv[])
     double PER; // packet error rate
     PER = (argc < 3) ? 0 : atof(argv[2]); // assign argv[2] or 0 if argv[2] not provided
 
+    // -------------------------------------------- Socket creation ---------------------------------------------
     struct addrinfo hints, *res, *p_iter;
     struct sockaddr_storage sender_addr;
 	socklen_t sizeof_sender_addr = sizeof sender_addr;
@@ -174,6 +176,8 @@ int main(int argc, char *argv[])
 
     std::cout << "Ready to communicate, PER = " << PER << " K_TB_SIZE = " << K_TB_SIZE << "\n";
 
+    //----------------------------------- vector of NCpacket + open file -------------------------------------
+
     std::vector<NCpacket> nc_vector;
     nc_vector.clear();
     int rec_bytes;
@@ -185,11 +189,11 @@ int main(int argc, char *argv[])
         output_file.close();
     }
 
-    // stats
+    // ----------------------------------------- stats variables --------------------------------------------
     int total_received_packets = 0;
     std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;
-    double total_time_decoding_block=0;
-    int num_blocks=0;
+    double total_time_decoding_block = 0;
+    int num_blocks = 0;
     std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
 
 
@@ -198,17 +202,23 @@ int main(int argc, char *argv[])
     bool first_block_rx = 1;
     bool first_packet_rx = 1;
     unsigned char rx_block_ID = 0;
-    bool file_complete=false;
+    bool file_complete = false;
+    bool ack_flag = 0; // flag which is set to 1 when the receiver has sent an ack and waits for a reply
+    bool new_block_flag = 0;
+    int total_received_dropped_packets = 0;
+    int received_packets = 0;
+    int dropped_packets = 0;
+    int packets_needed;
+
     // create receive buffer
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
-    // variables for socket select call
-    // timeout value
+    
+    // ----------------------------------- TimeCounter objects ------------------------------------------------
     std::chrono::microseconds timeout_span(std::chrono::milliseconds(50)); // initial value
     TimeCounter packetGapCounter(timeout_span);
     TimeCounter rrtCounter(timeout_span);
     TimeCounter newBlockRttCounter(timeout_span);
 	struct timeval tv = timeConversion(packetGapCounter.get());
-
 	// minimum value for a time_point, used for comparisons
 	std::chrono::time_point<std::chrono::system_clock> min_val = std::chrono::system_clock::time_point::min();
 	// time_point for the reception of the last packet
@@ -217,25 +227,17 @@ int main(int argc, char *argv[])
 	std::chrono::time_point<std::chrono::system_clock> ack_packet_tx = min_val;
 	std::chrono::microseconds packet_elapsed_time;
 	std::chrono::microseconds rtt_elapsed_time;
-	// flag which is set to 1 when the receiver has sent an ack and waits for a reply
-	bool ack_flag = 0;
-	bool new_block_flag = 0;
-	int total_received_dropped_packets = 0;
-	int received_packets = 0;
-	int dropped_packets = 0;
-	int const N=K_TB_SIZE+5;
-    double PER_estimate = 0;
 
     while(!file_complete)
     {
     	received_packets = 0;
-        int packets_needed;
+        packets_needed = 0;
         packetNeededAndVector decoded_info;  //pair: first is int containing needed packets; second is vector<char*> with decoded data
         decoded_info.first = K_TB_SIZE;
         
         while (decoded_info.first > 0)
         {
-            // ------------------receive or timeout-------------------
+            // ----------------------------- receive or timeout ---------------------------------------------
             NCpacket packet;
         	int rec_bytes = 0;
         	fd_set readfds;
@@ -252,7 +254,6 @@ int main(int argc, char *argv[])
 			if (select_ret > 0) {
 				if(first_packet_rx == 1) {
 					first_packet_rx = 0;
-					// TODO consider if here is fine, just after the reception of firt packet
 					start_file_rx = std::chrono::system_clock::now();
 					start_block_decoding = std::chrono::system_clock::now();  
 				}
@@ -309,9 +310,9 @@ int main(int argc, char *argv[])
             		last_packet_rx = min_val; // do not update packetGapCounter with invalid values
             		if (verb) {std::cout << "No packets for too long, send ACK for block " << (int)rx_block_ID << "\n";}
 	                ack_packet_tx = std::chrono::system_clock::now();
-	                if(nc_vector.size() < N) {
-                        packets_needed = N - nc_vector.size();
-	                	if (verb) {std::cout << "Not yet N packets, packets_needed " << N - nc_vector.size() << "\n";}
+	                if(nc_vector.size() < N_TB_SIZE) {
+                        packets_needed = N_TB_SIZE - nc_vector.size();
+	                	if (verb) {std::cout << "Not yet N_TB_SIZE packets, packets_needed " << N_TB_SIZE - nc_vector.size() << "\n";}
 	                	sendack(packets_needed, rx_block_ID, sender_addr);
 	                } else { // packets_needed was surely initialized
 	                	if (verb) {std::cout << "Decoding failed, packets_needed " << packets_needed << "\n";}
@@ -325,7 +326,7 @@ int main(int argc, char *argv[])
 		    }
 
             //------------------------------
-            if(nc_vector.size() >= N)
+            if(nc_vector.size() >= N_TB_SIZE)
             {
             	last_packet_rx = min_val; // when decoding, do not update the time between packet reception
             	ack_packet_tx = min_val;
@@ -383,7 +384,7 @@ int main(int argc, char *argv[])
 
                     decoded_info.second.clear();
                 }
-                packets_needed = std::ceil((decoded_info.first)/(1-PER_estimate));
+                packets_needed = decoded_info.first;
                 if(verb) {std::cout << "packets_needed = " << packets_needed << "\n";}
                 sendack(packets_needed, rx_block_ID, sender_addr);
                 ack_flag = 1;

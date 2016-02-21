@@ -113,7 +113,7 @@ int main(int argc, char const *argv[])
 	struct addrinfo *p_iter, dst, *res_dst;
 	int status;
 	unsigned int file_length;
-	int const N=K_TB_SIZE+5;
+	int const N_TB_SIZE=K_TB_SIZE+5;
 
 	// create socket in order to send data to receiver
 	memset(&dst, 0, sizeof dst);
@@ -191,7 +191,7 @@ int main(int argc, char const *argv[])
 		    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
 		    }
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
-	    	unsigned int packets_needed = N;
+	    	unsigned int packets_needed = N_TB_SIZE;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] <<"\n";}
 	    	packet_sent_per_block_ID[block_ID] = sendPackets(input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID);
@@ -215,7 +215,7 @@ int main(int argc, char const *argv[])
 		    		// a timeout has occurred, no ACK was received
 		    		// retransmit!
 		    		std::cout << "No ACK, retx\n";
-		    		packets_needed = N;
+		    		packets_needed = N_TB_SIZE;
 		    	}
 		    	else {
 		    		// retransmit the number of packets specified
@@ -223,13 +223,9 @@ int main(int argc, char const *argv[])
 		    		packets_needed = ack.first;
 		    		ack_block_ID = ack.second;
 	    			if(verb){std::cout << "receive ack for " << (int)ack_block_ID << " with packets_needed " << packets_needed << "\n";}
-	    			// if(packet_needed_per_block_ID[(int)ack_block_ID] >= N) { // only for the first TX of each block
-		    		// 	// I sent N*(1-PER) packets, packets_needed were not received -> estimate PER
-		    		// 	PER_estimate = (1-alpha)*(double)packets_needed/std::ceil((packet_needed_per_block_ID[(int)ack_block_ID]/(1 - PER_estimate))) + alpha*PER_estimate;
-		    		// 	if(verb) {std::cout << "PER_estimate " << PER_estimate << "\n";}
-		    		// }
+
 		    		if(packets_needed == 0 && packet_needed_per_block_ID[(int)ack_block_ID] == 0) { // this block was already ACKED as completed!
-		    			packet_sent_per_block_ID[ack_block_ID]--;
+		    			packet_sent_per_block_ID[ack_block_ID]--; // decrease the number of packet sent since of them were unnecessary
 		    		}
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 
@@ -249,7 +245,7 @@ int main(int argc, char const *argv[])
 	    			total_sent += packet_sent_per_block_ID[block_index];
 	    		}
 	    		PPoverhead = (double)total_sent/(block_ID+1);
-	    		PER_estimate = alpha*(1 - (double)N/PPoverhead) + (1-alpha)*PER_estimate;
+	    		PER_estimate = alpha*(1 - (double)N_TB_SIZE/PPoverhead) + (1-alpha)*PER_estimate;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
 	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    		no_history = (block_ID >= PPO_history) ? 0 : 1;
@@ -271,7 +267,7 @@ int main(int argc, char const *argv[])
 	    			}
 	    		}
 	    		PPoverhead = (double)total_sent/(PPO_history);
-	    		PER_estimate = alpha*(1 - (double)N/PPoverhead) + (1-alpha)*PER_estimate;
+	    		PER_estimate = alpha*(1 - (double)N_TB_SIZE/PPoverhead) + (1-alpha)*PER_estimate;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
 	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    	}

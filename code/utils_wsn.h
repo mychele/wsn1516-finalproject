@@ -22,6 +22,8 @@ using std::vector;
 using std::cout;
 using namespace NTL;
 
+static const int N_TB_SIZE = K_TB_SIZE + 5;
+
 /**
  * This functions returns a vector of NCpackets, it should be extended to account
  * for EV which are currently set to 0
