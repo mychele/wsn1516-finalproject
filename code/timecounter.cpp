@@ -5,7 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <stdlib.h>
-#include "TimeCounter.h"
+#include "timecounter.h"
 
 TimeCounter::TimeCounter(microseconds defaultValue) 
 {
