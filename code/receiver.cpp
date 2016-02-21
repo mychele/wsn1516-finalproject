@@ -274,13 +274,13 @@ int main(int argc, char *argv[])
 				    	// compute elapsed time 
 				    	if(!ack_flag) { // update the elapsed between the reception of two packets
 					    	if (last_packet_rx > min_val) {
-					    		packet_elapsed_time = std::chrono::microseconds(std::chrono::system_clock::now() - last_packet_rx);
+					    		packet_elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - last_packet_rx);
 					    		packetGapCounter.update(packet_elapsed_time);
 					    	}
 					    	last_packet_rx = std::chrono::system_clock::now();
 				    	} else {
 				    		if (ack_packet_tx > min_val) {
-					    		rtt_elapsed_time = std::chrono::system_clock::now() - ack_packet_tx;
+					    		rtt_elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - ack_packet_tx);
 					    		rrtCounter.update(rtt_elapsed_time);
 					    	}
 					    	ack_flag = 0;
