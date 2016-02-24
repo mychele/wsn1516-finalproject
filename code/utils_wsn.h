@@ -79,11 +79,23 @@ unsigned int unpacku32(unsigned char *buf);
  */
 timeval timeConversion(std::chrono::microseconds d);
 
+//PMD of Robust Soliton Distribution
+std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta);
+
+//CDF with initial 0
+std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delta);
+
+//generate a random degree according to a given RSD CDF
+int random_degree(std::vector<double>* RSD_CDF);
 
 // randomly initialize with binary numbers and existing matrix
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed);
+// randomly initialize with binary numbers and existing matrix according to row degrees given by RSD
+void rand_initialize_sparse_matrix(mat_GF2& X, int const r, int const c, int const seed,  double const C, double const delta);
 // create a randomly initialized matrix
 mat_GF2 rand_create_matrix(int const r, int const c, int const seed);
+// create a randomly initialized sparse matrix according to RSD
+mat_GF2  rand_create_sparse_matrix(int const r, int const c, int const seed, double const C, double const delta);
 // randomly creata data (not encoded) matrix
 //K=number of packets, m=bits per packet
 mat_GF2 rand_create_data(int const K, int const m, int const seed);

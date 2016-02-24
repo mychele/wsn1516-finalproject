@@ -14,7 +14,7 @@
 #include <bitset>
 #include <chrono>
 #include <random>
-
+#include<algorithm>
 
 // this function will be extended in order to consider also EV
 extern std::vector<NCpacket> memoryToVector(char *buffer, int size)
@@ -145,36 +145,67 @@ unsigned int unpacku32(unsigned char *buf)
 
 struct timeval timeConversion(std::chrono::microseconds d)
 {
-	struct timeval tv;
-	std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
-	if( usec <= std::chrono::microseconds(0) )
-	tv.tv_sec = tv.tv_usec = 0;
-	else
-	{
-	tv.tv_sec = usec.count()/1000000;
-	tv.tv_usec = usec.count()%1000000;
-	}
-	return tv;
+    struct timeval tv;
+    std::chrono::microseconds usec = std::chrono::duration_cast<std::chrono::microseconds>(d);
+    if( usec <= std::chrono::microseconds(0) )
+        tv.tv_sec = tv.tv_usec = 0;
+    else
+    {
+        tv.tv_sec = usec.count()/1000000;
+        tv.tv_usec = usec.count()%1000000;
+    }
+    return tv;
 }
 
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed)
 {
+    double p=0.4;
     std::mt19937 eng(seed); // seed the generator
     // TODO a good practice is to use a distribution, however they are not consistent in different OS
     for (int i=0; i<r; i++)
     {
         for (int j=0; j<c; j++)
         {
-            X[i][j]=eng()%2;
+            double num=(double) rand()/RAND_MAX;
+            if (num<=p)
+                X[i][j]=1;
+            else
+                X[i][j]=0;
         }
     }
 }
+
+void rand_initialize_sparse_matrix(mat_GF2& X, int const r, int const c, int const seed, double const C, double const delta)
+{
+    std::mt19937 eng(seed);
+    std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(c, C, delta);
+    int row_degree;
+    for (int i=0; i<r; i++)
+    {
+        row_degree=random_degree(&cumulative_distribution);
+        std::vector<bool>stub(c,0);
+        for (int j=0; j<row_degree; j++)
+            stub[j]=1;
+        std::random_shuffle(stub.begin(), stub.end());
+        for (int j=0; j<c; j++)
+            X[i][j]=stub[j];
+    }
+}
+
 
 mat_GF2 rand_create_matrix(int const r, int const c, int const seed)
 {
     mat_GF2 out_matrix;
     out_matrix.SetDims(r,c);
     rand_initialize_matrix(out_matrix,r,c,seed);
+    return out_matrix;
+}
+
+mat_GF2 rand_create_sparse_matrix(int const r, int const c, int const seed,  double const C, double const delta)
+{
+    mat_GF2 out_matrix;
+    out_matrix.SetDims(r,c);
+    rand_initialize_sparse_matrix(out_matrix,r,c,seed,C,delta);
     return out_matrix;
 }
 
@@ -386,4 +417,61 @@ vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
     return out;
 }
 
+std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
+{
+    double S;
+    S=(double)c*log(K/delta)*sqrt(K);
+    cout<<"S= "<<S<<"\n";
+    int K_S= (int)(K/S);
+    K_S=min(K_S,K);
+    cout<<"K_S= "<<K_S<<"\n";
+    double normalization=0;
+    std::vector<double> rho(K);
+    std::vector<double> tau(K,0.0);
+    std::vector<double> mu(K);
+    rho[0]=1/K;
+    for(int i=1; i<K; i++)
+    {
+        rho[i]=(double)1/((i*(i+1)));
+    }
+
+    for (int i=0; i<K_S-1; i++)
+    {
+        tau[i]=(double)S/((i+1)*K);
+    }
+    tau[K_S-1]=S/K*log(S/delta);
+
+    for (int i=0; i<K; i++)
+        normalization=(double)normalization+rho[i]+tau[i];
+    for (int i=0; i<K; i++)
+        mu[i]=(double)(rho[i]+tau[i])/normalization;
+    return mu;
+
+}
+
+std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delta)
+{
+    std::vector<double> pmd=Robust_Soliton_Distribution(K,c,delta);
+    std::vector<double> cdf(K,0.0);
+    for (int i=1; i<K; i++)
+    {
+        cdf[i]=cdf[i-1]+pmd[i-1];
+    }
+    return cdf;
+}
+
+int random_degree(std::vector<double>* RSD_CDF)
+{
+    int K=RSD_CDF->size();
+    double x=(double)rand()/RAND_MAX;
+    std::vector<double> position(K);
+    for (int i=0; i<K; i++)
+    {
+        if (x-RSD_CDF->at(i)>=0)
+            position[i]=x-RSD_CDF->at(i);
+        else
+            position[i]=2;
+    }
+    return std::min_element(position.begin(), position.end())-position.begin()+1;
+}
 
