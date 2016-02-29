@@ -421,10 +421,10 @@ std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
 {
     double S;
     S=(double)c*log(K/delta)*sqrt(K);
-    cout<<"S= "<<S<<"\n";
+    //cout<<"S= "<<S<<"\n";
     int K_S= (int)(K/S);
     K_S=min(K_S,K);
-    cout<<"K_S= "<<K_S<<"\n";
+    //cout<<"K_S= "<<K_S<<"\n";
     double normalization=0;
     std::vector<double> rho(K);
     std::vector<double> tau(K,0.0);
