@@ -18,6 +18,8 @@
 
 #define K_TB_SIZE 16
 #define PAYLOAD_SIZE 1024 //in byte
+#define RSD_CONST_C 0.03
+#define RSD_CONST_DELTA 0.5
 
 using std::vector;
 using std::bitset;
