@@ -16,8 +16,8 @@
 #ifndef NCPACKET
 #define NCPACKET
 
-#define K_TB_SIZE 16
-#define PAYLOAD_SIZE 1024 //in byte
+#define K_TB_SIZE 2500
+#define PAYLOAD_SIZE 512 //in byte
 #define RSD_CONST_C 0.03
 #define RSD_CONST_DELTA 0.5
 
@@ -117,7 +117,7 @@ public:
 	 * Get binary version of header
 	 * @return mat_GF2 with binary representation of header
 	 */
-    mat_GF2 getBinaryHeader();
+    std::bitset<K_TB_SIZE> getBinaryHeader();
 
 	/**
 	 * Overload << operator

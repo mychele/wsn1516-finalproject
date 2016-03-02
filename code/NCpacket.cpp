@@ -27,7 +27,7 @@ NCpacket::NCpacket(vector<char*> data, unsigned char block_ID)
 {
     // create encoding vector
     packet.header=rand();
-    mat_GF2 encoding_vector=rand_create_sparse_matrix(1,K_TB_SIZE,packet.header,RSD_CONST_C,RSD_CONST_DELTA);
+    bitset<K_TB_SIZE> encoding_vector=rand_create_sparse_matrix(1,K_TB_SIZE,packet.header,RSD_CONST_C,RSD_CONST_DELTA);
     char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
     // create payload
     XOR_encode(encoding_vector, data, tmp);
@@ -97,7 +97,7 @@ NCpacket::serialize()
     return returnPointer;
 }
 
-mat_GF2
+std::bitset<K_TB_SIZE>
 NCpacket::getBinaryHeader()
 {
     return rand_create_sparse_matrix(1,K_TB_SIZE,packet.header,RSD_CONST_C,RSD_CONST_DELTA);

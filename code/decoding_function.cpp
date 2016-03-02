@@ -33,36 +33,27 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
 {
 
     packetNeededAndVector out;
-    int N=packetVector.size();
-    int K=K_TB_SIZE;
-    mat_GF2 M;
-    M.SetDims(N,K);
+    std::vector<bitset<K_TB_SIZE>> M;
     int i=0;
     std::vector<char*> encoded_payloads;
     std::vector<char*> decoded_data;
     for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt)
     {
-        mat_GF2 tmp_ev;
-        tmp_ev=pckIt->getBinaryHeader();
+        M.push_back(pckIt->getBinaryHeader());
         //cout<<"seed :"<<pckIt->getHeader()<<"\n";
-        for (int s=0; s<K; s++)
-        {
-            M[i][s]=tmp_ev[0][s];
-        }
         encoded_payloads.push_back(pckIt->getPayload());
-        i++;
     }
 
-    std::vector<std::vector<unsigned short int> > u(N);
-    std::vector<std::vector<unsigned short int> > e(N);
+    std::vector<std::vector<unsigned short int> > u(N_TB_SIZE);
+    std::vector<std::vector<unsigned short int> > e(N_TB_SIZE);
     //vector of outcoming nodes for each left node, representing and unecoded data pck
-    std::vector<std::vector<unsigned short int> > v(K);
-    std::vector<std::vector<unsigned short int> > d(K);
-    for (int i=0; i<N; i++)
+    std::vector<std::vector<unsigned short int> > v(K_TB_SIZE);
+    std::vector<std::vector<unsigned short int> > d(K_TB_SIZE);
+    for (int i=0; i<N_TB_SIZE; i++)
     {
-        for (int j=0; j<K; j++)
+        for (int j=0; j<K_TB_SIZE; j++)
         {
-            if (M[i][j]==1)
+            if (M.at(i)[j]==1)
             {
                 u[i].push_back(j);
                 v[j].push_back(i);
@@ -71,7 +62,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
         }
 
     }
-    for (int j=0; j<K; j++)
+    for (int j=0; j<K_TB_SIZE; j++)
     {
         if (v[j].size()==0)
         {
@@ -88,7 +79,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     do
     {
         something_done=0;
-        for (int i=0; i<N; i++)
+        for (int i=0; i<N_TB_SIZE; i++)
         {
             //one edge: remove it and note how left node is decoded (vectors d and e)
             if (u[i].size()==1)
@@ -145,7 +136,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
 
     }
     while (something_done);
-    for (int i=0; i<K; i++)
+    for (int i=0; i<K_TB_SIZE; i++)
     {
         if (d[i].size()==0)
         {
@@ -154,26 +145,26 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
         }
 
     }
-    mat_GF2 M_inv;
-    M_inv.SetDims(K,N);
-    for (int i=0; i<K; i++)
-    {
-        for (int j=0; j<N; j++)
+    std::vector<bitset<N_TB_SIZE>> M_inv;
+    bitset<N_TB_SIZE> tmp;
+            for (int j=0; j<N_TB_SIZE; j++)
         {
-            M_inv[i][j]=0;
+            tmp[j]=0;
 
         }
+    for (int i=0; i<K_TB_SIZE; i++)
+    {
+        M_inv.push_back(tmp);
     }
     for (int i=0; i<d.size(); i++)
     {
         for (int j=0; j<d[i].size(); j++)
         {
-            M_inv[i][d[i].at(j)]=M_inv[i][d[i].at(j)]+1;
+            M_inv.at(i)[d[i].at(j)]=M_inv.at(i)[d[i].at(j)]^1;
 
         }
     }
-        decoded_data=XOR_decode(M_inv, encoded_payloads);
-
+    decoded_data=XOR_decode(M_inv, encoded_payloads);
     out.first=0;
     out.second=decoded_data;
     decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)

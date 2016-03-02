@@ -22,7 +22,7 @@ using std::vector;
 using std::cout;
 using namespace NTL;
 
-static const int N_TB_SIZE = K_TB_SIZE + 5;
+static const int N_TB_SIZE = 3000;
 
 /**
  * This functions returns a vector of NCpackets, it should be extended to account
@@ -85,44 +85,13 @@ std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta);
 //CDF with initial 0
 std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delta);
 
-//generate a random degree according to a given RSD CDF
-int random_degree(std::vector<double>* RSD_CDF);
+//generate a random degree according to a given RSD CDF, starting from a random_number in [0,1]
+int random_degree(std::vector<double>* RSD_CDF, double random_number);
 
-// randomly initialize with binary numbers and existing matrix
-void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed);
 // randomly initialize with binary numbers and existing matrix according to row degrees given by RSD
-void rand_initialize_sparse_matrix(mat_GF2& X, int const r, int const c, int const seed,  double const C, double const delta);
-// create a randomly initialized matrix
-mat_GF2 rand_create_matrix(int const r, int const c, int const seed);
+void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const r, int const c, int const seed,  double const C, double const delta);
 // create a randomly initialized sparse matrix according to RSD
-mat_GF2  rand_create_sparse_matrix(int const r, int const c, int const seed, double const C, double const delta);
-// randomly creata data (not encoded) matrix
-//K=number of packets, m=bits per packet
-mat_GF2 rand_create_data(int const K, int const m, int const seed);
-//append identity matrix to an existing matrix
-mat_GF2 append_identity(mat_GF2& X);
-// given a data matrix of and an encoding matrix, give endcoded data
-mat_GF2 encoded_data(mat_GF2& data_matrix,mat_GF2& encoding_matrix);
-// given a matrix of encoded data and the pseudo-inverse of the encoding matrix, give dedcoded data
-mat_GF2 decoded_data(mat_GF2& _encoded_data_matrix,mat_GF2& inverse_matrix);
-// write matrix (the output of the default write functon: cout<<matrix; is unreadable)
-// id_append=1 iff there's and identity matrix appended (divide matrix and identity using ||), otherwise 0
-void write_matrix(mat_GF2& X, bool id_appended);
-// truncates the matrix resulting from Gaussian-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
-mat_GF2 pseudo_inverse(mat_GF2& X, int const matrix_rank);
-
-//LITTLE ENDIAN order: successive elements of the matrix are stored into progressively significant bits starting from the least significant
-/*ex: matrix
-110000101001100
-101011100101111
-100...
-becomes characters
-01000011
-10011001
-00111010
-...
-i.e. first character is hex_43='C'*/
-void binary_to_char(char* output_data, mat_GF2& X);
+std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const r, int const c, int const seed,  double const C, double const delta);
 
 /**
 * encode the packets according to an encoding vector
@@ -130,9 +99,9 @@ void binary_to_char(char* output_data, mat_GF2& X);
 * @param input vector of data (i.e. vector of arrays of chars)
 * @param output payload (array of chars)
 */
-void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload);
+void XOR_encode(std::bitset<K_TB_SIZE>& X, vector<char*>& data, char* out_payload);
 
-vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data);
+vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data);
 
 unsigned int binary_to_unsigned_int(mat_GF2& X);
 
