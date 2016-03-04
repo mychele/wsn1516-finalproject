@@ -87,9 +87,9 @@ std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delt
 int random_degree(std::vector<double>* RSD_CDF, double random_number);
 
 // randomly initialize with binary numbers and existing matrix according to row degrees given by RSD
-void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const r, int const c, int const seed,  double const C, double const delta);
+void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const c, int const seed,  double const C, double const delta);
 // create a randomly initialized sparse matrix according to RSD
-std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const r, int const c, int const seed,  double const C, double const delta);
+std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const c, int const seed,  double const C, double const delta);
 
 /**
 * encode the packets according to an encoding vector

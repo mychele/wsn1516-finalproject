@@ -1,5 +1,3 @@
-//NTL library can be found here: http://www.shoup.net/ntl/
-
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
@@ -26,9 +24,12 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
 
     packetNeededAndVector out;
     std::vector<bitset<K_TB_SIZE>> M;
+    M.reserve(packetVector->size());
     int i=0;
     std::vector<char*> encoded_payloads;
+    encoded_payloads.reserve(packetVector->size());
     std::vector<char*> decoded_data;
+    decoded_data.reserve(packetVector->size());
     for(std::vector<NCpacket>::iterator pckIt = packetVector->begin(); pckIt != packetVector->end(); ++pckIt)
     {
         M.push_back(pckIt->getBinaryHeader());

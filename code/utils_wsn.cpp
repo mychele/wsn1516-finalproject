@@ -158,28 +158,28 @@ struct timeval timeConversion(std::chrono::microseconds d)
 }
 
 
-void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const r, int const c, int const seed, double const C, double const delta)
+void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const ev_size, int const seed, double const C, double const delta)
 {
     std::mt19937 eng(seed);
     std::uniform_real_distribution<double> distr(0.0, 1.0); // it will create uniform random number in range 0,1 
-    std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(c, C, delta);
+    std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(ev_size, C, delta);
     int row_degree;
         double rnd_num = distr(eng); // U(0,1) number
         row_degree = random_degree(&cumulative_distribution, rnd_num);
-        std::vector<bool>stub(c,0);
+        std::vector<bool>stub(ev_size,0);
         for (int j=0; j<row_degree; j++) {
             stub[j]=1;
         }
         std::shuffle(stub.begin(), stub.end(), eng); //to verify: does shuffle work with bitset?
-        for (int j=0; j<c; j++) {
+        for (int j=0; j<ev_size; j++) {
             X[j]=stub[j];
         }
 }
 
-std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const r, int const c, int const seed,  double const C, double const delta)
+std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const ev_size, int const seed,  double const C, double const delta)
 {
     std::bitset<K_TB_SIZE> out_matrix;
-    rand_initialize_sparse_matrix(out_matrix,r,c,seed,C,delta);
+    rand_initialize_sparse_matrix(out_matrix,ev_size,seed,C,delta);
     return out_matrix;
 }
 
