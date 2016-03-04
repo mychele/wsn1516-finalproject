@@ -25,6 +25,7 @@
 #include "decoding_function.h"
 #include <limits.h>
 #include "timecounter.h"
+#include "NCpacketHelper.h"
 
 #define RECEIVER_PORT "30000"
 #define BACKLOG 10
@@ -176,11 +177,13 @@ int main(int argc, char *argv[])
 
     std::cout << "Ready to communicate, PER = " << PER << " K_TB_SIZE = " << K_TB_SIZE << "\n";
 
-    //----------------------------------- vector of NCpacket + open file -------------------------------------
+    //----------------------------------- vector of NCpacket + NCpacketHelper object + open file -------------------------------------
 
     std::vector<NCpacket> nc_vector;
     nc_vector.clear();
     int rec_bytes;
+
+    NCpacketHelper *nchelper = new NCpacketHelper(K_TB_SIZE, RSD_CONST_C, RSD_CONST_DELTA);
 
     // open file for the first time
     std::ofstream output_file (argv[1], std::ios::out | std::ios::binary);
@@ -332,7 +335,7 @@ int main(int argc, char *argv[])
             	ack_packet_tx = min_val;
                 // try to decode and update packets needed
                 std::chrono::time_point<std::chrono::system_clock> start_packet_decoder = std::chrono::system_clock::now();
-                decoded_info = packet_decoder(&nc_vector);
+                decoded_info = packet_decoder(&nc_vector, nchelper);
                 end_packet_decoder = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
                 //std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";
@@ -418,6 +421,7 @@ int main(int argc, char *argv[])
     std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
     std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
 
+    delete nchelper;
     return 0;
 
 }

@@ -76,27 +76,13 @@ unsigned int unpacku32(unsigned char *buf);
  */
 timeval timeConversion(std::chrono::microseconds d);
 
-//PMD of Robust Soliton Distribution
-std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta);
-
-//CDF with initial 0
-std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delta);
-
-//generate a random degree according to a given RSD CDF, starting from a random_number in [0,1]
-int random_degree(std::vector<double>* RSD_CDF, double random_number);
-
-// randomly initialize with binary numbers and existing matrix according to row degrees given by RSD
-// void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const c, int const seed,  double const C, double const delta);
-// create a randomly initialized sparse matrix according to RSD
-std::vector<int> rand_create_sparse_matrix(int const c, int const seed,  double const C, double const delta);
-
 /**
 * encode the packets according to an encoding vector
 * @param binary encoding matrix (EV)
 * @param input vector of data (i.e. vector of arrays of chars)
 * @param output payload (array of chars)
 */
-void XOR_encode(std::vector<int> *encoding_vector, vector<char*>& data, char* out_payload);
+void XOR_encode(std::vector<int> *encoding_vector, vector<char*> *data, char* out_payload);
 
 vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data);
 

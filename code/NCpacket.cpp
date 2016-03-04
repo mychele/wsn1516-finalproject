@@ -23,18 +23,14 @@ NCpacket::NCpacket(unsigned int header, unsigned char block_ID, char* payload)
     memcpy(packet.payload, payload, PAYLOAD_SIZE);
 }
 
-NCpacket::NCpacket(vector<char*> data, unsigned char block_ID)
-{
-    // create encoding vector
-    packet.header=rand();
-    std::vector<int> encoding_vector = rand_create_sparse_matrix(K_TB_SIZE,packet.header,RSD_CONST_C,RSD_CONST_DELTA);
+NCpacket::NCpacket(int header, unsigned char block_ID, std::vector<int> encoding_vector, vector<char*> *data) {
+    packet.header = header;
     char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
     // create payload
     XOR_encode(&encoding_vector, data, tmp);
     // store payload and ev
     memcpy(packet.payload, tmp, PAYLOAD_SIZE);
     packet.block_ID = block_ID;
-     //write_matrix(encoding_vector,0);
 }
 
 void
@@ -97,19 +93,14 @@ NCpacket::serialize()
     return returnPointer;
 }
 
-std::vector<int>
-NCpacket::getBinaryHeader()
-{
-    return rand_create_sparse_matrix(K_TB_SIZE,packet.header,RSD_CONST_C,RSD_CONST_DELTA);
-}
 
 std::ostream& operator<<(std::ostream &strm, const NCpacket &packet_ext)
 {
     const char *payload_pointer = packet_ext.getPayload();
     int header_pck = packet_ext.getHeader();
     strm << "\nNCpacket:\nheader = " << header_pck; 
-    for(int i = 0; i < PAYLOAD_SIZE; i++) {
-        strm << (int)payload_pointer[i] << "\n";
-    }
+    // for(int i = 0; i < PAYLOAD_SIZE; i++) {
+    //     strm << (int)payload_pointer[i] << "\n";
+    // }
     return strm;
 }

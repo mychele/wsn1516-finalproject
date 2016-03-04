@@ -19,7 +19,7 @@
 #include <iterator>
 #include "decoding_function.h"
 
-packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
+packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpacketHelper *nchelper)
 {
     packetNeededAndVector out;
     std::vector< std::vector<int> > M;
@@ -31,7 +31,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
     decoded_data.reserve(packetVector->size());
     for(std::vector<NCpacket>::iterator pckIt = packetVector->begin(); pckIt != packetVector->end(); ++pckIt)
     {
-        M.push_back(pckIt->getBinaryHeader());
+        M.push_back(nchelper->getBinaryHeader(pckIt->getHeader()));
         //cout<<"seed :"<<pckIt->getHeader()<<"\n";
         encoded_payloads.push_back(pckIt->getPayload());
     }
@@ -137,17 +137,8 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
         }
 
     }
-    std::vector<bitset<N_TB_SIZE>> M_inv;
-    bitset<N_TB_SIZE> tmp;
-            for (int j=0; j<N_TB_SIZE; j++)
-        {
-            tmp[j]=0;
+    std::vector<bitset<N_TB_SIZE>> M_inv = std::vector<bitset<N_TB_SIZE>>(K_TB_SIZE);
 
-        }
-    for (int i=0; i<K_TB_SIZE; i++)
-    {
-        M_inv.push_back(tmp);
-    }
     for (int i=0; i<d.size(); i++)
     {
         for (int j=0; j<d[i].size(); j++)

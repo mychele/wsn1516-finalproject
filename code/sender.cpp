@@ -22,18 +22,19 @@
 #include <chrono>
 #include <future>
 #include <thread>
+#include "NCpacketHelper.h"
 
 #define RECEIVER_PORT "30000"
 
 typedef std::pair<int, unsigned char> ackPayload;
 
-int sendPackets(std::vector<char*> input_vector, int packetNumber, int sockfd_send,
-	struct addrinfo *p_iter, unsigned char block_ID) {
+int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_send,
+	struct addrinfo *p_iter, unsigned char block_ID, NCpacketHelper *nchelper) {
 	int sentPackets = 0;
 	// encoding of packetNumber packets
 	std::vector<NCpacket> packetVector;
 	for (int enc_pck = 0; enc_pck < packetNumber; enc_pck++) {
-        NCpacket nc = NCpacket(input_vector, block_ID);
+        NCpacket nc = nchelper->createNCpacket(input_vector, block_ID); // use NCpacketHelper to create the NCpackets
         packetVector.push_back(nc);
     }
 
@@ -152,9 +153,12 @@ int main(int argc, char const *argv[])
 	double alpha = 0.1;
 
 	// -------------------------------------------- Chrono and timeout values ---------------------------------------
-	auto timeout_span = std::chrono::seconds(100);
+	auto timeout_span = std::chrono::seconds(1000);
 	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
-	
+
+	// ---------------------------------------------- NCpacketHelper -----------------------------------------------
+    NCpacketHelper *nchelper = new NCpacketHelper(K_TB_SIZE, RSD_CONST_C, RSD_CONST_DELTA);
+
 	// -------------------------------------------- Open input file ----------------------------------------------
 	std::ifstream input_file (argv[3], std::ifstream::binary);
 	if(input_file) {
@@ -193,12 +197,12 @@ int main(int argc, char const *argv[])
 	    	unsigned int packets_needed = N_TB_SIZE;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
 	    	if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] <<"\n";}
-	    	packet_sent_per_block_ID[block_ID] = sendPackets(input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID);
+	    	packet_sent_per_block_ID[block_ID] = sendPackets(&input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID, nchelper);
 	    	do {
 	    		if (ack_block_ID == block_ID) { // if the ACK just received is for this block
 		    		// encode and send them
 		    		if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] << "\n";}
-		    		packet_sent_per_block_ID[block_ID] += sendPackets(input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID);
+		    		packet_sent_per_block_ID[block_ID] += sendPackets(&input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID, nchelper);
 		    	}
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();
@@ -290,5 +294,7 @@ int main(int argc, char const *argv[])
 	freeaddrinfo(res_dst);
 	// close socket
 	close(sockfd_send);
+	// delete objects
+	delete nchelper;
 	return 0;
 }

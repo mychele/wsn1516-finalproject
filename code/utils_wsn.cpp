@@ -158,35 +158,13 @@ struct timeval timeConversion(std::chrono::microseconds d)
 }
 
 
-std::vector<int> rand_create_sparse_matrix(int const ev_size, int const seed,  double const C, double const delta)
-{
-    std::bitset<K_TB_SIZE> out_matrix;
-    std::mt19937 eng(seed);
-    std::uniform_real_distribution<double> distr(0.0, 1.0); // it will create uniform random number in range 0,1 
-    std::uniform_int_distribution<int> distr0k(0, ev_size - 1);
-
-    std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(ev_size, C, delta);
-    int row_degree;
-    double rnd_num = distr(eng); // U(0,1) number
-    row_degree = random_degree(&cumulative_distribution, rnd_num);
-    
-    // create the vector of 1's positions
-    std::vector<int> onePositions = std::vector<int>(row_degree);
-    for(int i = 0; i < row_degree; i++) {
-        // get a random number in [0, K-1] and save it in the vector
-        onePositions[i] = distr0k(eng);
-    }
-
-    return onePositions;  
-}
-
-void XOR_encode(std::vector<int> *encoding_vector, vector<char*>& data, char* out_payload) 
+void XOR_encode(std::vector<int> *encoding_vector, vector<char*> *data, char* out_payload) 
 {
     vector<char> sum = vector<char>(PAYLOAD_SIZE, 0);
     //std::fill(sum.begin(), sum.end(), 0);
     for (int i=0; i < encoding_vector->size(); i++) // encoding vector contains the position of 1, i.e. which packets must be XORed
     {
-        char* pyl=data.at(encoding_vector->at(i));
+        char* pyl=data->at(encoding_vector->at(i));
         for (int j=0; j<PAYLOAD_SIZE; j++)
         {
             sum[j]=sum[j]^pyl[j];
@@ -223,61 +201,5 @@ vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_dat
         memcpy(out.at(i), &sum[0], PAYLOAD_SIZE);
     }
     return out;
-}
-
-std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
-{
-    double S;
-    S=c*std::log((double)K/delta)*std::sqrt((double)K);
-    //cout<<"S= "<<S<<"\n";
-    int K_S= (int)(K/S);
-    K_S=std::min(K_S,K);
-    //cout<<"K_S= "<<K_S<<"\n";
-    double normalization=0;
-    std::vector<double> rho(K);
-    std::vector<double> tau(K,0.0);
-    std::vector<double> mu(K);
-    rho[0]=1/K;
-    for(int i=1; i<K; i++)
-    {
-        rho[i]=(double)1/((i*(i+1)));
-    }
-
-    for (int i=0; i<K_S-1; i++)
-    {
-        tau[i]=(double)S/((i+1)*K);
-    }
-    tau[K_S-1]=S/K*std::log(S/delta);
-
-    for (int i=0; i<K; i++)
-        normalization=(double)normalization+rho[i]+tau[i];
-    for (int i=0; i<K; i++)
-        mu[i]=(double)(rho[i]+tau[i])/normalization;
-    return mu;
-
-}
-
-std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delta)
-{
-    std::vector<double> pmd=Robust_Soliton_Distribution(K,c,delta);
-    std::vector<double> cdf(K,0.0);
-    for (int i=1; i<K; i++)
-    {
-        cdf[i]=cdf[i-1]+pmd[i-1];
-    }
-    return cdf;
-}
-
-// random number must be uniform in [0,1]
-int random_degree(std::vector<double>* RSD_CDF, double random_number)
-{
-    // CDF inversion: pick a random_number U in [0,1], then the value
-    // of the random variable with CDF F will be the first n such that F(n) > U
-    for(int i = 0; i < RSD_CDF->size(); ++i) {
-        if(RSD_CDF->at(i) > random_number) {
-            return i; 
-        }
-    }
-    return RSD_CDF->size();
 }
 
