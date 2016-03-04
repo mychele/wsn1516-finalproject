@@ -98,7 +98,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 
 int main(int argc, char const *argv[])
 {
-	bool verb = 0;
+	bool verb = 1;
 
 	srand(time(NULL));
 	// read input
@@ -113,7 +113,6 @@ int main(int argc, char const *argv[])
 	struct addrinfo *p_iter, dst, *res_dst;
 	int status;
 	unsigned int file_length;
-	int const N_TB_SIZE=K_TB_SIZE+5;
 
 	// create socket in order to send data to receiver
 	memset(&dst, 0, sizeof dst);
@@ -153,13 +152,13 @@ int main(int argc, char const *argv[])
 	double alpha = 0.1;
 
 	// -------------------------------------------- Chrono and timeout values ---------------------------------------
-	auto timeout_span = std::chrono::seconds(10);
+	auto timeout_span = std::chrono::seconds(100);
 	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
 	
 	// -------------------------------------------- Open input file ----------------------------------------------
 	std::ifstream input_file (argv[3], std::ifstream::binary);
 	if(input_file) {
-		std::cout << "K " << K_TB_SIZE << "\n";
+		std::cout << "K " << K_TB_SIZE << "N " << N_TB_SIZE << "\n";
 		start_file_tx = std::chrono::system_clock::now();
 		// read file size
 		// get length of file:

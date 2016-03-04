@@ -5,7 +5,6 @@
 #include "NCpacket.h"
 #include <vector>
 
-using namespace NTL;
 
 typedef std::pair<int, std::vector<char*>> packetNeededAndVector ;
 

@@ -14,7 +14,7 @@
 #include <bitset>
 #include <chrono>
 #include <random>
-#include<algorithm>
+#include <algorithm>
 
 // this function will be extended in order to consider also EV
 extern std::vector<NCpacket> memoryToVector(char *buffer, int size)
@@ -234,10 +234,10 @@ vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_dat
 std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
 {
     double S;
-    S=(double)c*log(K/delta)*sqrt(K);
+    S=(double)c*std::log(K/delta)*std::sqrt(K);
     //cout<<"S= "<<S<<"\n";
     int K_S= (int)(K/S);
-    K_S=min(K_S,K);
+    K_S=std::min(K_S,K);
     //cout<<"K_S= "<<K_S<<"\n";
     double normalization=0;
     std::vector<double> rho(K);
@@ -253,7 +253,7 @@ std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
     {
         tau[i]=(double)S/((i+1)*K);
     }
-    tau[K_S-1]=S/K*log(S/delta);
+    tau[K_S-1]=S/K*std::log(S/delta);
 
     for (int i=0; i<K; i++)
         normalization=(double)normalization+rho[i]+tau[i];

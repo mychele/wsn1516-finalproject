@@ -6,11 +6,6 @@
 #include <stdlib.h>
 #include <vector>
 #include <ostream>
-#include <NTL/ZZ.h>
-#include <NTL/vector.h>
-#include <NTL/GF2X.h>
-#include <NTL/GF2.h>
-#include <NTL/mat_GF2.h>
 #include <bitset>
 
 #ifndef NCPACKET
@@ -23,7 +18,6 @@
 
 using std::vector;
 using std::bitset;
-using namespace NTL;
 
 struct NCpacketContainer
 {

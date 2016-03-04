@@ -4,22 +4,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <NTL/ZZ.h>
-#include <NTL/vector.h>
-#include <NTL/GF2X.h>
-#include <NTL/GF2.h>
 #include <bitset>
 #include <stdio.h>
-#include <iostream>
 #include <istream>
 #include <fstream>
 #include <string.h>
 #include <stdlib.h>
 #include <string>
 #include <cstring>
-#include "unistd.h"
 #include "NCpacket.h"
 #include "utils_wsn.h"
 #include <cmath>
@@ -27,7 +20,6 @@
 #include <vector>
 #include <iterator>
 #include "decoding_function.h"
-using namespace NTL;
 
 packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
 {
@@ -170,4 +162,4 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)
     return out;
 
-    }
+}

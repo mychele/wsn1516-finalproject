@@ -107,7 +107,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 
 int main(int argc, char *argv[])
 {
-	bool verb = 0;
+	bool verb = 1;
 
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
@@ -133,9 +133,9 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
+    //hints.ai_flags = AI_PASSIVE;
     // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
-    if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
+    if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
     {
         fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;

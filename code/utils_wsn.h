@@ -8,11 +8,10 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <NTL/mat_GF2.h>
 #include <bitset>
 #include <vector>
 #include <chrono>
-
+#include <iostream>
 
 
 #ifndef UTILS_WSN
@@ -20,7 +19,6 @@
 
 using std::vector;
 using std::cout;
-using namespace NTL;
 
 static const int N_TB_SIZE = 3000;
 
@@ -102,8 +100,6 @@ std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const r, int const c, int c
 void XOR_encode(std::bitset<K_TB_SIZE>& X, vector<char*>& data, char* out_payload);
 
 vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data);
-
-unsigned int binary_to_unsigned_int(mat_GF2& X);
 
 #endif
 //UTILS_WSN
