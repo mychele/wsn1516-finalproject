@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
             	ack_packet_tx = min_val;
                 // try to decode and update packets needed
                 std::chrono::time_point<std::chrono::system_clock> start_packet_decoder = std::chrono::system_clock::now();
-                decoded_info = packet_decoder(nc_vector);
+                decoded_info = packet_decoder(&nc_vector);
                 end_packet_decoder = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
                 //std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";

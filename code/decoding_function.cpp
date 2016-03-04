@@ -21,7 +21,7 @@
 #include <iterator>
 #include "decoding_function.h"
 
-packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
+packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
 {
 
     packetNeededAndVector out;
@@ -29,7 +29,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     int i=0;
     std::vector<char*> encoded_payloads;
     std::vector<char*> decoded_data;
-    for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt)
+    for(std::vector<NCpacket>::iterator pckIt = packetVector->begin(); pckIt != packetVector->end(); ++pckIt)
     {
         M.push_back(pckIt->getBinaryHeader());
         //cout<<"seed :"<<pckIt->getHeader()<<"\n";
@@ -50,9 +50,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
                 u[i].push_back(j);
                 v[j].push_back(i);
             }
-
         }
-
     }
     for (int j=0; j<K_TB_SIZE; j++)
     {
@@ -61,8 +59,8 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
             out.first=1;
             return out;
         }
-
     }
+
     bool something_done=0;
     unsigned short int pivot;
     //edge: left node (pivot), right node

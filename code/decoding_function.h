@@ -8,6 +8,6 @@
 
 typedef std::pair<int, std::vector<char*>> packetNeededAndVector ;
 
-packetNeededAndVector  packet_decoder(std::vector<NCpacket> packetVector);
+packetNeededAndVector  packet_decoder(std::vector<NCpacket> *packetVector);
 
 #endif
