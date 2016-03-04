@@ -158,45 +158,39 @@ struct timeval timeConversion(std::chrono::microseconds d)
 }
 
 
-void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const ev_size, int const seed, double const C, double const delta)
+std::vector<int> rand_create_sparse_matrix(int const ev_size, int const seed,  double const C, double const delta)
 {
+    std::bitset<K_TB_SIZE> out_matrix;
     std::mt19937 eng(seed);
     std::uniform_real_distribution<double> distr(0.0, 1.0); // it will create uniform random number in range 0,1 
+    std::uniform_int_distribution<int> distr0k(0, ev_size - 1);
+
     std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(ev_size, C, delta);
     int row_degree;
     double rnd_num = distr(eng); // U(0,1) number
     row_degree = random_degree(&cumulative_distribution, rnd_num);
-    std::vector<bool>stub(ev_size,0);
-    for (int j=0; j<row_degree; j++) {
-        stub[j]=1;
+    
+    // create the vector of 1's positions
+    std::vector<int> onePositions = std::vector<int>(row_degree);
+    for(int i = 0; i < row_degree; i++) {
+        // get a random number in [0, K-1] and save it in the vector
+        onePositions[i] = distr0k(eng);
     }
-    std::shuffle(stub.begin(), stub.end(), eng); //to verify: does shuffle work with bitset?
-    for (int j=0; j<ev_size; j++) {
-        X[j]=stub[j];
-    }
+
+    return onePositions;  
 }
 
-std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const ev_size, int const seed,  double const C, double const delta)
+void XOR_encode(std::vector<int> *encoding_vector, vector<char*>& data, char* out_payload) 
 {
-    std::bitset<K_TB_SIZE> out_matrix;
-    rand_initialize_sparse_matrix(out_matrix,ev_size,seed,C,delta);
-    return out_matrix;
-}
-
-void XOR_encode(std::bitset<K_TB_SIZE>& X, vector<char*>& data, char* out_payload)
-{
-    vector<char> sum(PAYLOAD_SIZE);
-    std::fill(sum.begin(), sum.end(), 0);
-    for (int i=0; i<K_TB_SIZE; i++)
+    vector<char> sum = vector<char>(PAYLOAD_SIZE, 0);
+    //std::fill(sum.begin(), sum.end(), 0);
+    for (int i=0; i < encoding_vector->size(); i++) // encoding vector contains the position of 1, i.e. which packets must be XORed
     {
-        if (X[i]==1)
+        char* pyl=data.at(encoding_vector->at(i));
+        for (int j=0; j<PAYLOAD_SIZE; j++)
         {
-            char* pyl=data.at(i);
-            for (int j=0; j<PAYLOAD_SIZE; j++)
-            {
-                sum[j]=sum[j]^pyl[j];
+            sum[j]=sum[j]^pyl[j];
 
-            }
         }
     }
     memcpy(out_payload, &sum[0], PAYLOAD_SIZE);

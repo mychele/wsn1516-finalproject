@@ -12,7 +12,9 @@
 #define NCPACKET
 
 #define K_TB_SIZE 2500
-#define PAYLOAD_SIZE 512 //in byte
+#define N_TB_SIZE 3000
+
+#define PAYLOAD_SIZE 2048 //in byte
 #define RSD_CONST_C 0.03
 #define RSD_CONST_DELTA 0.5
 
@@ -23,7 +25,7 @@ struct NCpacketContainer
 {
 	unsigned int header; // 32 bit
 	unsigned char block_ID; // 8 bit
- 	char payload[PAYLOAD_SIZE]; //1024 byte payload
+ 	char payload[PAYLOAD_SIZE]; //PAYLOAD_SIZE byte payload
 };
 
 /**
@@ -109,9 +111,9 @@ public:
 
 	/**
 	 * Get binary version of header
-	 * @return mat_GF2 with binary representation of header
+	 * @return a vector of int with the positions of the 1 in the encoding vector
 	 */
-    std::bitset<K_TB_SIZE> getBinaryHeader();
+    std::vector<int> getBinaryHeader();
 
 	/**
 	 * Overload << operator

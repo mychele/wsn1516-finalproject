@@ -20,7 +20,6 @@
 using std::vector;
 using std::cout;
 
-static const int N_TB_SIZE = 3000;
 
 /**
  * This functions returns a vector of NCpackets, it should be extended to account
@@ -87,9 +86,9 @@ std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delt
 int random_degree(std::vector<double>* RSD_CDF, double random_number);
 
 // randomly initialize with binary numbers and existing matrix according to row degrees given by RSD
-void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const c, int const seed,  double const C, double const delta);
+// void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const c, int const seed,  double const C, double const delta);
 // create a randomly initialized sparse matrix according to RSD
-std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const c, int const seed,  double const C, double const delta);
+std::vector<int> rand_create_sparse_matrix(int const c, int const seed,  double const C, double const delta);
 
 /**
 * encode the packets according to an encoding vector
@@ -97,7 +96,7 @@ std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const c, int const seed,  d
 * @param input vector of data (i.e. vector of arrays of chars)
 * @param output payload (array of chars)
 */
-void XOR_encode(std::bitset<K_TB_SIZE>& X, vector<char*>& data, char* out_payload);
+void XOR_encode(std::vector<int> *encoding_vector, vector<char*>& data, char* out_payload);
 
 vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data);
 

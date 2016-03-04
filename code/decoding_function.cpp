@@ -21,9 +21,8 @@
 
 packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
 {
-
     packetNeededAndVector out;
-    std::vector<bitset<K_TB_SIZE>> M;
+    std::vector< std::vector<int> > M;
     M.reserve(packetVector->size());
     int i=0;
     std::vector<char*> encoded_payloads;
@@ -42,17 +41,19 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector)
     //vector of outcoming nodes for each left node, representing and unecoded data pck
     std::vector<std::vector<unsigned short int> > v(K_TB_SIZE);
     std::vector<std::vector<unsigned short int> > d(K_TB_SIZE);
-    for (int i=0; i<N_TB_SIZE; i++)
+    int degree = 0;
+    int pos = 0;
+    for (int i = 0; i < N_TB_SIZE; i++) // cycle on N encoding vector
     {
-        for (int j=0; j<K_TB_SIZE; j++)
+        degree = M.at(i).size();
+        for (int j = 0; j < degree; j++) // cycle on an encoding vector
         {
-            if (M.at(i)[j]==1)
-            {
-                u[i].push_back(j);
-                v[j].push_back(i);
-            }
+            pos = M.at(i)[j]; // get the position of the 1
+            u[i].push_back(pos);
+            v[pos].push_back(i);
         }
     }
+
     for (int j=0; j<K_TB_SIZE; j++)
     {
         if (v[j].size()==0)
