@@ -164,16 +164,16 @@ void rand_initialize_sparse_matrix(std::bitset<K_TB_SIZE>& X, int const ev_size,
     std::uniform_real_distribution<double> distr(0.0, 1.0); // it will create uniform random number in range 0,1 
     std::vector<double> cumulative_distribution=Robust_Soliton_Distribution_CDF(ev_size, C, delta);
     int row_degree;
-        double rnd_num = distr(eng); // U(0,1) number
-        row_degree = random_degree(&cumulative_distribution, rnd_num);
-        std::vector<bool>stub(ev_size,0);
-        for (int j=0; j<row_degree; j++) {
-            stub[j]=1;
-        }
-        std::shuffle(stub.begin(), stub.end(), eng); //to verify: does shuffle work with bitset?
-        for (int j=0; j<ev_size; j++) {
-            X[j]=stub[j];
-        }
+    double rnd_num = distr(eng); // U(0,1) number
+    row_degree = random_degree(&cumulative_distribution, rnd_num);
+    std::vector<bool>stub(ev_size,0);
+    for (int j=0; j<row_degree; j++) {
+        stub[j]=1;
+    }
+    std::shuffle(stub.begin(), stub.end(), eng); //to verify: does shuffle work with bitset?
+    for (int j=0; j<ev_size; j++) {
+        X[j]=stub[j];
+    }
 }
 
 std::bitset<K_TB_SIZE> rand_create_sparse_matrix(int const ev_size, int const seed,  double const C, double const delta)
@@ -234,7 +234,7 @@ vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_dat
 std::vector<double> Robust_Soliton_Distribution(int K, double c, double delta)
 {
     double S;
-    S=(double)c*std::log(K/delta)*std::sqrt(K);
+    S=c*std::log((double)K/delta)*std::sqrt((double)K);
     //cout<<"S= "<<S<<"\n";
     int K_S= (int)(K/S);
     K_S=std::min(K_S,K);
@@ -277,17 +277,13 @@ std::vector<double> Robust_Soliton_Distribution_CDF(int K, double c, double delt
 // random number must be uniform in [0,1]
 int random_degree(std::vector<double>* RSD_CDF, double random_number)
 {
-    int K = RSD_CDF->size();
-    std::vector<double> position(K);
-    for (int i = 0; i < K; ++i)
-    {
-        if(random_number - RSD_CDF->at(i) >= 0) {
-            position[i] = random_number - RSD_CDF->at(i);
-        }
-        else {
-            position[i] = 2;
+    // CDF inversion: pick a random_number U in [0,1], then the value
+    // of the random variable with CDF F will be the first n such that F(n) > U
+    for(int i = 0; i < RSD_CDF->size(); ++i) {
+        if(RSD_CDF->at(i) > random_number) {
+            return i; 
         }
     }
-    return std::min_element(position.begin(), position.end()) - position.begin() + 1;
+    return RSD_CDF->size();
 }
 
