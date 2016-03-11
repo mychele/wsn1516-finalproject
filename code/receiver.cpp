@@ -28,7 +28,7 @@
 #include "NCpacketHelper.h"
 
 #define RECEIVER_PORT "30000"
-#define BACKLOG 10
+#define BACKLOG 100
 
 /**
  * Struct used as return type of receivePacket
@@ -108,7 +108,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 
 int main(int argc, char *argv[])
 {
-	bool verb = 1;
+	bool verb = 0;
 
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    std::cout << "Ready to communicate, PER = " << PER << " K_TB_SIZE = " << K_TB_SIZE << "\n";
+    if(verb) {std::cout << "Ready to communicate, PER = " << PER << " K_TB_SIZE = " << K_TB_SIZE << "\n";}
 
     //----------------------------------- vector of NCpacket + NCpacketHelper object + open file -------------------------------------
 
@@ -405,23 +405,31 @@ int main(int argc, char *argv[])
         num_blocks++;
         nc_vector.clear();
         total_received_packets += received_packets;
-        if (verb) {std::cout << total_received_packets << "\n";} else {std::cout << total_received_packets << "\r";}
+        if (verb) {std::cout << total_received_packets << "\n";}// else {std::cout << total_received_packets << "\r";}
         start_block_decoding = std::chrono::system_clock::now();  
     }
     end_file_rx_and_decoding= std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
-    std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_block/num_blocks << "s \n";
-    std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
+    if(verb) {
+        std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_block/num_blocks << "s \n";
+        std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
+        std::cout << "File successfully received and decoded!! :-)\n";
+        std::cout << "Stats on packets" << "\n";
+        std::cout << "Total received packets " << total_received_dropped_packets << " dropped packets " << dropped_packets 
+        					<< " received packets " << total_received_packets << "\n";
+        std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
+        std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
+    } else {
+        std::cout << (double)total_time_decoding_block/num_blocks << "\t\t"
+                  << elapsed_seconds_file_rx_decoding.count() << "\t\t"
+                  << total_received_dropped_packets << "\t\t"
+                  << dropped_packets << "\t\t\t"
+                  << total_received_packets << "\t\t"
+                  << total_received_dropped_packets - dropped_packets - total_received_packets << "\t\t\t"
+                  << (double)dropped_packets/total_received_dropped_packets << "\n";
+    }
     free(receive_buffer);
     close(sockfd);
-    std::cout << "File successfully received and decoded!! :-)\n";
-    std::cout << "Stats on packets" << "\n";
-    std::cout << "Total received packets " << total_received_dropped_packets << " dropped packets " << dropped_packets 
-    					<< " received packets " << total_received_packets << "\n";
-    std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
-    std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
-
     delete nchelper;
     return 0;
-
 }

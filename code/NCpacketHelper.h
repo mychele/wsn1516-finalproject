@@ -55,7 +55,7 @@ private:
 	std::random_device m_randomDevice; // device entropy
     std::mt19937 m_eng;
     std::uniform_real_distribution<double> m_distr01; // it will create uniform random number in range 0,1 
-    std::uniform_int_distribution<int> m_distr0k; // it will create uniform random number in range 0,1 
+    std::uniform_int_distribution<int> m_distr0k; // it will create uniform random number in range 0,k
 
     void initRSDpmd();
     void initRSDcdf();

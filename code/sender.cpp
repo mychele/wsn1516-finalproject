@@ -99,7 +99,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 
 int main(int argc, char const *argv[])
 {
-	bool verb = 1;
+	bool verb = 0;
 
 	srand(time(NULL));
 	// read input
@@ -149,7 +149,7 @@ int main(int argc, char const *argv[])
 	double PER_estimate = 0;
 	bool no_history = 1;
 	int PPO_history = 150;
-	bool PER_mode = 0;
+	bool PER_mode = 1;
 	double alpha = 0.1;
 
 	// -------------------------------------------- Chrono and timeout values ---------------------------------------
@@ -162,7 +162,7 @@ int main(int argc, char const *argv[])
 	// -------------------------------------------- Open input file ----------------------------------------------
 	std::ifstream input_file (argv[3], std::ifstream::binary);
 	if(input_file) {
-		std::cout << "K " << K_TB_SIZE << "N " << N_TB_SIZE << "\n";
+		if(verb) {std::cout << "K " << K_TB_SIZE << "\n";}
 		start_file_tx = std::chrono::system_clock::now();
 		// read file size
 		// get length of file:
@@ -282,14 +282,21 @@ int main(int argc, char const *argv[])
 	}
 	end_file_tx = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_tx = end_file_tx-start_file_tx;
-
-	std::cout << "packet_sent = " << sentPackets <<"\n";
-	std::cout << "packet_in_file = " << file_length/PAYLOAD_SIZE + 1 << "\n"; // it does not consider the zero padding of the last block
-	std::cout << "elapsed time = " << elapsed_seconds_file_tx.count() << "s\n";
-	std::cout << "goodput = " << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
-	std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
-
-	std::cout << "PER_estimate = " << PER_estimate << "\n";
+    if(verb) {
+		std::cout << "packet_sent = " << sentPackets <<"\n";
+		std::cout << "packet_in_file = " << file_length/PAYLOAD_SIZE + 1 << "\n"; // it does not consider the zero padding of the last block
+		std::cout << "elapsed time = " << elapsed_seconds_file_tx.count() << "s\n";
+		std::cout << "goodput = " << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
+		std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
+		std::cout << "PER_estimate = " << PER_estimate << "\n";	
+	} else {
+		std::cout << sentPackets << "\t\t"
+				  << file_length/PAYLOAD_SIZE + 1 << "\t\t"
+				  << elapsed_seconds_file_tx.count() << "\t\t"
+				  << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << "\t\t"
+				  << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << "\t\t"
+				  << PER_estimate << "\n";
+	}
 
 	freeaddrinfo(res_dst);
 	// close socket
