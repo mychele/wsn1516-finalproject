@@ -420,13 +420,13 @@ int main(int argc, char *argv[])
         std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
         std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
     } else {
-        std::cout << (double)total_time_decoding_block/num_blocks << "\t\t"
-                  << elapsed_seconds_file_rx_decoding.count() << "\t\t"
-                  << total_received_dropped_packets << "\t\t"
-                  << dropped_packets << "\t\t\t"
-                  << total_received_packets << "\t\t"
-                  << total_received_dropped_packets - dropped_packets - total_received_packets << "\t\t\t"
-                  << (double)dropped_packets/total_received_dropped_packets << "\n";
+        std::cout << (double)total_time_decoding_block/num_blocks << " "
+                  << elapsed_seconds_file_rx_decoding.count() << " "
+                  << total_received_dropped_packets << " "
+                  << dropped_packets << " "
+                  << total_received_packets << " "
+                  << total_received_dropped_packets - dropped_packets - total_received_packets << " "
+                  << (double)dropped_packets/total_received_dropped_packets << " "<<argv[2]<<"\n";
     }
     free(receive_buffer);
     close(sockfd);
