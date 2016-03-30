@@ -1,24 +1,34 @@
 #!/bin/bash 
 
 
-make clear
-make all
+
 rm *.txt
-
-echo -e "sent\t\tinfile\t\ttime\t\tgoodput\t\tthroughput\tPER_estimate" >> "logtx".txt
-echo -e "dectime\t\trxtime\t\ttotrxpck\tdroppck\t\trxpck\t\tuselesspck\t\tPER" >> "logrx".txt
-
-echo $1
-
-for PER in 0.6 0.7 0.8
+echo -e "sent\tinfile\ttime\tgoodput\tthroughput\tPER_estimate\tPER\tK_TB_SIZE\tN_TB_SIZE" >> "logtx".txt
+echo -e "dectime\trxtime\ttotrxpck\tdroppck\trxpck\tuselesspck\tPER_estimate\tPER\tK_TB_SIZE\tN_TB_SIZE" >> "logrx".txt
+for K_TB_SIZE_VAL in 3500 4500 5500;
 do
+	N_TB_SIZE_VAL=$((K_TB_SIZE_VAL+1000))
+	echo $K_TB_SIZE_VAL
+	make clear
+	sed "s/K_TB_SIZE_VALUE/$K_TB_SIZE_VAL/g" NCpacket.h.template > NCpacket.h.tmp
+	sed "s/N_TB_SIZE_VALUE/$N_TB_SIZE_VAL/g" NCpacket.h.tmp > NCpacket.h
+	make all
+	rm NCpacket.h
+	rm NCpacket.h.tmp
 
-	for i in `seq 1 10`;
+
+	echo $1
+
+	for PER in 0.6 0.7
 	do
-		echo $i
-		./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background
-		sleep 1
-		./sender localhost localhost $1 $PER >> "logtx".txt # $1 is filename
-		#simulate $1 $2
-	done 
+
+		for i in `seq 1 10`;
+		do
+			echo $i
+			./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background
+			sleep 1
+			./sender localhost localhost $1 $PER >> "logtx".txt # $1 is filename
+			#simulate $1 $2
+		done 
+	done
 done

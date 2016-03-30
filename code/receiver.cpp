@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
                   << dropped_packets << " "
                   << total_received_packets << " "
                   << total_received_dropped_packets - dropped_packets - total_received_packets << " "
-                  << (double)dropped_packets/total_received_dropped_packets << " "<<argv[2]<<"\n";
+                  << (double)dropped_packets/total_received_dropped_packets << " "<<argv[2]<<" "<<K_TB_SIZE<<" "<<N_TB_SIZE<<"\n";
     }
     free(receive_buffer);
     close(sockfd);

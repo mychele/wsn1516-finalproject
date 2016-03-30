@@ -295,7 +295,7 @@ int main(int argc, char const *argv[])
 				  << elapsed_seconds_file_tx.count() << " "
 				  << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " "
 				  << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " "
-				  << PER_estimate <<" "<<argv[4]<<"\n";
+				  << PER_estimate <<" "<<argv[4]<<" "<<K_TB_SIZE<<" "<<N_TB_SIZE<<"\n";
 	}
 
 	freeaddrinfo(res_dst);
