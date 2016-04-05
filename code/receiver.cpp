@@ -394,6 +394,9 @@ int main(int argc, char *argv[])
                 sendack(packets_needed, rx_block_ID, sender_addr);
                 ack_flag = 1;
                 new_block_flag = 1;
+                // after a decoding operation, if successful go to the next block and discard the nc_packet vector,
+                // if not successful retransmit the entire block, so discard the nc_packet vector anyway
+                nc_vector.clear();
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
         }

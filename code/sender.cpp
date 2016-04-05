@@ -104,7 +104,7 @@ int main(int argc, char const *argv[])
 	srand(time(NULL));
 	// read input
 	if (argc != 5) {
-		std::cout << "usage: sender hostname dstname filename";
+		std::cout << "usage: sender hostname dstname filename PER";
 		return 2;
 	}
 

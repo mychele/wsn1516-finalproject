@@ -132,7 +132,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
     {
         if (d[i].size()==0)
         {
-            out.first=1;
+            out.first=N_TB_SIZE;
             return out;
         }
 
