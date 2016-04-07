@@ -6,9 +6,9 @@ rm *.txt
 echo -e "sent\tinfile\ttime\tgoodput\tthroughput\tPER_estimate\tPER\tK_TB_SIZE\tN_TB_SIZE" >> "logtx".txt
 echo -e "dectime\trxtime\ttotrxpck\tdroppck\trxpck\tuselesspck\tPER_estimate\tPER\tK_TB_SIZE\tN_TB_SIZE" >> "logrx".txt
 
-for K_TB_SIZE_VAL in 10000;
+for K_TB_SIZE_VAL in 1000 1500 2500 3500 4500 5500;
 do
-	for INCREMENT in 1000;
+	for INCREMENT in 1000 1250 1500 1750 2000;
 	do
 		N_TB_SIZE_VAL=$((K_TB_SIZE_VAL+INCREMENT))
 		echo "K_TB_SIZE=$K_TB_SIZE_VAL"
@@ -23,7 +23,7 @@ do
 
 		echo $1
 
-		for PER in 0.3 0.4 0.5 0.6 0.7 0.8
+		for PER in 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8
 		do
 
 			echo "PER=$PER"
