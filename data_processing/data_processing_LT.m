@@ -1,10 +1,9 @@
 clear all;
-close all hidden;
-
 color_matrix = colormap;
 markers = {'+-','o-','*-','.-','x-','s-','d-','^-','v-','>-','<-','p-','h-'};
 markersize = 6; % 3 is best for tikz
 linewidth = 1.2;
+close all hidden;
 %% LT RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
 data_LT_rx=importdata('./data/data_LT_rx_1.txt',' ');
