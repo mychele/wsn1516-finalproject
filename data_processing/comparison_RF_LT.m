@@ -2,7 +2,7 @@ clear all;
 close all hidden;
 %% Random fountain RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_est PER
-data_RF_rx=importdata('./data_RF_rx.txt',' ');
+data_RF_rx=importdata('./data/data_RF_rx.txt',' ');
 PERs=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8];
 for i=1:length(PERs)
     data_PER=[];
@@ -39,7 +39,7 @@ end
 
 %% Random fountain TX
 %sent infile time goodput throughput	PER_estimate PER
-data_RF_tx=importdata('./data_RF_tx.txt',' ');
+data_RF_tx=importdata('./data/data_RF_tx.txt',' ');
 PERs=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8];
 for i=1:length(PERs)
     data_PER=[];
@@ -72,8 +72,8 @@ end
 % legend('throughput','goodput')
 
 %% LT RX
-%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_est PER
-data_LT_rx=importdata('./data_LT_rx.txt',' ');
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER
+data_LT_rx=importdata('./data/data_LT_rx.txt',' ');
 PERs=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8];
 for i=1:length(PERs)
     data_PER=[];
@@ -110,7 +110,7 @@ end
 
 %% LT TX
 %sent infile time goodput throughput	PER_estimate PER
-data_LT_tx=importdata('./data_LT_tx.txt',' ');
+data_LT_tx=importdata('./data/data_LT_tx.txt',' ');
 PERs=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8];
 for i=1:length(PERs)
     data_PER=[];
