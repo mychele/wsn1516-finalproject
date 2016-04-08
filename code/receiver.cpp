@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
     int received_packets = 0;
     int dropped_packets = 0;
     int packets_needed;
+    int num_failed_decoding = 0;
 
     // create receive buffer
     void* receive_buffer = malloc(PAYLOAD_SIZE*K_TB_SIZE*sizeof(char));
@@ -399,6 +400,7 @@ int main(int argc, char *argv[])
                 // if not successful retransmit the entire block, so discard the nc_packet vector anyway
                 nc_vector.clear();
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
+                num_failed_decoding = (decoded_info.first == 0) ? (num_failed_decoding) : (num_failed_decoding + 1);
             }
         }
         end_block_decoding = std::chrono::system_clock::now();
@@ -423,6 +425,7 @@ int main(int argc, char *argv[])
         					<< " received packets " << total_received_packets << "\n";
         std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
         std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
+        std::cout << "Number of failed decoding " << num_failed_decoding << "\n";
     } else {
         std::cout << (double)total_time_decoding_block/num_blocks << " "
                   << elapsed_seconds_file_rx_decoding.count() << " "
@@ -430,7 +433,11 @@ int main(int argc, char *argv[])
                   << dropped_packets << " "
                   << total_received_packets << " "
                   << total_received_dropped_packets - dropped_packets - total_received_packets << " "
-                  << (double)dropped_packets/total_received_dropped_packets << " "<<argv[2]<<" "<<K_TB_SIZE<<" "<<N_TB_SIZE<<"\n";
+                  << (double)dropped_packets/total_received_dropped_packets << " "
+                  << argv[2] << " "
+                  << K_TB_SIZE << " " 
+                  << N_TB_SIZE << " " 
+                  << num_failed_decoding << "\n";
     }
     free(receive_buffer);
     close(sockfd);
