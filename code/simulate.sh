@@ -32,11 +32,11 @@ do
 			while [ $i -le 10 ]
 			do
 				echo $i >> "report".log
-				timeout 240 ./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background
+				timeout 240 ./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background. 					Timeout of 240 s. Killed if timeout
 				sleep 1
 				timeout 240 ./sender localhost localhost $1 $PER >> "logtx".txt # $1 is filename
 				#simulate $1 $2
-				status=$?
+				status=$? # $? is exit status of timeout command: 0 if no timeout, 124 otherwise
 				echo "exit status of timeout: "$status >> "report".log
 				if [ $status -ne 124 ]
 					then
