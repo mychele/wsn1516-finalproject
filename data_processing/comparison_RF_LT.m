@@ -143,42 +143,55 @@ end
 % legend('throughput','goodput')
 
 %% Comparison RF LT
+
+linewidth = 1.5;
+
 figure();
-plot(PERs,goodput_LT);
+plot(PERs, goodput_LT, '-x', 'LineWidth', linewidth);
 hold all;
-plot(PERs,goodput_RF);
+plot(PERs, goodput_RF, '-o', 'LineWidth', linewidth);
 grid on
 title('Goodput comparison')
+xlabel('PER')
+ylabel('Goodput [Mbit/s]')
 legend('LT','RF')
+
 figure();
 hold all;
-plot(PERs,dectime_LT);
-plot(PERs,dectime_RF);
+plot(PERs,dectime_LT, '-x', 'LineWidth', linewidth);
+plot(PERs,dectime_RF, '-o', 'LineWidth', linewidth);
 grid on
 title('Decoding time comparison')
 xlabel('PER')
+ylabel('T [s]')
 legend('LT','RF')
+
 figure();
 hold all;
-plot(PERs,throughput_LT);
-plot(PERs,throughput_RF);
+plot(PERs,throughput_LT, '-x', 'LineWidth', linewidth);
+plot(PERs,throughput_RF, '-o', 'LineWidth', linewidth);
 grid on
 title('Throughput comparison')
 xlabel('PER')
+ylabel('Throughput [Mbit/s]')
 legend('LT','RF')
+
 figure();
 hold all;
-plot(PERs,uselesspck_LT);
-plot(PERs,uselesspck_RF);
+plot(PERs,uselesspck_LT, '-x', 'LineWidth', linewidth);
+plot(PERs,uselesspck_RF, '-o', 'LineWidth', linewidth);
 grid on
 title('Number of useless pcks comparison')
 xlabel('PER')
+ylabel('Useless pck [packet]')
 legend('LT','RF')
+
 figure();
 hold all;
-plot(PERs,rxtime_LT);
-plot(PERs,rxtime_RF);
+plot(PERs,rxtime_LT, '-x', 'LineWidth', linewidth);
+plot(PERs,rxtime_RF, '-o', 'LineWidth', linewidth);
 grid on
 title('Time to receive comparison')
 xlabel('PER')
+ylabel('T [s]')
 legend('LT','RF')

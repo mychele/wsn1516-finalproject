@@ -1,5 +1,10 @@
 clear all;
 close all hidden;
+
+color_matrix = colormap;
+markers = {'+-','o-','*-','.-','x-','s-','d-','^-','v-','>-','<-','p-','h-'};
+markersize = 6; % 3 is best for tikz
+linewidth = 1.2;
 %% LT RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
 data_LT_rx=importdata('./data/data_LT_rx_1.txt',' ');
@@ -26,12 +31,14 @@ end
 for j=1:length(Ks)
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(droppck_LT(:,j,k)));
+        plot(PERs,squeeze(droppck_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['Number of packets dropped K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('Dropped packets [packet]');
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
@@ -40,12 +47,14 @@ for j=1:length(Ks)
     
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(rxtime_LT(:,j,k)));
+        plot(PERs,squeeze(rxtime_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['Time to receive the file K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('T [s]')
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
@@ -54,12 +63,14 @@ for j=1:length(Ks)
     
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(dectime_LT(:,j,k)));
+        plot(PERs,squeeze(dectime_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['Time to decode the file K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('T [s]');
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
@@ -68,12 +79,14 @@ for j=1:length(Ks)
     
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(uselesspck_LT(:,j,k)));
+        plot(PERs,squeeze(uselesspck_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize);
         title(['Number of packets correctly received but useless K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('Useless pck [packet]')
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
@@ -105,12 +118,14 @@ end
 for j=1:length(Ks)
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(goodput_LT(:,j,k)));
+        plot(PERs,squeeze(goodput_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['Goodput K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('Goodput [Mbit/s]')
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
@@ -119,26 +134,30 @@ for j=1:length(Ks)
     
     figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(throughput_LT(:,j,k)));
+        plot(PERs,squeeze(throughput_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['Throughput K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('Throughput [Mbit/s]')
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
     end
     legend(str_legend');
     
-        figure();
+    figure();
     for k=1:length(increments)
-        plot(PERs,squeeze(PER_estimate_LT(:,j,k)));
+        plot(PERs,squeeze(PER_estimate_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
         title(['PER estimated @TX K= ', num2str(Ks(j))]);
         hold all;
     end
     grid on;
     xlabel('PER');
+	ylabel('PER estimate');
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
