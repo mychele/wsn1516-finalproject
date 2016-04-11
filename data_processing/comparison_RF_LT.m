@@ -195,3 +195,13 @@ title('Time to receive comparison')
 xlabel('PER')
 ylabel('T [s]')
 legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,goodput_LT./throughput_LT, '-x', 'LineWidth', linewidth);
+plot(PERs,goodput_RF./throughput_RF, '-o', 'LineWidth', linewidth);
+grid on
+title('Efficiency')
+xlabel('PER')
+ylabel('Efficiency')
+legend('LT','RF')
