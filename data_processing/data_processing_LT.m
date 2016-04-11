@@ -162,4 +162,20 @@ for j=1:length(Ks)
         str_legend(i)=cellstr(strjoin(str(i,:)));
     end
     legend(str_legend');
+    
+    figure();
+    for k=1:length(increments)
+        plot(PERs,squeeze(goodput_LT(:,j,k))./squeeze(throughput_LT(:,j,k)), markers{mod(k, numel(markers)) + 1}, 'Color', color_matrix(mod(k*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
+        title(['Efficiency K= ', num2str(Ks(j))]);
+        hold all;
+    end
+    grid on;
+    xlabel('PER');
+	ylabel('PER estimate');
+    str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
+    for i=1:length(str(:,1))
+        str_legend(i)=cellstr(strjoin(str(i,:)));
+    end
+    legend(str_legend');
 end
