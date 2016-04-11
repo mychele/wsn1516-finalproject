@@ -6,8 +6,9 @@ linewidth = 1.2;
 close all hidden;
 %% LT RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
-data_LT_rx=importdata('./data/data_LT_rx_1.txt',' ');
-Nmc=10; %number of Montecarlo trials for each tuple of PER-K-N
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE	faileddec
+data_LT_rx=importdata('./data/data_LT_rx_3.txt',' ');
+Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
 increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
@@ -94,8 +95,7 @@ for j=1:length(Ks)
 end
 %% LT TX
 %sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
-data_LT_tx=importdata('./data/data_LT_tx_1.txt',' ');
-Nmc=10; %number of Montecarlo trials for each tuple of PER-K-N
+data_LT_tx=importdata('./data/data_LT_tx_3.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
