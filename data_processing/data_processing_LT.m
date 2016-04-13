@@ -172,7 +172,7 @@ for j=1:length(Ks)
     end
     grid on;
     xlabel('PER');
-	ylabel('Efficiency');
+    ylabel('Efficiency');
     str=[cellstr(num2str((Ks(j)+increments), 'N=%-d'))']';
     for i=1:length(str(:,1))
         str_legend(i)=cellstr(strjoin(str(i,:)));
