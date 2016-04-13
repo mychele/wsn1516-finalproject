@@ -102,8 +102,8 @@ int main(int argc, char const *argv[])
 
 	srand(time(NULL));
 	// read input
-	if (argc != 4) {
-		std::cout << "usage: sender hostname dstname filename";
+	if (argc != 5) {
+		std::cout << "usage: sender hostname dstname filename PER";
 		return 2;
 	}
 
@@ -287,12 +287,12 @@ int main(int argc, char const *argv[])
 		std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
 		std::cout << "PER_estimate = " << PER_estimate << "\n";	
 	} else {
-		std::cout << sentPackets << "\t\t"
-				  << file_length/PAYLOAD_SIZE + 1 << "\t\t"
-				  << elapsed_seconds_file_tx.count() << "\t\t"
-				  << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << "\t\t"
-				  << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << "\t\t"
-				  << PER_estimate << "\n";
+		std::cout << sentPackets << " "
+				  << file_length/PAYLOAD_SIZE + 1 << " "
+				  << elapsed_seconds_file_tx.count() << " "
+				  << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " "
+				  << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " "
+				  << PER_estimate <<" "<<argv[4]<<" "<<K_TB_SIZE<<" "<<N_TB_SIZE<<"\n";
 	}
 
 	freeaddrinfo(res_dst);

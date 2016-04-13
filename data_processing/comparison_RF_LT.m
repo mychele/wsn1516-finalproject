@@ -1,0 +1,200 @@
+clear all;
+close all hidden;
+%% Random fountain RX
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate	PER	K_TB_SIZE	N_TB_SIZE
+data_RF_rx=importdata('./data/data_RF_rx_1.txt',' ');
+Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
+PERs=unique(data_RF_rx(:,8));
+Ks=unique(data_RF_rx(:,9));
+increments=unique(data_RF_rx(find(data_RF_rx(:,9)==Ks(1)),10))-Ks(1);
+
+for i=1:length(PERs)
+    for j=1:length(Ks)
+        for k=1:length(increments)
+    data_PER_K_N_rx=[];
+    data_PER_K_N_rx=data_RF_rx(find(data_RF_rx(:,8)==PERs(i) & data_RF_rx(:,9)==Ks(j) & data_RF_rx(:,10)==(Ks(j)+increments(k))),:);
+    dectime_RF(i,j,k)=mean(data_PER_K_N_rx(:,1));
+    rxtime_RF(i,j,k)=mean(data_PER_K_N_rx(:,2));
+    totrxpck_RF(i,j,k)=mean(data_PER_K_N_rx(:,3));
+    droppck_RF(i,j,k)=mean(data_PER_K_N_rx(:,4));
+    rxpck_RF(i,j,k)=mean(data_PER_K_N_rx(:,5));
+    uselesspck_RF(i,j,k)=mean(data_PER_K_N_rx(:,6));
+    PER_estimate_RF(i,j,k)=mean(data_PER_K_N_rx(:,7));
+        end
+    end
+end
+
+
+% figure();
+% plot(PERs,droppck_RF);
+% title('Number of packets dropped');
+% hold all;
+% grid on;
+% figure();
+% hold all;
+% plot(PERs,rxtime_RF);
+% title('Time to receive the file');
+% grid on;
+% figure();
+% hold all;
+% plot(PERs,dectime_RF);
+% title('Time to decode the file');
+% grid on;
+% figure();
+% hold all;
+% plot(PERs,uselesspck_RF);
+% title('Number of packets correctly received but useless');
+% grid on;
+
+%% Random fountain TX
+%sent infile time goodput throughput	PER_estimate PER
+%sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
+data_RF_tx=importdata('./data/data_RF_tx_1.txt',' ');
+PERs=unique(data_RF_tx(:,7));
+Ks=unique(data_RF_tx(:,8));
+increments=unique(data_RF_tx(find(data_RF_tx(:,8)==Ks(1)),9))-Ks(1);
+
+for i=1:length(PERs)
+    for j=1:length(Ks)
+        for k=1:length(increments)
+            data_PER_K_N_tx=[];
+            data_PER_K_N_tx=data_RF_tx(find(data_RF_tx(:,7)==PERs(i) & data_RF_tx(:,8)==Ks(j) & data_RF_tx(:,9)==(Ks(j)+increments(k))),:);
+            sent_RF(i,j,k)=mean(data_PER_K_N_tx(:,1));
+            time_RF(i,j,k)=mean(data_PER_K_N_tx(:,3));
+            goodput_RF(i,j,k)=mean(data_PER_K_N_tx(:,4));
+            throughput_RF(i,j,k)=mean(data_PER_K_N_tx(:,5));
+            PER_estimate_RF(i,j,k)=mean(data_PER_K_N_tx(:,6));
+        end
+    end
+end
+
+% figure();
+% plot(PERs,sent_RF);
+% title('Number of packets sent');
+% hold all;
+% grid on;
+% figure();
+% hold all;
+% plot(PERs,time_RF);
+% title('Time to send all packets');
+% grid on;
+% figure();
+% hold all;
+% plot(PERs,throughput_RF);
+% grid on;
+% hold all;
+% plot(PERs,goodput_RF);
+% grid on;
+% title('Throughput and goodput');
+% legend('throughput','goodput')
+
+%% LT RX
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
+%%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE	faileddec
+data_LT_rx=importdata('./data/data_LT_rx_3.txt',' ');
+Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
+PERs=unique(data_LT_rx(:,8));
+Ks=unique(data_LT_rx(:,9));
+increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
+for i=1:length(PERs)
+    for j=1:length(Ks)
+        for k=1:length(increments)
+    data_PER_K_N_rx=[];
+    data_PER_K_N_rx=data_LT_rx(find(data_LT_rx(:,8)==PERs(i) & data_LT_rx(:,9)==Ks(j) & data_LT_rx(:,10)==(Ks(j)+increments(k))),:);
+    dectime_LT(i,j,k)=mean(data_PER_K_N_rx(:,1));
+    rxtime_LT(i,j,k)=mean(data_PER_K_N_rx(:,2));
+    totrxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,3));
+    droppck_LT(i,j,k)=mean(data_PER_K_N_rx(:,4));
+    rxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,5));
+    uselesspck_LT(i,j,k)=mean(data_PER_K_N_rx(:,6));
+    PER_estimate_LT(i,j,k)=mean(data_PER_K_N_rx(:,7));
+        end
+    end
+end
+%% LT TX
+%sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
+data_LT_tx=importdata('./data/data_LT_tx_3.txt',' ');
+PERs=unique(data_LT_tx(:,7));
+Ks=unique(data_LT_tx(:,8));
+increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
+
+for i=1:length(PERs)
+    for j=1:length(Ks)
+        for k=1:length(increments)
+            data_PER_K_N_tx=[];
+            data_PER_K_N_tx=data_LT_tx(find(data_LT_tx(:,7)==PERs(i) & data_LT_tx(:,8)==Ks(j) & data_LT_tx(:,9)==(Ks(j)+increments(k))),:);
+            sent_LT(i,j,k)=mean(data_PER_K_N_tx(:,1));
+            time_LT(i,j,k)=mean(data_PER_K_N_tx(:,3));
+            goodput_LT(i,j,k)=mean(data_PER_K_N_tx(:,4));
+            throughput_LT(i,j,k)=mean(data_PER_K_N_tx(:,5));
+            PER_estimate_LT(i,j,k)=mean(data_PER_K_N_tx(:,6));
+        end
+    end
+end
+%% Comparison RF LT
+
+linewidth = 1.5;
+
+Ks_LT_index=4;
+increment_LT_index=1;
+
+figure();
+plot(PERs, squeeze(goodput_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+hold all;
+plot(PERs, squeeze(goodput_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Goodput comparison')
+xlabel('PER')
+ylabel('Goodput [Mbit/s]')
+legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,squeeze(dectime_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+plot(PERs,squeeze(dectime_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Decoding time comparison')
+xlabel('PER')
+ylabel('T [s]')
+legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,squeeze(throughput_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+plot(PERs,squeeze(throughput_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Throughput comparison')
+xlabel('PER')
+ylabel('Throughput [Mbit/s]')
+legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,squeeze(uselesspck_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+plot(PERs,squeeze(uselesspck_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Number of useless pcks comparison')
+xlabel('PER')
+ylabel('Useless pck [packet]')
+legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,squeeze(rxtime_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+plot(PERs,squeeze(rxtime_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Time to receive comparison')
+xlabel('PER')
+ylabel('T [s]')
+legend('LT','RF')
+
+figure();
+hold all;
+plot(PERs,squeeze(goodput_LT(:,Ks_LT_index,increment_LT_index))./squeeze(throughput_LT(:,Ks_LT_index,increment_LT_index)), '-x', 'LineWidth', linewidth);
+plot(PERs,squeeze(goodput_RF(:,1,1))./squeeze(throughput_RF(:,1,1)), '-o', 'LineWidth', linewidth);
+grid on
+title('Efficiency comparison')
+xlabel('PER')
+ylabel('Efficiency')
+legend('LT','RF')
