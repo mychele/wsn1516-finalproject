@@ -179,3 +179,42 @@ for j=1:length(Ks)
     end
     legend(str_legend');
 end
+
+
+for k = 1:length(increments)
+	figure();
+	hold all;
+	for j = 1:length(Ks)
+		plot(PERs, squeeze(goodput_LT(:,j,k))./squeeze(throughput_LT(:,j,k)), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
+	end
+	title(strcat('Efficiency for N - K = ', num2str(increments(k))));
+	hold all;
+	grid on;
+	xlabel('PER');
+	ylabel('Efficiency');
+	str=[cellstr(num2str((Ks), 'K=%-d'))']';
+	for i=1:length(str(:,1))
+		str_legend(i)=cellstr(strjoin(str(i,:)));
+	end
+	legend(str_legend');
+	
+	figure();
+	hold all;
+	for j = 1:length(Ks)
+		plot(PERs, squeeze(goodput_LT(:,j,k)), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+				'LineWidth', linewidth, 'MarkerSize', markersize)
+	end
+	title(strcat('Goodput for N - K = ', num2str(increments(k))));
+	hold all;
+	grid on;
+	xlabel('PER');
+	ylabel('Goodput [Mbit/s]');
+	str=[cellstr(num2str((Ks), 'K=%-d'))']';
+	for i=1:length(str(:,1))
+		str_legend(i)=cellstr(strjoin(str(i,:)));
+	end
+	legend(str_legend');
+	
+	
+end
