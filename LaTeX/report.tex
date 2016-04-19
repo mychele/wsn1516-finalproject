@@ -129,6 +129,8 @@
 
 \interfootnotelinepenalty=10000
 
+\linespread{1.5} 
+
 \begin{document}
 \title{WSN - Final report on LT codes implementative project}
 \author{Stefano Olivotto - Michele Polese}
@@ -139,5 +141,15 @@
 \include{RF_LT}
 \include{results}
 
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+  
+\bibitem{lipsum}
+\lipsum[1]
+\end{thebibliography}
 
 \end{document}
