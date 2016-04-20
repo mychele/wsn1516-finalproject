@@ -32,6 +32,8 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest} 
 \pgfplotsset{plot coordinates/math parser=false} 
+\newlength\fheight
+\newlength\fwidth
 
 \usepackage{fancybox}
 \usepackage[section]{placeins}
@@ -58,6 +60,10 @@
 \usepackage{caption}
 \newcommand{\ap}[1]{\raisebox{0.6ex}{\scriptsize #1}} 
 \newcommand{\ped}[1]{\raisebox{-0.6ex}{\scriptsize #1}}
+
+% for tikz figures
+\usetikzlibrary{automata,positioning,chains,shapes,arrows}
+\usetikzlibrary{plotmarks}
 
 \usepackage{times}
 %\usepackage[active]{srcltx}
@@ -136,6 +142,14 @@
 \author{Stefano Olivotto - Michele Polese}
 \maketitle
 
+% tikz styles
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{decision} = [circle, minimum width=2cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+
 \include{introduction}
 \include{sender_receiver}
 \include{RF_LT}
@@ -148,8 +162,8 @@
 \expandafter\ifx\csname href\endcsname\relax
   \def\href#1#2{#2} \def\path#1{#1}\fi
   
-\bibitem{lipsum}
-\lipsum[1]
+\bibitem{rfc6298} IETF, RFC 6298, Computing TCP's Retransmission Timer, June 2011
+
 \end{thebibliography}
 
 \end{document}
