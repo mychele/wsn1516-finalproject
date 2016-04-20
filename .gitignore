@@ -4,3 +4,10 @@
 code/receiver
 
 code/sender
+
+*.log
+*.aux
+
+code/LT/receiver
+
+code/LT/sender

@@ -1,2 +1,60 @@
 \section{Implementation of sender and receiver}
-\lipsum[1]
+Sender and receiver are implemented as two standalone classes, which can be launched by a command line interface with some options. They create all the objects needed, then open some sockets and perform transmission and reception of a file using network coding techniques. We implemented two different versions, one which relies on a Random Fountain coding, and the second that uses LT codes, which is much more difficult to implement but offers better performances.
+
+In order to easily handle encoded packets, we defined the class \texttt{NCpacket}. It has a single private variable, a \texttt{NCpacketContainer} struct that stores an header as a 32 bit integer, a sequence number (\texttt{blockID}) as an 8 bit char, and the payload (i.e. the encoded data) as char array of fixed size. It has constructors that accept either these three parameters or the \texttt{blockID} and the whole chunk of uncoded data, and performs the encoding inside the constructor. 
+The header represents a seed which is given to a random number generator in order to create the same encoding vector at sender and receiver side. 
+
+The RF implementation relies on C++ \texttt{rand()} to generate encoding vectors, and \texttt{NCpacket} objects are directly created in sender and receiver main methods.
+The LT implementation, instead, uses a factory paradigm to generate \texttt{NCpacket} objects, i.e. it does not directly call the object constructor but creates an helper, \texttt{NCpacketHelper}, which is initialized when the main method of sender (and receiver) is called. This allows to generate only once the Robust Soliton Distribution needed to perform coding and the C++ objects of the \texttt{random} class, which allow a more robust approach for the encoding vector generation. This class has a method that from the seed generates a vector (of variable size) with the position of ones in the encoding vector (which is much more efficient than handling the whole encoding vector, with few ones and thousands of zeros).
+
+The receiver uses objects from a \texttt{TimeCounter} class that performs estimation of time intervals, using the approach inspired to~\cite{rfc6298}. The time intervals of interest are time between the reception of two packets, in order to perform packet gap detection, and the RTT, in order to estimate whether an ACK sent to the sender was received or not. RFC~\cite{rfc6298} proposes a method to estimate RTT for TCP connection, based on some filtering of RTT measurements. However, the order of magnitude of the quantities of interest is much smaller than the minimum value that is returned by an estimator working with~\cite{rfc6298} rules. Therefore some changes have to be made. Let $s_{est}$ be the smoothed estimate of the quantity of interest, $s_{var}$ an estimate of the variance, $s$ a new measurement. Before any measurement is taken, $s_{est}$ is initialized at 50 ms and $s_{var} = s_{est}/2$. Then, once a new value $s$ is available, these two variables are updated as follows
+\begin{equation}
+	s_{var} = (1-\beta) s_{var}  + \beta |s_{est} - s|
+\end{equation}
+\begin{equation}
+	s_{est} = (1 - \alpha) s_{est} + \alpha s
+\end{equation}
+where $\alpha = 1/8$, $\beta = 1/4$ as suggested in~\cite{rfc6298}.
+
+The value returned by the \texttt{TimeCounter} object is finally
+\begin{equation}
+	\max\left\{1, s_{est} + K\times s_{var}  \right\} \mbox{ ms}
+\end{equation}
+where a granularity of minimum 1 ms is set (instead of 1 s as in~\cite{rfc6298} and $K = 4$. 
+
+Finally, sender and receiver use some static functions which are place in a common \texttt{utils} class. 
+
+Let's now discuss the implementation of sender and receiver. The retransmission policy is a stop and wait per block, i.e. until a block is not successfully received packets for that block are sent. Flow diagrams for sender and receiver are in Fig.~\ref{fig:sender} and~\ref{fig:receiver} respectively. 
+
+\begin{figure}[t]
+\centering
+
+% picture of realization diagram
+\begin{tikzpicture}[node distance = 2cm]
+	\node (start) [startstop] {Init};
+	\node (setup) [process, below of=start, align=center] {Open socket, initialize \\ useful variable, open input file};
+	\node (filesetup) [process, below of=setup, align=center] {Compute file size and \\ number of blocks $B$};
+	\node (while) [decision, below of=filesetup, yshift=-1cm] {For each block};
+	\node (read) [process, below of=while, yshift=-1cm, align=center] {Read data, set \\ packets needed $P = N$};
+	\node (send) [process, below of=read] {Encode and send $P$ packets};
+	\node (waitack) [process, left of=send, xshift=-4cm] {Wait for ACK};
+	\node (ack) [decision, below of=send, align=center, yshift=-1cm] {Packet needed \\ $P$ = 0?};
+	\node (ackrx) [io, left of=ack, xshift=-4cm] {Ack received};
+
+	\draw[arrow] (start) -- (setup);
+	\draw[arrow] (setup) -- (filesetup);
+	\draw[arrow] (filesetup) -- (while);
+	\draw[arrow] (while) -- (read);
+	\draw[arrow] (read) -- (send);
+	\draw[arrow] (send) -- (waitack);
+	\draw[arrow] (ackrx) -- (ack);
+	\draw[arrow] (ack) -- node[anchor=east] {no} (send);
+	\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- (while);
+	%\draw[arrow] (retx) -- (setup);
+	%\draw[arrow] (start) -- (setup);
+
+\end{tikzpicture}
+\caption{Sender flowchart}
+\label{fig:sender}
+\end{figure}
+
