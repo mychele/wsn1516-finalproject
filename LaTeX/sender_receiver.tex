@@ -28,33 +28,81 @@ Let's now discuss the implementation of sender and receiver. The retransmission 
 
 \begin{figure}[t]
 \centering
-
 % picture of realization diagram
 \begin{tikzpicture}[node distance = 2cm]
 	\node (start) [startstop] {Init};
 	\node (setup) [process, below of=start, align=center] {Open socket, initialize \\ useful variable, open input file};
-	\node (filesetup) [process, below of=setup, align=center] {Compute file size and \\ number of blocks $B$};
-	\node (while) [decision, below of=filesetup, yshift=-1cm] {For each block};
-	\node (read) [process, below of=while, yshift=-1cm, align=center] {Read data, set \\ packets needed $P = N$};
+	\node (filesetup) [process, below of=setup, align=center, yshift=-1cm] {Compute file size,\\ number of blocks $B$, \\ set number of tx block $b = 0$};
+	\node (while) [decision, below of=filesetup, yshift=-1cm] {$b < B$?};
+	\node (stop) [startstop, below left of=while, yshift=-1cm, xshift=-2cm] {Stop};
+	\node (read) [process, below right of=while, yshift=-1cm, xshift=1.2cm, align=center] {Read data, set \\ packets needed $P = N$};
 	\node (send) [process, below of=read] {Encode and send $P$ packets};
 	\node (waitack) [process, left of=send, xshift=-4cm] {Wait for ACK};
 	\node (ack) [decision, below of=send, align=center, yshift=-1cm] {Packet needed \\ $P$ = 0?};
-	\node (ackrx) [io, left of=ack, xshift=-4cm] {Ack received};
+	\node (ackrx) [io, left of=ack, xshift=-4cm, align=center] {Ack received \\ update $P$};
 
 	\draw[arrow] (start) -- (setup);
 	\draw[arrow] (setup) -- (filesetup);
 	\draw[arrow] (filesetup) -- (while);
-	\draw[arrow] (while) -- (read);
+	\draw[arrow] (while) -- node[anchor=west] {yes} (read);
+	\draw[arrow] (while) -- node[anchor=east] {no} (stop);
 	\draw[arrow] (read) -- (send);
 	\draw[arrow] (send) -- (waitack);
 	\draw[arrow] (ackrx) -- (ack);
 	\draw[arrow] (ack) -- node[anchor=east] {no} (send);
-	\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- (while);
-	%\draw[arrow] (retx) -- (setup);
-	%\draw[arrow] (start) -- (setup);
-
+	\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- node[anchor=west] {$b$++} (while);
 \end{tikzpicture}
 \caption{Sender flowchart}
 \label{fig:sender}
 \end{figure}
 
+
+\begin{figure}[t]
+\centering
+% picture of realization diagram
+\begin{tikzpicture}[node distance = 2cm]
+	\node (start) [startstop] {Init};
+	\node (setup) [process, below of=start, yshift=-1cm, align=center] {Open socket, initialize \\ useful variables,\\\texttt{decoded} = \texttt{false},\\received packet $R=0$};
+	\node (while) [decision, below right of=setup, yshift=-1.5cm, xshift=2cm,align=center] {File download\\completed?};
+	\node (stop) [startstop, below left of=setup, yshift=-1.5cm, xshift=-2cm] {Stop};
+
+	\node (waitpck) [process, below of=while, yshift=-1cm, align=center] {Wait for packet\\start timer T};
+	
+	\node (recv) [io, below of=stop, yshift=-1cm, align=center] {Receive packet\\$R= R+1$};
+
+	\node (numpck) [decision, below of=recv, align=center] {$R<N$?};
+
+	\node (decode) [process, below of=numpck, align=center] {Decode};
+
+	\node (success) [decision, below of=decode, align=center] {Successful\\decoding?};
+
+	\node (write) [process, below of=success, yshift=-1cm, align=center] {Write decoded chunk\\Send ack with $P=0$};
+
+	\node (sendack) [process, below of=waitpck, align=center] {Send ack with\\$P=N-R$};
+
+	\node (timer) [io, below of=sendack, align=center] {Timer expired};
+
+	\node (sendun) [process, below of=timer, align=center] {Send ack with\\$P=N$};
+
+	\draw[arrow] (start) -- (setup);
+	\draw[arrow] (setup) -- (while);
+	\draw[arrow] (while) -- node[anchor=west] {no, T=new\_block} (waitpck);
+	\draw[arrow] (while) -- node[anchor=north] {yes} (stop);
+	\draw[arrow] (recv) -- (numpck);
+	\draw[arrow] (numpck) -- node[anchor=east] {yes} (decode);
+	\draw[arrow] (numpck) -- node[anchor=south west] {no, T=pg} (waitpck);
+	\draw[arrow] (decode) -- (success);
+	\draw[arrow] (success) -- node[anchor=east] {yes} (write);
+	\draw[arrow] (success) -- node[anchor=east] {no} (sendun);
+	\draw[arrow] (sendun) -| node[anchor=south] {T=ack} ([xshift=+1cm]timer.east) |-  (while);
+	\draw[arrow] (timer) -- (sendack);
+	\draw[arrow] (sendack) -- node[anchor=east] {T=ack} (waitpck);
+	\draw[arrow] (write) -| ([xshift=+2cm]timer.east) |- (while.north);
+	
+	%\draw[arrow] (ackrx) -- (ack);
+	%\draw[arrow] (ack) -- node[anchor=east] {no} (send);
+	%\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- node[anchor=west] {$b$++} (while);
+\end{tikzpicture}
+\caption{Receiver flowchart. T can be a timer of three different kind, pg for packet gap detection, ack for RTT, new\_block for new blocks (RTT + read + encoding)}
+\label{fig:receiver}
+\end{figure}
