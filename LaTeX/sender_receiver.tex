@@ -35,20 +35,20 @@ Let's now discuss the implementation of sender and receiver. The retransmission 
 	\node (setup) [process, below of=start, align=center] {Open socket, initialize \\ useful variable, open input file};
 	\node (filesetup) [process, below of=setup, align=center] {Compute file size and \\ number of blocks $B$};
 	\node (while) [decision, below of=filesetup, yshift=-1cm] {For each block};
-	\node (read) [process, below of=while, yshift=-1cm] {Read data};
-	\node (send) [process, below of=read] {Encode and send $N$ packets};
+	\node (read) [process, below of=while, yshift=-1cm, align=center] {Read data, set \\ packets needed $P = N$};
+	\node (send) [process, below of=read] {Encode and send $P$ packets};
+	\node (waitack) [process, left of=send, xshift=-4cm] {Wait for ACK};
 	\node (ack) [decision, below of=send, align=center, yshift=-1cm] {Packet needed \\ $P$ = 0?};
 	\node (ackrx) [io, left of=ack, xshift=-4cm] {Ack received};
-	\node (retx) [process, below of=ack, yshift=-1cm] {Retransmit $P$ new encoded packets};
 
 	\draw[arrow] (start) -- (setup);
 	\draw[arrow] (setup) -- (filesetup);
 	\draw[arrow] (filesetup) -- (while);
 	\draw[arrow] (while) -- (read);
 	\draw[arrow] (read) -- (send);
-	\draw[arrow] (send) -- (ack);
+	\draw[arrow] (send) -- (waitack);
 	\draw[arrow] (ackrx) -- (ack);
-	\draw[arrow] (ack) -- node[anchor=east] {no} (retx);
+	\draw[arrow] (ack) -- node[anchor=east] {no} (send);
 	\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- (while);
 	%\draw[arrow] (retx) -- (setup);
 	%\draw[arrow] (start) -- (setup);
