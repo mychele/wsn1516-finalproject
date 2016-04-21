@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 			} else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
 				tv = timeConversion(10*rrtCounter.get());
 			} else if (new_block_flag) {
-				tv = timeConversion(1000*rrtCounter.get());
+				tv = timeConversion(100*rrtCounter.get());
 			}
 			int select_ret = select(32, &readfds, NULL, NULL, &tv);
 			if (select_ret > 0) {
@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
                   << total_received_packets << " "
                   << total_received_dropped_packets - dropped_packets - total_received_packets << " "
                   << (double)dropped_packets/total_received_dropped_packets << " "
-                  << argv[2] << " "
+                  << PER << " "
                   << K_TB_SIZE << " " 
                   << N_TB_SIZE << " " 
                   << num_failed_decoding << "\n";

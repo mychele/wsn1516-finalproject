@@ -149,7 +149,7 @@ int main(int argc, char const *argv[])
 	double PER_estimate = 0;
 	bool no_history = 1;
 	int PPO_history = 150;
-	bool PER_mode = 1;
+	bool PER_mode = 0;
 	double alpha = 0.1;
 
 	// -------------------------------------------- Chrono and timeout values ---------------------------------------
