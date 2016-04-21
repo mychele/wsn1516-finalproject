@@ -22,9 +22,21 @@ The value returned by the \texttt{TimeCounter} object is finally
 \end{equation}
 where a granularity of minimum 1 ms is set (instead of 1 s as in~\cite{rfc6298} and $K = 4$. 
 
-Finally, sender and receiver use some static functions which are place in a common \texttt{utils} class. 
+\subsection{Sender}
+Let's now discuss the implementation of sender and receiver. The retransmission policy is a stop and wait per block, i.e. until a block is not successfully received packets for that block are sent. Flow diagram for the sender is in Fig.~\ref{fig:sender}. Both for the RF and LT implementations a rate $K/N$ is set to guarantee a certain probability of successful decoding. 
 
-Let's now discuss the implementation of sender and receiver. The retransmission policy is a stop and wait per block, i.e. until a block is not successfully received packets for that block are sent. Flow diagrams for sender and receiver are in Fig.~\ref{fig:sender} and~\ref{fig:receiver} respectively. Both for the RF and LT implementations a rate 
+Then, given a certain $K$, the sender reads a portion of the file and creates $N$ coded packets (as \texttt{NCpacket} objects). Then it sends them and starts waiting for an acknowledgment from the receiver. When an ack is received, the sender checks for the number of needed packets $P$. If this is 0, it proceeds with the next block to be sent, instead, if it is not, it sends $P$ new encoded packets. In the first block of data, the sender reserves 4 byte for file length. This becomes part of the payload of the first packet, and once decoded at the receiver it allows the receiver to know how much data to expect and terminate correctly once the whole file is received. 
+
+\subsection{Receiver}
+The receiver flow diagram is in Fig.~\ref{fig:receiver}. 
+For each block of data, it waits for the reception of $N$ packets, then it attempts to decode them. If successful, it appends to the output file the received chunk of data and starts waiting for the next block. If not, it behaves differently in LT and RF implementations. In the latter, when running Gauss elimination, it is possible to know the number $P$ of linearly dependent encoding vectors. Therefore the receiver sends an ack to the sender carrying $P$. When new packets are received, they are all used for decoding, until at least $N$ %TODO check 
+linearly independent packets are found.
+With LT, instead, this is not possible, therefore an entire new block is asked by sending an ack with $P=N$ to the sender. A possible improvement is to retransmit only a fraction of the $N$ packets and combine them with a random subset of the already received packets. However, if the ratio $K/N$ is low enough, the probability of unsuccessful decoding can be made as small as desired. 
+
+The receiver uses different timers for different events. The first (called pg in Fig.~\ref{fig:receiver}) measures the time between the reception of two packets, in order to perform packet gap detection. If a packet is expected and the timer expires, the receiver assumes it was lost. Since the receiver has to collect $N$ packets before decoding, if the number of received packets $R$ is lower than $N$ then it sends an ack to the sender specifying the number of needed packets $P = N - R$. The second timer is used when waiting for the first packet after an ack. It thus waits for the ack to be received, new packets to be encoded and for the first to be received at the receiver (this interval is defined as a \textit{round trip time} (RTT)). If it expires, the ack is sent again. Both these timers use estimates provided by \texttt{TimeCounter} objects, however in order to make the system less aggressive (expecially in localhost, where intervals are very small and difficult to handle for the OS) the value of the estimate is scaled by 10 times. A third timer is used when a new block is expected, it is based on the RTT estimate but it scaled by 100 in order to allow for possible delays in reading the file from disk and encoding a whole new block. The scaling factors are empirical values, and can be adapted for usage on different networks.
+
+\subsection{PER estimation at sender}
+The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \textit{Packet Error Rate} (PER) of the channel and tries to adapt to it. The estimation is done with a moving average on a window of past block transmissions. In particular the sender records the average number of packets $P_b$ needed to successfully transmit each block, and estimates the PER as $PER = 1 - N/P_b$. Then once the sender needs to send $P$ packets, it sends $P/(1-PER)$ packets trying to prevent channel losses without needing retransmission. This lowers the efficiency of the system, but decreases the time needed to transmit the file.
 
 \begin{sidewaysfigure}
 \captionsetup{justification=centering,margin=3cm}
@@ -97,7 +109,6 @@ Let's now discuss the implementation of sender and receiver. The retransmission 
 		\draw[arrow] (success) -- node[anchor=east] {yes} (write);
 		\draw[arrow] (success) -- node[anchor=north] {no} (sendun);
 		\draw[arrow] (sendun) -| node[anchor=south, yshift=-0.7cm] {T=ack} ([xshift=+2cm]sendack.east) |-  (while);
-		\draw[arrow] (timer) -- (sendack);
 		\draw[arrow] (sendack) -- node[anchor=east] {T=ack} (waitpck);
 		\draw[arrow] (write) -| ([xshift=+3cm]sendack.east) |- ([yshift=+1cm]while.north east) -| (while.north);
 
