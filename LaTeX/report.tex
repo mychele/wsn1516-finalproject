@@ -24,7 +24,7 @@
 %mdwtab.sty	-- A complete ground-up rewrite of LaTeX's `tabular' and  `array' environments.  Has lots of advantages over
 %		   the standard version, and over the version in `array.sty'.
 % *** SUBFIGURE PACKAGES ***
-\usepackage[tight,footnotesize]{subfigure}
+% deprecated \usepackage[tight,footnotesize]{subfigure}
 
 \usepackage[top=2cm, bottom=2cm, right=1.6cm,left=1.6cm]{geometry}
 \usepackage{indentfirst}
@@ -42,7 +42,6 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{graphicx}
-\usepackage{subfig}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{mathrsfs}
@@ -58,9 +57,15 @@
 \usepackage{caption}
 \usepackage{booktabs}
 \usepackage{caption}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{rotating}
+\usepackage{mwe}
+
 \newcommand{\ap}[1]{\raisebox{0.6ex}{\scriptsize #1}} 
 \newcommand{\ped}[1]{\raisebox{-0.6ex}{\scriptsize #1}}
-
+\usepackage{lscape}
+\usepackage{multicol}
 % for tikz figures
 \usetikzlibrary{automata,positioning,chains,shapes,arrows}
 \usetikzlibrary{plotmarks}
@@ -108,7 +113,7 @@
 % FORMATTING
 \newcommand{\ie}{i.e.,\,}
 \newcommand{\eg}{e.g.,\,}
-\newcommand{\columnbreak}{\vfill\eject} % Column break
+%\newcommand{\columnbreak}{\vfill\eject} % Column break
 
 % REFERENCES
 \newcommand{\Fig}[1]{Fig.~\ref{#1}}
@@ -123,8 +128,6 @@
 
 \usepackage{layout}
 \usepackage{changepage}
-
-\usetikzlibrary{positioning}
 
 	
 \definecolor{cerulean}{cmyk}{0.94,0.11,0,0}
