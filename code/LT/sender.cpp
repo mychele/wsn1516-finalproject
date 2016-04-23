@@ -31,6 +31,8 @@ typedef std::pair<int, unsigned char> ackPayload;
 int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_send,
 	struct addrinfo *p_iter, unsigned char block_ID, NCpacketHelper *nchelper) {
 	int sentPackets = 0;
+	std::chrono::seconds timeout = std::chrono::seconds(10);
+
 	// encoding of packetNumber packets
 	std::vector<NCpacket> packetVector;
 	for (int enc_pck = 0; enc_pck < packetNumber; enc_pck++) {
@@ -44,12 +46,25 @@ int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_s
 			char *serializedPacket = pckIt->serialize();
 			int byte_to_send = pckIt->getInfoSizeNCpacket();
 			int byte_sent;
-			if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
-				perror("sender: tx socket");
-				std::cout << "Sent only " << byte_sent << " byte because of an error\n";
+			struct timeval tv = timeConversion(std::chrono::duration_cast<std::chrono::microseconds>(timeout));
+			fd_set writefds;
+		    FD_ZERO(&writefds);
+		    FD_SET(sockfd_send, &writefds);
+		    
+			int select_ret = select(32, NULL, &writefds, NULL, &tv);
+			if (select_ret > 0) {
+				//std::cout << "Select > 0\n";
+				if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
+					perror("sender: tx socket");
+					std::cout << "Sent only " << byte_sent << " byte because of an error\n";
+				} else {
+					sentPackets++;
+				}
+			} else {
+				std::cout << "Send timeout, retry later";
+				packetVector.push_back(*pckIt);
 			}
 			free(serializedPacket);
-			sentPackets++;
 		}
 		packetVector.clear();
 	}
@@ -99,7 +114,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 
 int main(int argc, char const *argv[])
 {
-	bool verb = 0;
+	bool verb = 1;
 
 	srand(time(NULL));
 	// read input
