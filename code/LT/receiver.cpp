@@ -29,7 +29,7 @@
 #include "NCpacketHelper.h"
 
 #define RECEIVER_PORT "30000"
-#define BACKLOG 100
+#define BACKLOG 1000
 
 /**
  * Struct used as return type of receivePacket
@@ -109,7 +109,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 
 int main(int argc, char *argv[])
 {
-	bool verb = 0;
+	bool verb = 1;
 
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
@@ -135,9 +135,9 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    //hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE;
     // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
-    if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
+    if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {
         fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;
@@ -220,9 +220,11 @@ int main(int argc, char *argv[])
     
     // ----------------------------------- TimeCounter objects ------------------------------------------------
     std::chrono::microseconds timeout_span(std::chrono::milliseconds(50)); // initial value
+    std::chrono::microseconds timeout_span_ack(std::chrono::milliseconds(1000)); // initial value
+
     TimeCounter packetGapCounter(timeout_span);
-    TimeCounter rrtCounter(timeout_span);
-    TimeCounter newBlockRttCounter(timeout_span);
+    TimeCounter rrtCounter(timeout_span_ack);
+    TimeCounter newBlockRttCounter(timeout_span_ack);
 	struct timeval tv = timeConversion(packetGapCounter.get());
 	// minimum value for a time_point, used for comparisons
 	std::chrono::time_point<std::chrono::system_clock> min_val = std::chrono::system_clock::time_point::min();
@@ -249,9 +251,13 @@ int main(int argc, char *argv[])
 		    FD_ZERO(&readfds);
 		    FD_SET(sockfd, &readfds);
 		    if (!ack_flag && !new_block_flag) { // consider as timeout the estimated gap between packets
-		    	tv = timeConversion(10*packetGapCounter.get()); // use a new estimate to initialize the timeout
+		    	tv = timeConversion(packetGapCounter.get()); // use a new estimate to initialize the timeout
 			} else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
-				tv = timeConversion(10*rrtCounter.get());
+				if(packets_needed > 0) {
+					tv = timeConversion((100*packets_needed/N_TB_SIZE)*rrtCounter.get());
+				} else {
+					tv = timeConversion(rrtCounter.get());
+				}
 			} else if (new_block_flag) {
 				tv = timeConversion(100*rrtCounter.get());
 			}
@@ -291,6 +297,12 @@ int main(int argc, char *argv[])
 					    	ack_flag = 0;
 				    	}
 				        packet = deserialize((char *)receive_buffer);
+				        // std::vector<int> bheader = nchelper->getBinaryHeader(packet.getHeader());
+				        // std::cout << bheader.size() << "\n";
+				        // for(std::vector<int>::iterator iter = bheader.begin(); iter != bheader.end(); ++iter) 
+				        // {
+				        // 	std::cout << *iter << "\n";
+				        // }
 				        if(packet.getBlockID() == rx_block_ID)
 	                    {
                             nc_vector.push_back(packet);
@@ -326,7 +338,8 @@ int main(int argc, char *argv[])
 	                ack_flag = 1;
 	                if (verb) {std::cout << "Current RTT estimate " << (double)rrtCounter.get().count()/1000 << " ms \n";}
             	}
-		    } else {
+		    } 
+		    else {
 				// do nothing, there was an error
 		    }
 

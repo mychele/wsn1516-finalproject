@@ -15,7 +15,7 @@ TimeCounter::TimeCounter(microseconds defaultValue)
 	m_beta_den = 4;
 	m_alpha = 1;
 	m_alpha_den = 8;
-	m_k = 4;
+	m_k = 20;
 }
 
 // see RFC 6298

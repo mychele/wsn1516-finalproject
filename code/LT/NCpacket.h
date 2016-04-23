@@ -11,10 +11,10 @@
 #ifndef NCPACKET
 #define NCPACKET
 
-#define K_TB_SIZE 4500
-#define N_TB_SIZE 5500
+#define K_TB_SIZE 3500
+#define N_TB_SIZE 4500
 
-#define PAYLOAD_SIZE 2048 //in byte
+#define PAYLOAD_SIZE 512 //in byte
 #define RSD_CONST_C 0.03
 #define RSD_CONST_DELTA 0.5
 
