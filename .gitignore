@@ -12,4 +12,10 @@ code/LT/receiver
 
 code/LT/sender
 
+code/LT-wifi/sender
+
+code/LT-wifi/receiver
+
 LaTeX/report.pdf
+
+*.wav
