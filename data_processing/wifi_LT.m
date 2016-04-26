@@ -7,10 +7,11 @@ close all hidden;
 %% LT RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE	faileddec
-data_LT_rx=importdata('./data/data_LT_wifirx_hsnr.txt',' ');
+data_LT_rx=importdata('./data/data_LT_wifirx_hsnr_2.txt',' ');
 Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
+Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
 for i=1:length(PERs)
     for j=1:length(Ks)
@@ -37,9 +38,10 @@ end
 
 %% LT TX
 %sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
-data_LT_tx=importdata('./data/data_LT_wifitx_hsnr.txt',' ');
+data_LT_tx=importdata('./data/data_LT_wifitx_hsnr_2.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
+Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
 
 for i=1:length(PERs)
