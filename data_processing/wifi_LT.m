@@ -11,37 +11,37 @@ data_LT_rx=importdata('./data/data_LT_wifirx_hsnr_2.txt',' ');
 Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
-Ks(end) = []; % exclude K = 5500, not enough measures yet!
+%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
 for i=1:length(PERs)
     for j=1:length(Ks)
         for k=1:length(increments)
-		data_PER_K_N_rx=[];
-		data_PER_K_N_rx=data_LT_rx(find(data_LT_rx(:,8)==PERs(i) & data_LT_rx(:,9)==Ks(j) & data_LT_rx(:,10)==(Ks(j)+increments(k))),:);
-		dectime_LT(i,j,k)=mean(data_PER_K_N_rx(:,1));
-		dectime_LT_std(i,j,k)=std(data_PER_K_N_rx(:,1));
-		rxtime_LT(i,j,k)=mean(data_PER_K_N_rx(:,2));
-		rxtime_LT_std(i,j,k)=std(data_PER_K_N_rx(:,2));
-		totrxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,3));
-		totrxpck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,3));
-		droppck_LT(i,j,k)=mean(data_PER_K_N_rx(:,4));
-		droppck_std(i,j,k)=std(data_PER_K_N_rx(:,4));
-		rxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,5));
-		rxpck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,5));
-		uselesspck_LT(i,j,k)=mean(data_PER_K_N_rx(:,6));
-		uselesspck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,6));
-		PER_estimate_LT(i,j,k)=mean(data_PER_K_N_rx(:,7));
-		PER_estimate_LT_std(i,j,k)=std(data_PER_K_N_rx(:,7));
+			data_PER_K_N_rx=[];
+			data_PER_K_N_rx=data_LT_rx(find(data_LT_rx(:,8)==PERs(i) & data_LT_rx(:,9)==Ks(j) & data_LT_rx(:,10)==(Ks(j)+increments(k))),:);
+			dectime_LT(i,j,k)=mean(data_PER_K_N_rx(:,1));
+			dectime_LT_std(i,j,k)=std(data_PER_K_N_rx(:,1));
+			rxtime_LT(i,j,k)=mean(data_PER_K_N_rx(:,2));
+			rxtime_LT_std(i,j,k)=std(data_PER_K_N_rx(:,2));
+			totrxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,3));
+			totrxpck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,3));
+			droppck_LT(i,j,k)=mean(data_PER_K_N_rx(:,4));
+			droppck_std(i,j,k)=std(data_PER_K_N_rx(:,4));
+			rxpck_LT(i,j,k)=mean(data_PER_K_N_rx(:,5));
+			rxpck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,5));
+			uselesspck_LT(i,j,k)=mean(data_PER_K_N_rx(:,6));
+			uselesspck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,6));
+			PER_estimate_LT(i,j,k)=mean(data_PER_K_N_rx(:,7));
+			PER_estimate_LT_std(i,j,k)=std(data_PER_K_N_rx(:,7));
 		end
     end
 end
-
+ 
 %% LT TX
 %sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
 data_LT_tx=importdata('./data/data_LT_wifitx_hsnr_2.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
-Ks(end) = []; % exclude K = 5500, not enough measures yet!
+%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
 
 for i=1:length(PERs)
