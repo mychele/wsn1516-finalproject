@@ -1,10 +1,10 @@
 #!/bin/bash
-arr_K=(1000 2000 3000)
-arr_increment=(500 1000 1500 2000)
+arr_K=(2500 3500 4500)
+arr_increment=(1000 1500)
 source K_index_file
 source increment_index_file
 source trial_index_file
-if [ $trial_index -lt 10 ]
+if [ $trial_index -lt 2 ]
 	then
 	trial_index=$((trial_index+1))
 	echo trial_index=$trial_index > trial_index_file
@@ -12,7 +12,7 @@ else
 	trial_index=0
 	echo trial_index=$trial_index > trial_index_file
 	increment_index=$((increment_index+1))
-	if [ $increment_index -le 3 ]
+	if [ $increment_index -le 1 ]
 		then
 		echo increment_index=$increment_index > increment_index_file
 	else
