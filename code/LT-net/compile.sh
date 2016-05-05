@@ -1,4 +1,4 @@
-cd ~/repos/wsn1516-finalproject/code/LT
+cd ../..
 K_TB_SIZE_VAL=$1
 INCREMENT=$2
 N_TB_SIZE_VAL=$(($1+$2))
