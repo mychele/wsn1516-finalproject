@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /home/olivotto/RemoteDirLTH/WSN/LT-net/script/receiver
-arr_K=(2500 3500)
+arr_K=(2500 3500 4500)
 arr_increment=(1000 1500)
 source K_index_file
 source increment_index_file
@@ -20,7 +20,7 @@ else
 		increment_index=0
 		echo increment_index=$increment_index > increment_index_file
 		K_index=$((K_index+1))
-		if [ $K_index -le 1 ]
+		if [ $K_index -le 2 ]
 			then
 			echo K_index=$K_index > K_index_file
 			else
