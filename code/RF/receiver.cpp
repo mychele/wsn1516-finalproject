@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     // ----------------------------------------- stats variables --------------------------------------------
     int total_received_packets = 0;
     std::chrono::time_point<std::chrono::system_clock> start_file_rx, end_file_rx_and_decoding, start_packet_decoder, end_packet_decoder;
-    double total_time_decoding_block = 0;
+    double total_time_decoding_and_rx_block = 0;
     int num_blocks = 0;
     std::chrono::time_point<std::chrono::system_clock> start_block_decoding, end_block_decoding;
 
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
         std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
         if (verb) {std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";}
         if (verb) {std::cout << "Elapsed time to decode blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << ": "<<elapsed_seconds_block_decoding.count()<<" s\n";}
-        total_time_decoding_block += elapsed_seconds_block_decoding.count();
+        total_time_decoding_and_rx_block += elapsed_seconds_block_decoding.count();
         num_blocks++;
         nc_vector.clear();
         total_received_packets += received_packets;
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
     end_file_rx_and_decoding= std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
     if(verb) {
-        std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_block/num_blocks << "s \n";
+        std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_and_rx_block/num_blocks << "s \n";
         std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
         std::cout << "File successfully received and decoded!! :-)\n";
         std::cout << "Stats on packets" << "\n";
@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
         std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
         std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
     } else {
-        std::cout << (double)total_time_decoding_block/num_blocks << " "
+        std::cout << (double)total_time_decoding_and_rx_block/num_blocks << " "
                   << elapsed_seconds_file_rx_decoding.count() << " "
                   << total_received_dropped_packets << " "
                   << dropped_packets << " "
