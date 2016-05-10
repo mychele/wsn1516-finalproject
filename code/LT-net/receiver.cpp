@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
         					<< " received packets " << total_received_packets << "\n";
         std::cout << "Packets received from blocks already decoded " << total_received_dropped_packets - dropped_packets - total_received_packets << "\n";
         std::cout << "Drop probability " << (double)dropped_packets/total_received_dropped_packets << "\n";
-        std::cout << "Number of failed decoding " << num_failed_decoding << "\n"
+        std::cout << "Number of failed decoding " << num_failed_decoding << "\n";
         std::cout << "Average time to perform a decoding attempt " << (double)total_time_decoding_attempt/num_decoding_attempt << "\n";
     } else {
         std::cout << (double)total_time_decoding_and_rx_block/num_blocks << " "
@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
                   << PER << " "
                   << K_TB_SIZE << " " 
                   << N_TB_SIZE << " " 
-                  << num_failed_decoding <<
+                  << num_failed_decoding
                   << (double)total_time_decoding_attempt/num_decoding_attempt << "\n";
     }
     free(receive_buffer);
