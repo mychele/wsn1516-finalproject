@@ -11,7 +11,6 @@ data_LT_rx=importdata('./data/data_LT_wifirx_hsnr_2.txt',' ');
 Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
-%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
 for i=1:length(PERs)
     for j=1:length(Ks)
@@ -32,6 +31,7 @@ for i=1:length(PERs)
 			uselesspck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,6));
 			PER_estimate_LT(i,j,k)=mean(data_PER_K_N_rx(:,7));
 			PER_estimate_LT_std(i,j,k)=std(data_PER_K_N_rx(:,7));
+			num_samples_rx(i,j,k) = length(data_PER_K_N_rx);
 		end
     end
 end
@@ -41,7 +41,6 @@ end
 data_LT_tx=importdata('./data/data_LT_wifitx_hsnr_2.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
-%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
 
 for i=1:length(PERs)
@@ -61,6 +60,7 @@ for i=1:length(PERs)
 			throughput_LT_std(i,j,k)=std(data_PER_K_N_tx(:,5));
 			PER_estimate_LT(i,j,k)=mean(data_PER_K_N_tx(:,6));
 			PER_estimate_LT_std(i,j,k)=std(data_PER_K_N_tx(:,6));
+			num_samples_tx(i,j,k) = length(data_PER_K_N_tx);
 		end
     end
 end
@@ -70,7 +70,7 @@ n_meas = size(data_PER_K_N_rx, 1);
 figure()
 title('Goodput on Wi-Fi connection');
 for j=1:length(Ks)
-	errorbar(increments, squeeze(goodput_LT(:,j,:)), 1.96*squeeze(goodput_LT_std(:,j,:))./sqrt(n_meas), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	errorbar(increments, squeeze(goodput_LT(:,j,:)), 1.96*squeeze(goodput_LT_std(:,j,:))./sqrt(squeeze(num_samples_tx(:,j, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
 		'LineWidth', linewidth, 'MarkerSize', markersize)
 	hold all;	
 end
@@ -81,11 +81,28 @@ for i=1:length(str(:,1))
 	str_legend(i)=cellstr(strjoin(str(i,:)));
 end
 legend(str_legend');
+grid on
+
+figure()
+title('Throughput on Wi-Fi connection');
+for j=1:length(Ks)
+	errorbar(increments, squeeze(throughput_LT(:,j,:)), 1.96*squeeze(throughput_LT_std(:,j,:))./sqrt(squeeze(num_samples_tx(:,j, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+		'LineWidth', linewidth, 'MarkerSize', markersize)
+	hold all;	
+end
+xlabel('N-K');
+ylabel('Mbit/s');
+str=[cellstr(num2str((Ks), 'K=%-d'))']';
+for i=1:length(str(:,1))
+	str_legend(i)=cellstr(strjoin(str(i,:)));
+end
+legend(str_legend');
+grid on
 
 figure()
 title('Efficiency on Wi-Fi connection');
 for j=1:length(Ks)
-	errorbar(increments, squeeze(efficiency_LT(:,j,:)), 1.96*squeeze(efficiency_LT_std(:,j,:))./sqrt(n_meas), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	errorbar(increments, squeeze(efficiency_LT(:,j,:)), 1.96*squeeze(efficiency_LT_std(:,j,:))./sqrt(squeeze(num_samples_tx(:,j, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
 		'LineWidth', linewidth, 'MarkerSize', markersize)
 	hold all;	
 end
@@ -96,18 +113,97 @@ for i=1:length(str(:,1))
 	str_legend(i)=cellstr(strjoin(str(i,:)));
 end
 legend(str_legend');
+grid on
 
+% figure()
+% title('Goodput on Wi-Fi connection');
+% for j=1:length(Ks)
+% 	plot(increments, squeeze(goodput_LT(:,j,:)), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+% 		'LineWidth', linewidth, 'MarkerSize', markersize)
+% 	hold all;	
+% end
+% xlabel('N-K');
+% ylabel('Mbit/s');
+% str=[cellstr(num2str((Ks), 'K=%-d'))']';
+% for i=1:length(str(:,1))
+% 	str_legend(i)=cellstr(strjoin(str(i,:)));
+% end
+% legend(str_legend');
+
+
+%% Comparison with Low SNR
+%% LT TX
+%sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
+data_LT_tx_l=importdata('./data/data_LT_wifitx_lsnr.txt',' ');
+PERs_l=unique(data_LT_tx_l(:,7));
+Ks_l=unique(data_LT_tx_l(:,8));
+increments=unique(data_LT_tx_l(find(data_LT_tx_l(:,8)==Ks(1)),9))-Ks(1);
+
+for i=1:length(PERs)
+    for j=1:length(Ks)
+        for k=1:length(increments)
+            data_PER_K_N_tx=[];
+            data_PER_K_N_tx=data_LT_tx_l(find(data_LT_tx_l(:,7)==PERs(i) & data_LT_tx_l(:,8)==Ks(j) & data_LT_tx_l(:,9)==(Ks(j)+increments(k))),:);
+            
+			efficiency_LT_l(i,j,k)=mean(data_PER_K_N_tx(:,4)./data_PER_K_N_tx(:,5));
+			efficiency_LT_std_l(i,j,k)=std(data_PER_K_N_tx(:,4)./data_PER_K_N_tx(:,5));
+			goodput_LT_l(i,j,k)=mean(data_PER_K_N_tx(:,4));
+			goodput_LT_std_l(i,j,k)=std(data_PER_K_N_tx(:,4));
+			throughput_LT_l(i,j,k)=mean(data_PER_K_N_tx(:,5));
+			throughput_LT_std_l(i,j,k)=std(data_PER_K_N_tx(:,5));
+			num_samples_tx_l(i,j,k) = length(data_PER_K_N_tx);
+		end
+    end
+end
+
+k = 4;
+j = 1;
 figure()
 title('Goodput on Wi-Fi connection');
-for j=1:length(Ks)
-	plot(increments, squeeze(goodput_LT(:,j,:)), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
-		'LineWidth', linewidth, 'MarkerSize', markersize)
-	hold all;	
-end
+
+errorbar(increments, squeeze(goodput_LT(:,k,:)), 1.96*squeeze(goodput_LT_std(:,k, :))./sqrt(squeeze(num_samples_tx(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
+hold on,
+j = j+3;
+errorbar(increments, squeeze(goodput_LT_l(:,k,:)), 1.96*squeeze(goodput_LT_std_l(:,k, :))./sqrt(squeeze(num_samples_tx_l(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
 xlabel('N-K');
 ylabel('Mbit/s');
-str=[cellstr(num2str((Ks), 'K=%-d'))']';
-for i=1:length(str(:,1))
-	str_legend(i)=cellstr(strjoin(str(i,:)));
-end
-legend(str_legend');
+
+legend('High SNR', 'Low SNR');
+
+grid on
+
+j = 1;
+figure()
+title('Efficiency on Wi-Fi connection');
+
+errorbar(increments, squeeze(efficiency_LT(:,k,:)), 1.96*squeeze(efficiency_LT_std(:,k, :))./sqrt(squeeze(num_samples_tx(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
+hold on,
+j = j+3;
+errorbar(increments, squeeze(efficiency_LT_l(:,k,:)), 1.96*squeeze(efficiency_LT_std_l(:,k, :))./sqrt(squeeze(num_samples_tx_l(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
+xlabel('N-K');
+%ylabel('Mbit/s');
+
+legend('High SNR', 'Low SNR');
+
+grid on
+
+j = 1;
+figure()
+title('Throughput on Wi-Fi connection');
+
+errorbar(increments, squeeze(throughput_LT(:,k,:)), 1.96*squeeze(throughput_LT_std(:,k, :))./sqrt(squeeze(num_samples_tx(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
+hold on,
+j = j+3;
+errorbar(increments, squeeze(throughput_LT_l(:,k,:)), 1.96*squeeze(throughput_LT_std_l(:,k, :))./sqrt(squeeze(num_samples_tx_l(:,k, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+	'LineWidth', linewidth, 'MarkerSize', markersize)
+xlabel('N-K');
+ylabel('Mbit/s');
+
+legend('High SNR', 'Low SNR');
+
+grid on

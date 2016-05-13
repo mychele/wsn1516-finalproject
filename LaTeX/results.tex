@@ -1,2 +1,317 @@
 \section{Results and conclusions}
-\lipsum[1]
+\setlength{\abovecaptionskip}{0pt plus 0pt minus 2pt}
+
+% 1 page
+% Table with different experimental setups, file size, payload on diff setups (2048 byte on localhost, 1467 byte on WiFi and Net due to MTU), header size (32 seed + 8 block_ID bit), ACK size (32 packets needed + 8 block_ID bit). 
+
+% time to decode NET_localhost (last column) - x axis N-K, different lines for each K
+
+% 3 pages
+% localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.24\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_goodput_1000.tex}
+	\caption{$K=1000$}
+	\label{fig:lh_good_1000}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_goodput_3500.tex}
+	\caption{$K=3500$}
+	\label{fig:lh_good_3500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_goodput_5500.tex}
+	\caption{$K=5500$}
+	\label{fig:lh_good_5500}
+\end{subfigure}
+\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup}
+\label{fig:goodput_aggr}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_efficiency_1000.tex}
+	\caption{$K=1000$}
+	\label{fig:lh_eff_1000}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_efficiency_3500.tex}
+	\caption{$K=3500$}
+	\label{fig:lh_eff_3500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_efficiency_5500.tex}
+	\caption{$K=5500$}
+	\label{fig:lh_eff_5500}
+\end{subfigure}
+\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup}
+\label{fig:goodput_aggr}
+\end{figure}
+
+% TODO NET_localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
+% Relation between different parameters (K, N) and goodput/efficiency. Tradeoff redundancy goodput time to decode.
+% Compare the two setup and show the tradeoff between goodput and efficiency, according to the different timeout settings.
+% Something on useless packets (i.e. packets that arrive after the completion of a decoding attempt, that may be sent after 
+% the reception of previous ACKs), notice that they tend to 0.
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.24\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_goodput_1000.tex}
+	\caption{$K=1000$}
+	\label{fig:lh_good_1000_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_goodput_3500.tex}
+	\caption{$K=3500$}
+	\label{fig:lh_good_3500_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_goodput_5500.tex}
+	\caption{$K=5500$}
+	\label{fig:lh_good_5500_eff}
+\end{subfigure}
+\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency oriented setup}
+\label{fig:goodput_nonaggr}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_efficiency_1000.tex}
+	\caption{$K=1000$}
+	\label{fig:lh_eff_1000_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_efficiency_3500.tex}
+	\caption{$K=3500$}
+	\label{fig:lh_eff_3500_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/localhost_efficiency_5500.tex}
+	\caption{$K=5500$}
+	\label{fig:lh_eff_5500_eff}
+\end{subfigure}
+\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency oriented setup}
+\label{fig:eff_nonaggr}
+\end{figure}
+
+
+% 3 pages
+% wifi: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_eff.tex}
+	\caption{Efficiency}
+	\label{fig:wifi_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_goodput.tex}
+	\caption{Goodput}
+	\label{fig:wifi_good}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_throughput.tex}
+	\caption{Throughput}
+	\label{fig:wifi_thr}
+\end{subfigure}
+\caption{Metrics for WiFi simulation}
+\label{fig:wifi}
+\end{figure}
+% K = 4500, possibly others, show the difference between a nice setting and a low snr setting
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_eff_lsnr_3500.tex}
+	\caption{Efficiency}
+	\label{fig:wifi_eff_lsnr_3500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_goodput_lsnr_3500.tex}
+	\caption{Goodput}
+	\label{fig:wifi_good_lsnr_3500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_throughput_lsnr_3500.tex}
+	\caption{Throughput}
+	\label{fig:wifi_thr_lsnr_3500}
+\end{subfigure}
+\caption{Comparison between setup with good SNR and setup with bad SNR, for $K=3500$}
+\label{fig:wifi_lsnr_3500}
+\end{figure}
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_eff_lsnr_4500.tex}
+	\caption{Efficiency}
+	\label{fig:wifi_eff_lsnr_4500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_goodput_lsnr_4500.tex}
+	\caption{Goodput}
+	\label{fig:wifi_good_lsnr_4500}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/wifi_throughput_lsnr_4500.tex}
+	\caption{Throughput}
+	\label{fig:wifi_thr_lsnr_4500}
+\end{subfigure}
+\caption{Comparison between setup with good SNR and setup with bad SNR, for $K=4500$}
+\label{fig:wifi_lsnr_4500}
+\end{figure}
+% few words on MTU
+
+% net: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/net_eff.tex}
+	\caption{Efficiency}
+	\label{fig:net_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/net_goodput.tex}
+	\caption{Goodput}
+	\label{fig:net_good}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/net_throughput.tex}
+	\caption{Throughput}
+	\label{fig:net_thr}
+\end{subfigure}
+\caption{Metrics for Net simulation}
+\label{fig:net}
+\end{figure}
+
+% comparison between RF and LT in localhost
+% TODO decoding time comparison
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_eff_LT3500_RF.tex}
+	\caption{Efficiency}
+	\label{fig:RF_eff}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	\input{./figures/localhost_goodput_LT3500_RF.tex}
+	\caption{Goodput}
+	\label{fig:RF_good}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.23\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{\textwidth}
+	\setlength\fheight{140}
+	%\input{./figures/net_throughput.tex}
+	\caption{Decoding time per packet}
+	\label{fig:RFLT_dectime}
+\end{subfigure}
+\caption{Comparison between LT, $K=3500$ - $N=4500$, and RF, $K=12$ - $N=17$}
+\label{fig:RFLT}
+\end{figure}

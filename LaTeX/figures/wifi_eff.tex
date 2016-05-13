@@ -1,0 +1,67 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.01651,0.42660,0.87863}%
+\definecolor{mycolor2}{rgb}{0.03434,0.59658,0.81985}%
+\definecolor{mycolor3}{rgb}{0.14527,0.70976,0.66463}%
+\definecolor{mycolor4}{rgb}{0.57086,0.74852,0.44939}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=800,
+xmax=2200,
+xlabel={$N-K$},
+xmajorgrids,
+ymin=0.45,
+ymax=0.8,
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+legend style={legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=0.9pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.657617457918151	0.00830863609152333	0.00830863609152333\\
+1500	0.564777777929051	0.00794746376635875	0.00794746376635875\\
+2000	0.50522880664174	0.00771542675625213	0.00771542675625213\\
+};
+\addlegendentry{K=2500};
+
+\addplot [color=mycolor2,solid,line width=0.9pt,mark=asterisk,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.748587308805177	0.00921914040058714	0.00921914040058714\\
+1500	0.66024799425559	0.00993915646659489	0.00993915646659489\\
+2000	0.599013574820369	0.00986319140219534	0.00986319140219534\\
+};
+\addlegendentry{K=3500};
+
+\addplot [color=mycolor3,solid,line width=0.9pt,mark=*,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.782130337403139	0.0152248342402092	0.0152248342402092\\
+1500	0.711896622608992	0.0163528664880827	0.0163528664880827\\
+2000	0.661531590735928	0.00915159535438628	0.00915159535438628\\
+};
+\addlegendentry{K=4500};
+
+\addplot [color=mycolor4,solid,line width=0.9pt,mark=x,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.774577505266984	0.0141816261338152	0.0141816261338152\\
+1500	0.711899954988461	0.0147748897269377	0.0147748897269377\\
+2000	0.664920799774218	0.0156360274879407	0.0156360274879407\\
+};
+\addlegendentry{K=5500};
+
+\end{axis}
+\end{tikzpicture}%

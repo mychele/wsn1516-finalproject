@@ -1,0 +1,57 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.01651,0.42660,0.87863}%
+\definecolor{mycolor2}{rgb}{0.03434,0.59658,0.81985}%
+\definecolor{mycolor3}{rgb}{0.14527,0.70976,0.66463}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=900,
+xmax=1600,
+xlabel={$N-K$},
+xmajorgrids,
+xtick={1000,1500},
+xticklabels={1000,1500},
+ymin=7.6,
+ymax=8.8,
+ylabel={Mbit/s},
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+legend style={at={(0.92\fwidth,0.02)},anchor=south east,legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=0.9pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	8.41148229166667	0.102559026315919	0.102559026315919\\
+1500	8.55444454545454	0.207110378610739	0.207110378610739\\
+};
+\addlegendentry{K=2500};
+
+\addplot [color=mycolor2,solid,line width=0.9pt,mark=asterisk,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	8.40838454545455	0.110125326434846	0.110125326434846\\
+1500	8.63451696969697	0.159489638526828	0.159489638526828\\
+};
+\addlegendentry{K=3500};
+
+\addplot [color=mycolor3,solid,line width=0.9pt,mark=*,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	7.749506	0.114925525257486	0.114925525257486\\
+1500	8.59740363636364	0.0744991369542555	0.0744991369542555\\
+};
+\addlegendentry{K=4500};
+
+\end{axis}
+\end{tikzpicture}%

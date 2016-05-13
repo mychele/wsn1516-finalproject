@@ -1,0 +1,47 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.01651,0.42660,0.87863}%
+\definecolor{mycolor2}{rgb}{0.57086,0.74852,0.44939}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=800,
+xmax=2200,
+xlabel={$N-K$},
+xmajorgrids,
+ymin=0.5,
+ymax=0.9,
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+legend style={at={(0.5\fwidth,0.02)},anchor=south,legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=0.9pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.782130337403139	0.0152248342402092	0.0152248342402092\\
+1500	0.711896622608992	0.0163528664880827	0.0163528664880827\\
+2000	0.661531590735928	0.00915159535438628	0.00915159535438628\\
+};
+\addlegendentry{High SNR};
+
+\addplot [color=mycolor2,solid,line width=0.9pt,mark=x,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.753234924187871	0.100364625382823	0.100364625382823\\
+1500	0.622301348391012	0.107050431807866	0.107050431807866\\
+2000	0.671697409893172	0.0149895637653071	0.0149895637653071\\
+};
+\addlegendentry{Low SNR};
+
+\end{axis}
+\end{tikzpicture}%

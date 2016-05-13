@@ -1,0 +1,60 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=-0.1,
+xmax=0.9,
+xlabel={PER},
+xmajorgrids,
+ymin=0,
+ymax=60,
+ylabel={Goodput [Mbit/s]},
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+legend style={legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=0.9pt,mark=x,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	57.01156	0.427701997750642	0.427701997750642\\
+0.1	53.53186	0.67468020562806	0.67468020562806\\
+0.2	50.785391	0.98578202917479	0.98578202917479\\
+0.3	47.100001	1.03684942553393	1.03684942553393\\
+0.4	43.682905	1.13598079924901	1.13598079924901\\
+0.5	37.978742	1.14775390399833	1.14775390399833\\
+0.6	34.1070483	0.929161829765655	0.929161829765655\\
+0.7	30.410348	0.695811005445303	0.695811005445303\\
+0.8	26.373284	0.397723441910712	0.397723441910712\\
+};
+\addlegendentry{LT};
+
+\addplot [color=mycolor2,solid,line width=0.9pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	26.829898	0.244138859622235	0.244138859622235\\
+0.1	19.526204	0.250958936386755	0.250958936386755\\
+0.2	16.073498	0.252657568117072	0.252657568117072\\
+0.3	14.958232	0.248299799441779	0.248299799441779\\
+0.4	13.158552	0.215612631199697	0.215612631199697\\
+0.5	11.3128577	0.26362695148642	0.26362695148642\\
+0.6	9.4242409	0.192677814506084	0.192677814506084\\
+0.7	7.1813697	0.186140262115917	0.186140262115917\\
+0.8	4.6350582	0.147541666930359	0.147541666930359\\
+};
+\addlegendentry{RF};
+
+\end{axis}
+\end{tikzpicture}%

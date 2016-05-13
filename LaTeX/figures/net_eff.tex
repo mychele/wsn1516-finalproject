@@ -1,0 +1,56 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.01651,0.42660,0.87863}%
+\definecolor{mycolor2}{rgb}{0.03434,0.59658,0.81985}%
+\definecolor{mycolor3}{rgb}{0.14527,0.70976,0.66463}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=900,
+xmax=1600,
+xlabel={$N-K$},
+xmajorgrids,
+xtick={1000,1500},
+xticklabels={1000,1500},
+ymin=0.55,
+ymax=0.85,
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+legend style={legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=0.9pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.657615582001086	0.0152553586749612	0.0152553586749612\\
+1500	0.578791275831657	0.0156552115813056	0.0156552115813056\\
+};
+\addlegendentry{K=2500};
+
+\addplot [color=mycolor2,solid,line width=0.9pt,mark=asterisk,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.750034566754101	0.0157706618346538	0.0157706618346538\\
+1500	0.680270540769474	0.00741167227100883	0.00741167227100883\\
+};
+\addlegendentry{K=3500};
+
+\addplot [color=mycolor3,solid,line width=0.9pt,mark=*,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+1000	0.802191656442435	0.00836087773911449	0.00836087773911449\\
+1500	0.7382076703067	0.0157398139571112	0.0157398139571112\\
+};
+\addlegendentry{K=4500};
+
+\end{axis}
+\end{tikzpicture}%

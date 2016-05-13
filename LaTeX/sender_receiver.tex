@@ -1,4 +1,6 @@
 \section{Implementation of sender and receiver}
+\setlength{\abovecaptionskip}{10pt plus 3pt minus 2pt}
+
 Sender and receiver are implemented as two standalone classes, which can be launched by a command line interface with some options. They create all the objects needed, then open some sockets and perform transmission and reception of a file using network coding techniques. We implemented two different versions, one which relies on a Random Fountain coding, and the second that uses LT codes, which is much more difficult to implement but offers better performances.
 
 In order to easily handle encoded packets, we defined the class \texttt{NCpacket}. It has a single private variable, a \texttt{NCpacketContainer} struct that stores an header as a 32 bit integer, a sequence number (\texttt{blockID}) as an 8 bit char, and the payload (i.e. the encoded data) as char array of fixed size. It has constructors that accept either these three parameters or the \texttt{blockID} and the whole chunk of uncoded data, and performs the encoding inside the constructor. 

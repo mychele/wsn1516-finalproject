@@ -8,10 +8,8 @@ close all hidden;
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE	faileddec
 data_LT_rx=importdata('./data/data_LT_net_rx.txt',' ');
-Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
-%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_rx(find(data_LT_rx(:,9)==Ks(1)),10))-Ks(1);
 for i=1:length(PERs)
     for j=1:length(Ks)
@@ -42,7 +40,6 @@ end
 data_LT_tx=importdata('./data/data_LT_net_tx.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
-%Ks(end) = []; % exclude K = 5500, not enough measures yet!
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
 
 for i=1:length(PERs)
@@ -81,6 +78,23 @@ for i=1:length(str(:,1))
 	str_legend(i)=cellstr(strjoin(str(i,:)));
 end
 legend(str_legend');
+grid on
+
+figure()
+title('Goodput on Wi-Fi connection');
+for j=1:length(Ks)
+	errorbar(increments, squeeze(throughput_LT(:,j,:)), 1.96*squeeze(throughput_LT_std(:,j,:))./sqrt(squeeze(num_samples_tx(:,j, :))), markers{mod(j, numel(markers)) + 1}, 'Color', color_matrix(mod(j*10, size(color_matrix, 1)) + 1,:), ...
+		'LineWidth', linewidth, 'MarkerSize', markersize)
+	hold all;	
+end
+xlabel('N-K');
+ylabel('Mbit/s');
+str=[cellstr(num2str((Ks), 'K=%-d'))']';
+for i=1:length(str(:,1))
+	str_legend(i)=cellstr(strjoin(str(i,:)));
+end
+legend(str_legend');
+grid on
 
 figure()
 title('Efficiency on Wi-Fi connection');
@@ -96,4 +110,5 @@ for i=1:length(str(:,1))
 	str_legend(i)=cellstr(strjoin(str(i,:)));
 end
 legend(str_legend');
+grid on
 
