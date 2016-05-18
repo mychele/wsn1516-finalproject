@@ -48,7 +48,8 @@ NCpacketHelper::initRSDpmd() {
         tau[i] = (double)S/((i+1)*m_K);
     }
     tau[K_S-1] = S/m_K*std::log(S/m_delta_rsd);
-
+	
+	//compute normalizations constants and normalize
     double normalization = 0;
     for (int i = 0; i < m_K; i++) {
         normalization = (double)normalization+rho[i]+tau[i];

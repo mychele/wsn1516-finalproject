@@ -161,36 +161,35 @@ struct timeval timeConversion(std::chrono::microseconds d)
 void XOR_encode(std::vector<int> *encoding_vector, vector<char*> *data, char* out_payload) 
 {
     vector<char> sum = vector<char>(PAYLOAD_SIZE, 0);
-    //std::fill(sum.begin(), sum.end(), 0);
     for (int i=0; i < encoding_vector->size(); i++) // encoding vector contains the position of 1, i.e. which packets must be XORed
     {
-        char* pyl=data->at(encoding_vector->at(i));
+        char* pyl=data->at(encoding_vector->at(i)); //get the packets (array of chars) at position given by the EV
         for (int j=0; j<PAYLOAD_SIZE; j++)
         {
-            sum[j]=sum[j]^pyl[j];
+            sum[j]=sum[j]^pyl[j];	//perform bitwise XOR on the chars of the packet		
 
         }
     }
-    memcpy(out_payload, &sum[0], PAYLOAD_SIZE);
+    memcpy(out_payload, &sum[0], PAYLOAD_SIZE); //copy output in output variable
 }
 
 vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data)
 {
     vector<char*> out;
     vector<char> sum(PAYLOAD_SIZE);
-    for (int i=0; i<K_TB_SIZE; i++)
+    for (int i=0; i<K_TB_SIZE; i++) //rows of X are encoding vectors
     {
-        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));
+        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));  //allocate memory for output
         std::fill(sum.begin(), sum.end(), 0);
-        for (int j=0; j<N_TB_SIZE; j++)
+        for (int j=0; j<N_TB_SIZE; j++)	
         {
 
-            if (X.at(i)[j]==1)
+            if (X.at(i)[j]==1)  //1 at position j of encoding vector i
             {
-                char* pyl=encoded_data.at(j);
+                char* pyl=encoded_data.at(j); //get packet j
                 for (int h=0; h<PAYLOAD_SIZE; h++)
                 {
-                    sum[h]=sum[h]^pyl[h];
+                    sum[h]=sum[h]^pyl[h];     //perform bitwise XOR
 
 
                 }
@@ -198,7 +197,7 @@ vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_dat
             }
 
         }
-        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE);
+        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE); //copy output in output variable
     }
     return out;
 }

@@ -28,7 +28,7 @@ using std::cout;
 extern std::vector<NCpacket> memoryToVector(char *buffer, int size);
 
 /**
- * This function returns a vector of pointer to char arrays of size (hopefully) PAYLOAD_SIZE
+ * This function returns a vector of pointer to char arrays of size PAYLOAD_SIZE
  */
 extern std::vector<char *> memoryToCharVector(char *buffer, int size);
 
@@ -79,11 +79,17 @@ timeval timeConversion(std::chrono::microseconds d);
 /**
 * encode the packets according to an encoding vector
 * @param binary encoding matrix (EV)
-* @param input vector of data (i.e. vector of arrays of chars)
-* @param output payload (array of chars)
+* @param input decoded vector of data (i.e. vector of arrays of chars)
+* @param output encoded payload (array of chars)
 */
 void XOR_encode(std::vector<int> *encoding_vector, vector<char*> *data, char* out_payload);
 
+/**
+* decode the packets according to an encoding vector
+* @param binary encoding matrix (rows are the EVs)
+* @param input encoded vector of data (i.e. vector of arrays of chars)
+* @param output decodedpayload (array of chars)
+*/
 vector<char*> XOR_decode(vector<bitset<N_TB_SIZE>>&X, vector<char*>& encoded_data);
 
 #endif

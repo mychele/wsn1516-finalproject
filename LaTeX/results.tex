@@ -8,6 +8,28 @@
 
 % 3 pages
 % localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
+In our experiments to evaluate the performances of the system we have considered the following setups
+\begin{center}
+\begin{tabular}{ccccccc}
+
+\toprule
+scenario&file size (MB)& payload (byte) &header  (bit) &ACK size (bit)&min timeout\\
+& & &size seed + block\_ID&pcks + block\_ID& before RTX (ms) \\
+\midrule
+loc. aggressive&46.2&2048&32 + 8&32 + 8&1\\
+loc. efficient&46.2&2048&32 + 8&32 + 8&100\\
+WiFi&46.2&1467&32 + 8&32 + 8&100\\
+Network&46.2&1467&32 + 8&32 + 8&100\\
+\bottomrule
+\end{tabular}
+\captionof{table}{Experimental setups}
+\end{center}
+The transmission over the network has been carried out from Padova to Lausanne using UDP packets. \emph{pcks} gives the number of packets that are still needed to decode the block, and the payload size of WiFi and network is dictated by the MTU size. \\
+In all these regimes we consider a redundancy for which the porbability of decoding failures (i.e. the receiver correctly receives N packets, but they are not sufficient to decodode the K informative packets) is very low (typically $<10^{-3}$), and therefore negligible. \\
+The first very important tradeoff is between decoding time and transmission time as a function of the redundancy, which translates in most of the cases in a tradeoff between goodput and efficieny. In fact, for a fixed K and PER, adding redundancy decreases the time to decode, but it also increases the time to transmit the file (because each packet is bigger, and their number is the same). This tradeoff is very well shown in Figures \ref{fig:goodput_aggr} and \ref{fig:efficiency_aggr}, which show the performance obtained in localhost with an aggressive ARQ (i.e. low timeout before retrasmission). First of all we remark that the goodput decreases approximatively linearly with the packet error probability. Moreover, for K small, adding redundancy decreases the goodput. In fact for K small decoding time prevails over transmissions time (we are in localhost, therefore transmission time is always quite small), and since the time to decode decreases when redundancy increases, by adding redundancy we decode faster and the time to receive and decode the whole file decreases. Hence, the goodput increases. On the other hand, if we increase K, the time to transmit the file has more impact than the time to decode it, and therefore it is better to choose low redundancy in order to transmit faster (clearly up to some limits, under which we also start observing decoding failures).\\
+We also observe that goodput decreases with K. In fact in general in localhost, since transmission time is small, for a fixed redundancy, increasing K allows to marginally improve the time to transmit (lesser packets to transmit), while it significantly increases the time to decode. \\
+However the efficiency, i.e. the ratio between informative and sent packets, always decreases with redundancy (since we are not taking into account the time to transmit the packets).\\
+
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.24\textwidth}
@@ -71,7 +93,7 @@
 	\label{fig:lh_eff_5500}
 \end{subfigure}
 \caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup}
-\label{fig:goodput_aggr}
+\label{fig:efficiency_aggr}
 \end{figure}
 
 % TODO NET_localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
@@ -148,6 +170,7 @@
 
 % 3 pages
 % wifi: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
+Again, if Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency. Efficiency is always monotonic with respect to redundancy, whereas the behaviour of the goodput is more complicated, and depends on which between the transmission time and the decoding time prevails. We also remark that clearly throughput increases with redundancy, since we reduce the time to decode, whereas the time to transmit the single packets doesn't change very much (if the transmission rate of the packet is high enough, which is the case for WiFi g which is approximately 50 Mbit/s). This is confirmed by the fact that the increase in throughtput is greater for low K, because we are adding in percentage more redundacy, which greatly increase the decoding time. 
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.23\textwidth}
