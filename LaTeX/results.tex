@@ -101,6 +101,7 @@ However the efficiency, i.e. the ratio between informative and sent packets, alw
 % Compare the two setup and show the tradeoff between goodput and efficiency, according to the different timeout settings.
 % Something on useless packets (i.e. packets that arrive after the completion of a decoding attempt, that may be sent after 
 % the reception of previous ACKs), notice that they tend to 0.
+
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.24\textwidth}
@@ -170,7 +171,7 @@ However the efficiency, i.e. the ratio between informative and sent packets, alw
 
 % 3 pages
 % wifi: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
-Again, if Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency. Efficiency is always monotonic with respect to redundancy, whereas the behaviour of the goodput is more complicated, and depends on which between the transmission time and the decoding time prevails. We also remark that clearly throughput increases with redundancy, since we reduce the time to decode, whereas the time to transmit the single packets doesn't change very much (if the transmission rate of the packet is high enough, which is the case for WiFi g which is approximately 50 Mbit/s). This is confirmed by the fact that the increase in throughtput is greater for low K, because we are adding in percentage more redundacy, which greatly increase the decoding time. 
+Again, in Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency. Efficiency is always monotonic with respect to redundancy, whereas the behaviour of the goodput is more complicated, and depends on which between the transmission time and the decoding time prevails. In particular we see that gooput increases dramatically for high K when we pass from a redundancy of 1000 to a redundancy of 1500. This, again, is due to the fact that too little redundacy (in ratio with respect to K) yields longer decoding times, which can dominate over the transmission time, and therefore degradate the performances. This explains the peak at $N-K=1500$ for high K: for lower redundancy performance is dictated by decoding time (which increases as redundancy decreases), whereas for higher redundancy performance depends mainly on transmission time (which increases as redundancy increases, since we have more packets to transmit). Therefore goodput depends both on an increasing and decreasing function with respect to redundacy, which explains the non-monotonicity.  We also remark that clearly throughput increases with redundancy, since we reduce the time to decode, whereas the time to transmit the single packets doesn't change very much (if the transmission rate of the packet is high enough, which is the case for WiFi g which is approximately 50 Mbit/s). This is confirmed by the fact that the increase in throughtput is greater for low K, because we are adding in percentage more redundacy, which greatly increase the decoding time. 
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -204,6 +205,7 @@ Again, if Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency
 \label{fig:wifi}
 \end{figure}
 % K = 4500, possibly others, show the difference between a nice setting and a low snr setting
+In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the experimental results obtained using WiFi in a high SNR scenario () and low SNR scenario() for two different values of K. Even though experimental measurements show quite a large variance (as can be noted by observing the interval of confidence), it appears quite clearly that, as expected, in the high SNR scenario we obtain better performances with respect to the low SNR case. However measurement uncertainties do not allow to draw further and more precise conclusions (even though we can assume that the qualitative behaviour does not differ very much from the other cases, and the same considerations apply).
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -270,6 +272,8 @@ Again, if Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency
 \end{figure}
 % few words on MTU
 
+
+Fig. \ref{fig:net} show the results of packet transmission between Padova and Lausanne. Also here we see the same qualitative behaviour of the other cases. In particular we remark the crossing of the goodput curves for K=3500 and K=4500 due to the fact that when redundancy is too small, the time to decode a block increases significantly and impacts on the performances (even though less with respect to the WiFi scenario since in this scenario the transmission time is higher, since we have to transmit a packet through a network of 12 hops).
 % net: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
 \begin{figure}[t]
 \centering
