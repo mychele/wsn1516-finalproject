@@ -45,7 +45,21 @@ This tradeoff is very well shown in Figures \ref{fig:goodput_aggr} and \ref{fig:
 On the other hand, if we increase K, we reduce the relative redundancy, and therefore the time to decode the file has more impact than the time to transmit it. As a consequence, it is better to choose high redundancy in order to decode faster, rather than reduce N to transmit faster.\\
 We also observe that goodput decreases with K. In fact in general in localhost, since transmission time is small, for a fixed absolute redundancy, increasing K allows to marginally improve the time to transmit (lesser packets to transmit because the relative redundancy is lower), while it significantly increases the time to decode (because relative redundancy decreases). \\
 However the efficiency, i.e. the ratio between informative and sent packets, always decreases with redundancy (since we are not taking into account the time to transmit the packets).\\
-
+We also remak that the difference in goodput for a given K and two values of N decreases as PER increases. In fact we can write, for $N>N'$ and $PER>PER'$
+\begin{equation}
+\begin{split}
+[delay(N,PER')-delay(N',PER')]-[delay(N,PER)-delay(N',PER)]=\\
+=[tx\_time(N,PER')-tx\_time(N,PER)]-[tx\_time(N',PER')-tx\_time(N',PER)]
+\end{split}
+\end{equation}
+because the decoding time does not depend on PER. If we assume that the transmission time is a linear function of the number of retransmissions, and that the number of packets left to transmit is a geometric sequence in the number of retransmission $r$, we can write $N\cdot PER^r=1 \Rightarrow r=-\frac{\ln(N)}{\ln(PER)}$, and therefore
+\begin{equation}
+\begin{split}
+[delay(N,PER')-delay(N',PER')]-[delay(N,PER)-delay(N',PER)]=\\ 
+=K\frac{\ln(N)}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}-K\frac{\ln(N')}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}=\frac{K}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}\ln{\frac{N}{N'}}<0
+\end{split}
+\end{equation}
+since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increses as PER increases, and since the goodput depends on the inverse of the delay, the gap in goodput decreases as PER increases.
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.24\textwidth}
