@@ -8,7 +8,9 @@
 
 % 3 pages
 % localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
-In our experiments to evaluate the performances of the system we have considered the following setups
+In our experiments to evaluate the performances of the system we have considered the following setups:
+\MP{What about we always use $K$ and $N$ instead of K and N?}
+\MP{As we were saying, ACK and header may be described somewhere else than the table}
 \begin{center}
 \begin{tabular}{ccccccc}
 
@@ -24,17 +26,21 @@ Network&46.2&1467&32 + 8&32 + 8&100\\
 \end{tabular}
 \captionof{table}{Experimental setups}
 \end{center}
-The transmission over the network has been carried out from Padova to Lausanne using UDP packets. \emph{pcks} gives the number of packets that are still needed to decode the block, and the payload size of WiFi and network is dictated by the MTU size. \\
-In all these regimes we consider a redundancy for which the porbability of decoding failures (i.e. the receiver correctly receives N packets, but they are not sufficient to decodode the K informative packets) is very low (typically $<10^{-3}$), and therefore negligible. \\
+
+In the ACK the field \emph{pcks} gives the number of packets that are still needed to decode the block, and the payload size of WiFi and network is dictated by the MTU size. 
+The WiFi experiment was carried out using two different setups. In the \textit{high SNR} scenario sender and router, router and receiver are at a distance $d= 3$ m, with one brick wall between sender and router. The \textit{low SNR} scenario deployed sender and router in the same positions, but the receiver was moved 2 walls and 15 m away from the router. The WiFi router was a 802.11a/b/g device. 
+The transmission over the network has been carried out from Padua to Lausanne. The sender was connected via WiFi to a FTTC connection with 10 Mbits in uplink, while the receiver was connected via Ethernet on a connection with higher bandwidth. For localhost and network experiments, the receiver was executed on a workstation with a certain processor and RAM, while in both WiFi setups the laptop on which the receiver run had a 2.2 GHz i7 processor with 8 GB of RAM. \MP{Details on Stefano's workstation}
+
+In all these regimes we consider a redundancy for which the probability of decoding failures (i.e. the receiver correctly receives N packets, but they are not sufficient to decode the K informative packets) is very low (typically $<10^{-3}$), and therefore negligible. \\
 The first very important tradeoff is between decoding time and transmission time as a function of the redundancy, which translates in most of the cases in a tradeoff between goodput and efficieny. In fact, for a fixed K and PER, adding redundancy decreases the time to decode, but it also increases the time to transmit the file (because there are more packets to transmit). In general we can write that $delay=transmission\_time+decoding\_time$ where \emph{transmission\_time} includes all time spent in propagation, waiting, retransmitting, etc. over the channel, and \emph{decoding\_time} is the time that it takes to the decoder to decoded a block of N packets once they have all been correctly received. We can sum up these considerations in Table 2, where we show the dependecies of \emph{transmission\_time} and \emph{decoding\_time} on one parameter by keeping all others fixed.
 \begin{center}
-\begin{tabular}{ccccc}
+\begin{tabular}{c|c|c|c|c}
 
 \toprule
 &$K$&$N-K$&$\frac{N-K}{K}$&PER\\
 \midrule
-transmission\_time&$\sim$ indepentent& & $\nearrow$&$\nearrow$\\
-decoding\_time&$\nearrow$&$\searrow$&&independent\\
+transmission\_time&$\sim$ indepentent& & $\nearrow$&$\nearrow$\\ \hline
+decoding\_time&$\nearrow$&$\searrow$&&independent\\ 
 \bottomrule
 \end{tabular}
 \captionof{table}{Monotonicities}
@@ -231,11 +237,11 @@ Again, in Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency
 	\caption{Throughput}
 	\label{fig:wifi_thr}
 \end{subfigure}
-\caption{Metrics for WiFi simulation}
+\caption{Metrics for WiFi simulation. }
 \label{fig:wifi}
 \end{figure}
 % K = 4500, possibly others, show the difference between a nice setting and a low snr setting
-In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the experimental results obtained using WiFi in a high SNR scenario () and low SNR scenario() for two different values of K. Even though experimental measurements show quite a large variance (as can be noted by observing the interval of confidence), it appears quite clearly that, as expected, in the high SNR scenario we obtain better performances with respect to the low SNR case. However measurement uncertainties do not allow to draw further and more precise conclusions (even though we can assume that the qualitative behaviour does not differ very much from the other cases, and the same considerations apply).
+In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the experimental results obtained using WiFi in a \textit{high SNR} scenario and \textit{low SNR} scenario for two different values of K. Even though experimental measurements show quite a large variance (as can be noted by observing the interval of confidence), it appears quite clearly that, as expected, in the high SNR scenario we obtain better performances with respect to the low SNR case. However measurement uncertainties do not allow to draw further and more precise conclusions (even though we can assume that the qualitative behaviour does not differ very much from the other cases, and the same considerations apply).
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -265,7 +271,7 @@ In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the exp
 	\caption{Throughput}
 	\label{fig:wifi_thr_lsnr_3500}
 \end{subfigure}
-\caption{Comparison between setup with good SNR and setup with bad SNR, for $K=3500$}
+\caption{Comparison between setup with \textit{high SNR} and setup with \textit{low SNR}, for $K=3500$}
 \label{fig:wifi_lsnr_3500}
 \end{figure}
 \begin{figure}[!h]
@@ -297,7 +303,7 @@ In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the exp
 	\caption{Throughput}
 	\label{fig:wifi_thr_lsnr_4500}
 \end{subfigure}
-\caption{Comparison between setup with good SNR and setup with bad SNR, for $K=4500$}
+\caption{Comparison between setup with \textit{high SNR} and setup with \textit{low SNR}, for $K=4500$}
 \label{fig:wifi_lsnr_4500}
 \end{figure}
 % few words on MTU

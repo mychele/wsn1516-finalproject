@@ -1,4 +1,4 @@
-\documentclass[12pt, titlepage]{article}
+\documentclass[12pt]{article}
 %\usepackage[latin1]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{cite, url,color} % Citation numbers being automatically sorted and properly "compressed/ranged". 
@@ -125,10 +125,12 @@
 {\left\lbrace\begin{array}{@{}l@{}}}%
 {\end{array}\right.}
 
+\newcommand{\MP}[1]{\textit{\color{red}MP says: #1}}
+\newcommand{\SO}[1]{\textit{\color{blue}SO says: #1}}
+
 
 \usepackage{layout}
 \usepackage{changepage}
-
 	
 \definecolor{cerulean}{cmyk}{0.94,0.11,0,0}
 \definecolor{processblue}{cmyk}{0.96,0,0,0}
@@ -154,10 +156,9 @@
 \tikzstyle{darrow} = [thick,->,>=stealth,dashed]
 
 
-\include{introduction}
-\include{sender_receiver}
-\include{RF_LT}
-\include{results}
+\input{introduction}
+\input{sender_receiver}
+\input{results}
 
 
 \begin{thebibliography}{10}
