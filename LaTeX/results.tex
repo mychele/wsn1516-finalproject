@@ -7,32 +7,31 @@
 % time to decode NET_localhost (last column) - x axis N-K, different lines for each K
 
 % 3 pages
-% localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
-In our experiments to evaluate the performances of the system we have considered the following setups:
-\MP{What about we always use $K$ and $N$ instead of K and N?}
-\MP{As we were saying, ACK and header may be described somewhere else than the table}
+% localhost: goodput, efficiency with PER on x axis $K$ 1000 3500 5500, 3 plot per row, 2 rows
+In our experiments to evaluate the performances of the system we have considered the transmission of a file of size 46.2 MB. Packets header consists in 32 bits of seed plus 8 bits of block ID (a block is a set of $K$ packets that are encoded into $N$ packets), for a total header size of 40 bits. The ACK consists in 32 bits to represent the number of packets the receiver still needs to get $N$ correct packets (therefore we allow for a value of $N$ up to $2^{32}\simeq 4\cdot 10^9$, which is more than enough for our purposes) plus 8 bits of block ID, again for a total of 40 bits. The various experimental scenarios have been summarized in Table 1.
+
 \begin{center}
-\begin{tabular}{ccccccc}
+\begin{tabular}{ccc}
 
 \toprule
-scenario&file size (MB)& payload (byte) &header  (bit) &ACK size (bit)&min timeout\\
-& & &size seed + block\_ID&pcks + block\_ID& before RTX (ms) \\
+scenario& payload (byte) &minimum timeout\\
+& & before RTX (ms) \\
 \midrule
-loc. aggressive&46.2&2048&32 + 8&32 + 8&1\\
-loc. efficient&46.2&2048&32 + 8&32 + 8&100\\
-WiFi&46.2&1467&32 + 8&32 + 8&100\\
-Network&46.2&1467&32 + 8&32 + 8&100\\
+localhost aggressive&2048&1\\
+localhost efficient&2048&100\\
+WiFi&1467&100\\
+Network&1467&100\\
 \bottomrule
 \end{tabular}
 \captionof{table}{Experimental setups}
 \end{center}
-
-In the ACK the field \emph{pcks} gives the number of packets that are still needed to decode the block, and the payload size of WiFi and network is dictated by the MTU size. 
+The payload size of WiFi and network is dictated by the MTU size. \\
+We remark that with these setting we are able to transmit a file of size up to 2.25 PB in localhost and 1.61 PB over WiFi or network if we have no redundancy.\\
 The WiFi experiment was carried out using two different setups. In the \textit{high SNR} scenario sender and router, router and receiver are at a distance $d= 3$ m, with one brick wall between sender and router. The \textit{low SNR} scenario deployed sender and router in the same positions, but the receiver was moved 2 walls and 15 m away from the router. The WiFi router was a 802.11a/b/g device. 
-The transmission over the network has been carried out from Padua to Lausanne. The sender was connected via WiFi to a FTTC connection with 10 Mbits in uplink, while the receiver was connected via Ethernet on a connection with higher bandwidth. For localhost and network experiments, the receiver was executed on a workstation with a certain processor and RAM, while in both WiFi setups the laptop on which the receiver run had a 2.2 GHz i7 processor with 8 GB of RAM. \MP{Details on Stefano's workstation}
+The transmission over the network has been carried out from Padova to Lausanne. The sender was connected via WiFi to a FTTC connection with 10 Mbits in uplink, while the receiver was connected via Ethernet on a symmetric connection of 100 Mbits (therefore the bottleneck is 10 Mbits). For localhost and network experiments, the receiver was executed on a workstation with a 3.4 GHz i7 processor and 8 GB of RAM, while in both WiFi setups the laptop on which the receiver run had a 2.2 GHz i7 processor with 8 GB of RAM.
 
-In all these regimes we consider a redundancy for which the probability of decoding failures (i.e. the receiver correctly receives N packets, but they are not sufficient to decode the K informative packets) is very low (typically $<10^{-3}$), and therefore negligible. \\
-The first very important tradeoff is between decoding time and transmission time as a function of the redundancy, which translates in most of the cases in a tradeoff between goodput and efficieny. In fact, for a fixed K and PER, adding redundancy decreases the time to decode, but it also increases the time to transmit the file (because there are more packets to transmit). In general we can write that $delay=transmission\_time+decoding\_time$ where \emph{transmission\_time} includes all time spent in propagation, waiting, retransmitting, etc. over the channel, and \emph{decoding\_time} is the time that it takes to the decoder to decoded a block of N packets once they have all been correctly received. We can sum up these considerations in Table 2, where we show the dependecies of \emph{transmission\_time} and \emph{decoding\_time} on one parameter by keeping all others fixed.
+In all these regimes we consider a redundancy for which the probability of decoding failures (i.e. the receiver correctly receives $N$ packets, but they are not sufficient to decode the $K$ informative packets) is very low (typically $<10^{-3}$), and therefore negligible. \\
+The first very important trade-off is between decoding time and transmission time as a function of the redundancy, which translates in most of the cases in a trade-off between goodput and efficiency. In fact, for a fixed $K$ and PER, adding redundancy decreases the time to decode, but it also increases the time to transmit the file (because there are more packets to transmit). In general we can write that $delay=transmission\_time+decoding\_time$ where \emph{transmission\_time} includes all time spent in propagation, waiting, retransmitting, etc. over the channel, and \emph{decoding\_time} is the time that it takes to the decoder to decoded a block of $N$ packets once they have all been correctly received. We can sum up these considerations in Table 2, where we show the dependencies of \emph{transmission\_time} and \emph{decoding\_time} on one parameter by keeping all others fixed.
 \begin{center}
 \begin{tabular}{c|c|c|c|c}
 
@@ -47,11 +46,11 @@ decoding\_time&$\nearrow$&$\searrow$&&independent\\
 \end{center}
 
 
-This tradeoff is very well shown in Figures \ref{fig:goodput_aggr} and \ref{fig:efficiency_aggr}, which show the performance obtained in localhost with an aggressive ARQ (i.e. low timeout before retrasmission). First of all we remark that the goodput decreases approximatively linearly with the packet error probability. Moreover, for K small, adding redundancy decreases the goodput. In fact for K small and redundancy starting at $N-K=1000$ (i.e. 100\%), transmission time prevails over decoding time, which, at these levels of redundancy, decreases slowly as a function of N. Therefore, since the transmission time increases with redundancy (we can assume that transmission time increases approximatively linearly in N), even though the decoding time decreases, the overall delay increases. Hence, the goodput decreases by adding redundancy.
-On the other hand, if we increase K, we reduce the relative redundancy, and therefore the time to decode the file has more impact than the time to transmit it. As a consequence, it is better to choose high redundancy in order to decode faster, rather than reduce N to transmit faster.\\
-We also observe that goodput decreases with K. In fact in general in localhost, since transmission time is small, for a fixed absolute redundancy, increasing K allows to marginally improve the time to transmit (lesser packets to transmit because the relative redundancy is lower), while it significantly increases the time to decode (because relative redundancy decreases). \\
+This trade-off is very well shown in Figures \ref{fig:goodput_aggr} and \ref{fig:efficiency_aggr}, which show the performance obtained in localhost with an aggressive ARQ (i.e. low timeout before retransmission). First of all we remark that the goodput decreases approximatively linearly with the packet error probability. Moreover, for $K$ small, adding redundancy decreases the goodput. In fact for $K$ small and redundancy starting at $N-K=1000$ (i.e. 100\%), transmission time prevails over decoding time, which, at these levels of redundancy, decreases slowly as a function of N. Therefore, since the transmission time increases with redundancy (we can assume that transmission time increases approximatively linearly in N), even though the decoding time decreases, the overall delay increases. Hence, the goodput decreases by adding redundancy.
+On the other hand, if we increase K, we reduce the relative redundancy, and therefore the time to decode the file has more impact than the time to transmit it. As a consequence, it is better to choose high redundancy in order to decode faster, rather than reduce $N$ to transmit faster.\\
+We also observe that goodput decreases with K. In fact in general in localhost, since transmission time is small, for a fixed absolute redundancy, increasing $K$ allows to marginally improve the time to transmit (lesser packets to transmit because the relative redundancy is lower), while it significantly increases the time to decode (because relative redundancy decreases). \\
 However the efficiency, i.e. the ratio between informative and sent packets, always decreases with redundancy (since we are not taking into account the time to transmit the packets).\\
-We also remak that the difference in goodput for a given K and two values of N decreases as PER increases. In fact we can write, for $N>N'$ and $PER>PER'$
+We also remark that the difference in goodput for a given $K$ and two values of $N$ decreases as PER increases. In fact we can write, for $N>N'$ and $PER>PER'$
 \begin{equation}
 \begin{split}
 [delay(N,PER')-delay(N',PER')]-[delay(N,PER)-delay(N',PER)]=\\
@@ -65,7 +64,7 @@ because the decoding time does not depend on PER. If we assume that the transmis
 =K\frac{\ln(N)}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}-K\frac{\ln(N')}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}=\frac{K}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}\ln{\frac{N}{N'}}<0
 \end{split}
 \end{equation}
-since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increses as PER increases, and since the goodput depends on the inverse of the delay, the gap in goodput decreases as PER increases.
+since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER increases, and since the goodput depends on the inverse of the delay, the gap in goodput decreases as PER increases.
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.24\textwidth}
@@ -132,7 +131,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increses as PER incr
 \label{fig:efficiency_aggr}
 \end{figure}
 
-% TODO NET_localhost: goodput, efficiency with PER on x axis K 1000 3500 5500, 3 plot per row, 2 rows
+% TODO NET_localhost: goodput, efficiency with PER on x axis $K$ 1000 3500 5500, 3 plot per row, 2 rows
 % Relation between different parameters (K, N) and goodput/efficiency. Tradeoff redundancy goodput time to decode.
 % Compare the two setup and show the tradeoff between goodput and efficiency, according to the different timeout settings.
 % Something on useless packets (i.e. packets that arrive after the completion of a decoding attempt, that may be sent after 
@@ -206,8 +205,8 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increses as PER incr
 
 
 % 3 pages
-% wifi: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
-Again, in Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency. Efficiency is always monotonic with respect to redundancy, whereas the behaviour of the goodput is more complicated, and depends on which between the transmission time and the decoding time prevails. In particular we see that gooput increases dramatically for high K when we pass from a redundancy of 1000 to a redundancy of 1500. This, again, is due to the fact that too little redundacy (in ratio with respect to K) yields longer decoding times, which can dominate over the transmission time, and therefore degradates the performances. This explains the peak at $N-K=1500$ for high K: for lower redundancy performance is dictated by decoding time (which increases as redundancy decreases), whereas for higher redundancy performance depends mainly on transmission time (which increases as redundancy increases, since we have more packets to transmit). Therefore goodput depends both on an increasing and decreasing function with respect to redundacy, which explains the non-monotonicity.  We also remark that clearly throughput increases with redundancy, since we reduce the time to decode, whereas the time to transmit the single packets doesn't change very much (if the transmission rate of the packet is high enough, which is the case for WiFi g which is approximately 50 Mbit/s). This is confirmed by the fact that the increase in throughtput is greater for low K, because we are adding in percentage more redundacy, which greatly increase the decoding time. 
+% wifi: goodput and efficiency, with x axis with $N$ - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
+Again, in Fig. \ref{fig:wifi} we see the trade-off between goodput and efficiency. Efficiency is always monotonic with respect to redundancy, whereas the behavior of the goodput is more complicated, and depends on which between the transmission time and the decoding time prevails. In particular we see that gooput increases dramatically for high $K$ when we pass from a redundancy of 1000 to a redundancy of 1500. This, again, is due to the fact that too little redundancy (in ratio with respect to K) yields longer decoding times, which can dominate over the transmission time, and therefore degrades the performances. This explains the peak at $N-K=1500$ for high K: for lower redundancy performance is dictated by decoding time (which increases as redundancy decreases), whereas for higher redundancy performance depends mainly on transmission time (which increases as redundancy increases, since we have more packets to transmit). Therefore goodput depends both on an increasing and decreasing function with respect to redundancy, which explains the non-monotonicity.  We also remark that clearly throughput increases with redundancy, since we reduce the time to decode, whereas the time to transmit the single packets doesn't change very much (if the transmission rate of the packet is high enough, which is the case for WiFi g which is approximatively 50 Mbit/s). This is confirmed by the fact that the increase in throughput is greater for low K, because we are adding in percentage more redundancy, which greatly increase the decoding time. 
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -240,8 +239,8 @@ Again, in Fig. \ref{fig:wifi} we see the tradeoff between goodput and efficiency
 \caption{Metrics for WiFi simulation. }
 \label{fig:wifi}
 \end{figure}
-% K = 4500, possibly others, show the difference between a nice setting and a low snr setting
-In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the experimental results obtained using WiFi in a \textit{high SNR} scenario and \textit{low SNR} scenario for two different values of K. Even though experimental measurements show quite a large variance (as can be noted by observing the interval of confidence), it appears quite clearly that, as expected, in the high SNR scenario we obtain better performances with respect to the low SNR case. However measurement uncertainties do not allow to draw further and more precise conclusions (even though we can assume that the qualitative behaviour does not differ very much from the other cases, and the same considerations apply).
+% $K$ = 4500, possibly others, show the difference between a nice setting and a low snr setting
+In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the experimental results obtained using WiFi in a \textit{high SNR} scenario and \textit{low SNR} scenario for two different values of K. Even though experimental measurements show quite a large variance (as can be noted by observing the interval of confidence), it appears quite clearly that, as expected, in the high SNR scenario we obtain better performances with respect to the low SNR case. However measurement uncertainties do not allow to draw further and more precise conclusions (even though we can assume that the qualitative behavior does not differ very much from the other cases, and the same considerations apply).
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -309,8 +308,8 @@ In Figures \ref{fig:wifi_lsnr_3500} and \ref{fig:wifi_lsnr_4500} we show the exp
 % few words on MTU
 
 
-Fig. \ref{fig:net} shows the results of packet transmission between Padova and Lausanne. Also here we see the same qualitative behaviour of the other cases. In particular we remark the crossing of the goodput curves for K=3500 and K=4500 due to the fact that when redundancy is too small, the time to decode a block increases significantly and impacts on the performances (even though less with respect to the WiFi scenario since in this scenario the transmission time is higher, since we have to transmit a packet through a network of 12 hops).
-% net: goodput and efficiency, with x axis with N - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
+Fig. \ref{fig:net} shows the results of packet transmission between Padova and Lausanne. Also here we see the same qualitative behavior of the other cases. In particular we remark the crossing of the goodput curves for K=3500 and K=4500 due to the fact that when redundancy is too small, the time to decode a block increases significantly and impacts on the performances (even though less with respect to the WiFi scenario since in this scenario the transmission time is higher, since we have to transmit a packet through a network of approximatively 12 hops).
+% net: goodput and efficiency, with x axis with $N$ - K, also throughput, show that for N-K small the decoding time is more significant than rx time. 
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -346,7 +345,7 @@ Fig. \ref{fig:net} shows the results of packet transmission between Padova and L
 
 % comparison between RF and LT in localhost
 % TODO decoding time comparison
-Fig. \ref{fig:RFLT} shows a choice of N and K which yield approximately the same efficiency for Random Fountain and LT, but allow for a much bigger goodput with LT, proving therefore the usefulness of LT. In fact, using RF, we are constrained to low values of N and K because of the complexity of the Gaussian elimination. Low values of K oblige to a greater relative redundancy to have low possibility of failing the decode, and moreover result in more blocks (of K packets), which imply a bigger delay. Hence, the goodput decreases.
+Fig. \ref{fig:RFLT} shows a choice of $N$ and $K$ which yield approximately the same efficiency for Random Fountain and LT, but allow for a much bigger goodput with LT, proving therefore the usefulness of LT. In fact, using RF, we are constrained to low values of $N$ and $K$ because of the complexity of the Gaussian elimination. Low values of $K$ oblige to a greater relative redundancy to have low possibility of failing the decode, and moreover result in more blocks (of $K$ packets), which imply a bigger delay. Hence, the goodput decreases.
 \begin{figure}[!h]
 \centering
 \begin{subfigure}{0.23\textwidth}
