@@ -7,7 +7,7 @@ close all hidden;
 %% LT RX
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE
 %%dectime	rxtime	totrxpck droppck	rxpck	uselesspck PER_estimate PER	K_TB_SIZE N_TB_SIZE	faileddec
-data_LT_rx=importdata('./data/data_LT_rx_PER_mode_0.txt',' ');
+data_LT_rx=importdata('./data/data_LT_rx_loc_100ms.txt',' ');
 Nmc=100; %number of Montecarlo trials for each tuple of PER-K-N
 PERs=unique(data_LT_rx(:,8));
 Ks=unique(data_LT_rx(:,9));
@@ -31,6 +31,8 @@ for i=1:length(PERs)
 			uselesspck_LT_std(i,j,k)=std(data_PER_K_N_rx(:,6));
 			PER_estimate_LT(i,j,k)=mean(data_PER_K_N_rx(:,7));
 			PER_estimate_LT_std(i,j,k)=std(data_PER_K_N_rx(:,7));
+			decoding_time_LT(i,j,k) = mean(data_PER_K_N_rx(:,11));
+			decoding_time_LT_std(i,j,k) = std(data_PER_K_N_rx(:,11));
 			num_samples_rx(i,j,k) = length(data_PER_K_N_rx);
         end
     end
@@ -111,7 +113,7 @@ end
 % end
 %% LT TX
 %sent infile time goodput throughput	PER_estimate PER	K_TB_SIZE	N_TB_SIZE
-data_LT_tx=importdata('./data/data_LT_tx_PER_mode_0.txt',' ');
+data_LT_tx=importdata('./data/data_LT_tx_loc_100ms.txt',' ');
 PERs=unique(data_LT_tx(:,7));
 Ks=unique(data_LT_tx(:,8));
 increments=unique(data_LT_tx(find(data_LT_tx(:,8)==Ks(1)),9))-Ks(1);
@@ -253,3 +255,21 @@ end
 % 	
 % 	
 % end
+
+%% Plot decoding time
+figure();
+hold all;
+for j = 1:length(Ks)
+	plot(increments, log10(squeeze(decoding_time_LT(1,j,:))), markers{mod(k*j, numel(markers)) + 1}, 'Color', color_matrix(mod(k*j*10, size(color_matrix, 1)) + 1,:), ...
+			'LineWidth', linewidth, 'MarkerSize', markersize)
+
+end
+grid on
+xlim([990. 2010])
+xlabel('N-K')
+ylabel('log_10(D)')
+str=[cellstr(num2str((Ks), 'K=%-d'))']';
+for i=1:length(str(:,1))
+	str_legend(i)=cellstr(strjoin(str(i,:)));
+end
+legend(str_legend');

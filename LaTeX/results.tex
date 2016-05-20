@@ -6,6 +6,17 @@
 
 % time to decode NET_localhost (last column) - x axis N-K, different lines for each K
 
+\begin{figure}
+	\centering
+	\captionsetup{justification=centering,font=scriptsize}
+	\centering
+	\setlength\fwidth{0.5\textwidth}
+	\setlength\fheight{200}
+	\input{./figures/decoding_time.tex}
+	\caption{Average time to decode a packet, notice that y axis is in logarithmic scale}
+	\label{fig:decoding_time}
+\end{figure}
+
 % 3 pages
 % localhost: goodput, efficiency with PER on x axis $K$ 1000 3500 5500, 3 plot per row, 2 rows
 In our experiments to evaluate the performances of the system we have considered the transmission of a file of size 46.2 MB. Packets header consists in 32 bits of seed plus 8 bits of block ID (a block is a set of $K$ packets that are encoded into $N$ packets), for a total header size of 40 bits. The ACK consists in 32 bits to represent the number of packets the receiver still needs to get $N$ correct packets (therefore we allow for a value of $N$ up to $2^{32}\simeq 4\cdot 10^9$, which is more than enough for our purposes) plus 8 bits of block ID, again for a total of 40 bits. The various experimental scenarios have been summarized in Table 1.
@@ -144,7 +155,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_goodput_1000.tex}
+	\input{./figures/localhost_goodput_1000_100ms.tex}
 	\caption{$K=1000$}
 	\label{fig:lh_good_1000_eff}
 \end{subfigure}\hspace{2em}%
@@ -153,7 +164,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_goodput_3500.tex}
+	\input{./figures/localhost_goodput_3500_100ms.tex}
 	\caption{$K=3500$}
 	\label{fig:lh_good_3500_eff}
 \end{subfigure}\hspace{2em}%
@@ -162,7 +173,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_goodput_5500.tex}
+	\input{./figures/localhost_goodput_5500_100ms.tex}
 	\caption{$K=5500$}
 	\label{fig:lh_good_5500_eff}
 \end{subfigure}
@@ -177,7 +188,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_efficiency_1000.tex}
+	\input{./figures/localhost_efficiency_1000_100ms.tex}
 	\caption{$K=1000$}
 	\label{fig:lh_eff_1000_eff}
 \end{subfigure}\hspace{2em}%
@@ -186,7 +197,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_efficiency_3500.tex}
+	\input{./figures/localhost_efficiency_3500_100ms.tex}
 	\caption{$K=3500$}
 	\label{fig:lh_eff_3500_eff}
 \end{subfigure}\hspace{2em}%
@@ -195,7 +206,7 @@ since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER inc
 	\centering
 	\setlength\fwidth{\textwidth}
 	\setlength\fheight{140}
-	%\input{./figures/localhost_efficiency_5500.tex}
+	\input{./figures/localhost_efficiency_5500_100ms.tex}
 	\caption{$K=5500$}
 	\label{fig:lh_eff_5500_eff}
 \end{subfigure}
