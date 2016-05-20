@@ -281,13 +281,12 @@ legend(str_legend');
 figure();
 hold all;
 for j = 1:length(Ks)
-	plot(increments/Ks(j),log10(squeeze(decoding_time_LT(1,j,:))), markers{mod(k*j, numel(markers)) + 1}, 'Color', color_matrix(mod(k*j*10, size(color_matrix, 1)) + 1,:), ...
+	plot((Ks(j)+increments)/Ks(j),log10(squeeze(decoding_time_LT(1,j,:))), markers{mod(k*j, numel(markers)) + 1}, 'Color', color_matrix(mod(k*j*10, size(color_matrix, 1)) + 1,:), ...
 			'LineWidth', linewidth, 'MarkerSize', markersize)
 
 end
 grid on
-xlim([0.1 2])
-xlabel('(N-K)/K')
+xlabel('N/K')
 ylabel('log_10(D)')
 str=[cellstr(num2str((Ks), 'K=%-d'))']';
 for i=1:length(str(:,1))
