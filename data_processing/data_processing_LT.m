@@ -269,7 +269,7 @@ for j = 1:length(Ks)
 
 end
 grid on
-xlim([990. 2010])
+xlim([990, 2010])
 xlabel('N-K')
 ylabel('log_10(D)')
 str=[cellstr(num2str((Ks), 'K=%-d'))']';

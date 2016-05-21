@@ -6,15 +6,27 @@
 
 % time to decode NET_localhost (last column) - x axis N-K, different lines for each K
 
-\begin{figure}
-	\centering
+\begin{figure}[t!]
+\centering
+\captionsetup{justification=centering,font=scriptsize}
+\begin{subfigure}{0.4\textwidth}
 	\captionsetup{justification=centering,font=scriptsize}
-	\centering
-	\setlength\fwidth{0.5\textwidth}
-	\setlength\fheight{200}
+	\setlength\fwidth{0.85\textwidth}
+	\setlength\fheight{120}
 	\input{./figures/decoding_time.tex}
-	\caption{Average time to decode a packet, notice that y axis is in logarithmic scale}
+	\caption{Average time to decode a packet vs absolute redundancy}
 	\label{fig:decoding_time}
+\end{subfigure}\hspace{2em}%
+\begin{subfigure}{0.4\textwidth}
+	\captionsetup{justification=centering,font=scriptsize}
+	\setlength\fwidth{0.85\textwidth}
+	\setlength\fheight{120}
+	\input{./figures/decoding_time_rel.tex}
+	\caption{Average time to decode a packet vs relative redundancy}
+	\label{fig:decoding_time_rel}
+\end{subfigure}
+\caption{Average time to decode a packet, , for different $K$. Notice that y axis is in logarithmic scale}
+\label{fig:dc_all}
 \end{figure}
 
 % 3 pages
