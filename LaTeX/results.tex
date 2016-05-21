@@ -392,10 +392,12 @@ Fig. \ref{fig:RFLT} shows a choice of $N$ and $K$ which yield approximately the 
 \end{subfigure}\hspace{2em}%
 \begin{subfigure}{0.23\textwidth}
 	\captionsetup{justification=centering,font=scriptsize}
+	\small
 	\centering
-	\setlength\fwidth{\textwidth}
-	\setlength\fheight{140}
-	%\input{./figures/net_throughput.tex}
+	\begin{tabular}[c]{c|c}
+		LT [ms] & RF [ms] \\ \hline
+		0.15 & 0.61 \\
+	\end{tabular}
 	\caption{Decoding time per packet}
 	\label{fig:RFLT_dectime}
 \end{subfigure}
