@@ -1,0 +1,109 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.01651,0.42660,0.87863}%
+\definecolor{mycolor2}{rgb}{0.03434,0.59658,0.81985}%
+\definecolor{mycolor3}{rgb}{0.14527,0.70976,0.66463}%
+\definecolor{mycolor4}{rgb}{0.57086,0.74852,0.44939}%
+\definecolor{mycolor5}{rgb}{0.91393,0.72579,0.30628}%
+%
+\begin{tikzpicture}
+\tikzstyle{every node}=[font=\scriptsize]
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\fheight,
+at={(0\fwidth,0\fheight)},
+scale only axis,
+xmin=-0.1,
+xmax=0.9,
+xlabel={PER},
+xmajorgrids,
+ymin=15,
+ymax=70,
+ylabel={Goodput [Mbit/s]},
+ymajorgrids, ylabel shift = -5 pt, yticklabel shift = -3 pt,
+axis background/.style={fill=white},
+title style={font=\bfseries},
+legend style={legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid,line width=1.2pt,mark=o,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	20.801918	0.640400819517709	0.640400819517709\\
+0.1	20.437763	0.517447757042728	0.517447757042728\\
+0.2	20.943304	0.547966909233753	0.547966909233753\\
+0.3	19.804132	0.545021967893862	0.545021967893862\\
+0.4	19.106803	0.558349045931837	0.558349045931837\\
+0.5	18.76412	0.526659956502622	0.526659956502622\\
+0.6	17.5002135	0.536428946534537	0.536428946534537\\
+0.7	17.351965	0.433744333004783	0.433744333004783\\
+0.8	15.955525	0.361844439510108	0.361844439510108\\
+};
+\addlegendentry{N=6500};
+
+\addplot [color=mycolor2,solid,line width=1.2pt,mark=asterisk,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	39.967638	0.55479179974618	0.55479179974618\\
+0.1	39.098525	0.642387805763197	0.642387805763197\\
+0.2	37.922018	0.708736603029892	0.708736603029892\\
+0.3	36.515681	0.736161847991258	0.736161847991258\\
+0.4	34.678704	0.755852420045002	0.755852420045002\\
+0.5	32.802118	0.873612505045235	0.873612505045235\\
+0.6	30.388336	0.784424186508926	0.784424186508926\\
+0.7	27.525634	0.611055513565082	0.611055513565082\\
+0.8	25.136158	0.390763696709899	0.390763696709899\\
+};
+\addlegendentry{N=6750};
+
+\addplot [color=mycolor3,solid,line width=1.2pt,mark=*,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	52.980629	0.375768669287707	0.375768669287707\\
+0.1	51.542766	0.595053216089864	0.595053216089864\\
+0.2	49.935865	0.706217869928163	0.706217869928163\\
+0.3	47.294766	0.933650865447236	0.933650865447236\\
+0.4	44.982991	0.99674445602492	0.99674445602492\\
+0.5	41.745481	1.11076150727139	1.11076150727139\\
+0.6	38.047201	0.906784555079862	0.906784555079862\\
+0.7	34.239942	0.794655634003689	0.794655634003689\\
+0.8	29.421019	0.448076329852957	0.448076329852957\\
+};
+\addlegendentry{N=7000};
+
+\addplot [color=mycolor4,solid,line width=1.2pt,mark=x,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	60.333155	0.278103168722763	0.278103168722763\\
+0.1	58.549437	0.488784351942527	0.488784351942527\\
+0.2	56.022549	0.914299095866738	0.914299095866738\\
+0.3	52.576272	1.12367578574901	1.12367578574901\\
+0.4	49.668857	1.10489498371877	1.10489498371877\\
+0.5	45.231466	1.24280458415929	1.24280458415929\\
+0.6	40.609567	1.13593659566458	1.13593659566458\\
+0.7	36.082562	0.865861046033775	0.865861046033775\\
+0.8	31.474367	0.51976357973856	0.51976357973856\\
+};
+\addlegendentry{N=7250};
+
+\addplot [color=mycolor5,solid,line width=1.2pt,mark=square,mark options={solid}]
+ plot [error bars/.cd, y dir = both, y explicit]
+ table[row sep=crcr, y error plus index=2, y error minus index=3]{%
+0	64.520059	0.16579808981988	0.16579808981988\\
+0.1	62.078813	0.65446377116321	0.65446377116321\\
+0.2	59.521351	0.882501845620115	0.882501845620115\\
+0.3	56.554569	1.18420123386642	1.18420123386642\\
+0.4	53.345694	1.11459265788302	1.11459265788302\\
+0.5	48.164012	1.36991330501481	1.36991330501481\\
+0.6	42.583635	0.993356776694406	0.993356776694406\\
+0.7	37.041366	0.987369672321496	0.987369672321496\\
+0.8	32.166089	0.546486358495707	0.546486358495707\\
+};
+\addlegendentry{N=7500};
+
+\end{axis}
+\end{tikzpicture}%
