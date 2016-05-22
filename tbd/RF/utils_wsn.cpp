@@ -276,7 +276,6 @@ mat_GF2 decoded_data(mat_GF2& encoded_data_matrix,mat_GF2& inverse_matrix)
 
 void binary_to_char(char* output_data, mat_GF2& X)
 {
-    //char* data=(char*)malloc(sizeof(X[0][0])*X.NumCols()*X.NumRows());
     bitset<8> bits;
     bits.reset();
     int s=0;
@@ -292,7 +291,6 @@ void binary_to_char(char* output_data, mat_GF2& X)
             s++;
             if (s%8==0)
             {
-                //cout<<bits<<endl;
                 output_data[q]=static_cast<char>(bits.to_ulong());
                 bits.reset();
                 s=0;
@@ -323,7 +321,6 @@ unsigned int binary_to_unsigned_int(mat_GF2& X)
             s++;
             if (s%32==0)
             {
-                //cout<<bits<<endl;
                 out=static_cast<unsigned int>(bits.to_ulong());
                 bits.reset();
                 s=0;

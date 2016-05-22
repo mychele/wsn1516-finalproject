@@ -104,28 +104,73 @@ unsigned int unpacku32(unsigned char *buf);
  */
 timeval timeConversion(std::chrono::microseconds d);
 
+/**
+* randomly initialize an existing matrix
+* @param matrix
+* @param number of rows
+* @param number of columns
+* @param value of the random seed
+*/
 
-// randomly initialize with binary numbers and existing matrix
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed);
-// create a randomly initialized matrix
+/**
+* create a matrix and randomly initialize it
+* @param number of rows
+* @param number of columns
+* @param value of the random seed
+*/
 mat_GF2 rand_create_matrix(int const r, int const c, int const seed);
-// randomly creata data (not encoded) matrix
-//K=number of packets, m=bits per packet
+
+/**
+* create a data (not encoded) matrix and randomly initialize it
+* @param number of packets
+* @param number of bits per packet
+* @param value of the random seed
+*/
 mat_GF2 rand_create_data(int const K, int const m, int const seed);
-//append identity matrix to an existing matrix
+
+/**
+* append identity matrix (to the right) to an existing matrix
+* @param matrix
+*/
 mat_GF2 append_identity(mat_GF2& X);
-// given a data matrix of and an encoding matrix, give endcoded data
+
+/**
+* encode data according to a data matrix and an encoding matrix (collections of EVs)
+* @param data matrix
+* @param encoding matrix
+* @return matrix of encoded data
+*/
 mat_GF2 encoded_data(mat_GF2& data_matrix,mat_GF2& encoding_matrix);
-// given a matrix of encoded data and the pseudo-inverse of the encoding matrix, give dedcoded data
-mat_GF2 decoded_data(mat_GF2& _encoded_data_matrix,mat_GF2& inverse_matrix);
-// write matrix (the output of the default write functon: cout<<matrix; is unreadable)
-// id_append=1 iff there's and identity matrix appended (divide matrix and identity using ||), otherwise 0
+
+/**
+* decode data according to an encoded data matrix and the pseudo-inverse of the encoding matrix
+* @param matrix of encoded data
+* @param psedo-inverse (i.e. the biggest full-rank matrix given by Gauss-Jordan elimination)
+* @return matrix of dencoded data
+*/
+mat_GF2 decoded_data(mat_GF2& encoded_data_matrix,mat_GF2& inverse_matrix);
+
+/**
+* write matrix to screen. 
+* @param matrix to be written
+* @param id_append=1 if there's and identity matrix appended (divide matrix and identity using ||), otherwise 0
+*/
 void write_matrix(mat_GF2& X, bool id_appended);
-// truncates the matrix resulting from Gaussian-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
+
+/**
+* truncates the matrix resulting from Gaussian-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
+* @param input matrix
+* @param rank of the inverse
+* @return truncated matrix (inverse)
+*/
 mat_GF2 pseudo_inverse(mat_GF2& X, int const matrix_rank);
 
-//LITTLE ENDIAN order: successive elements of the matrix are stored into progressively significant bits starting from the least significant
-/*ex: matrix
+/**
+* converts matrix of bits to an array of chars. 
+Matrix is read by rows.
+The conversion is done with LITTLE ENDIAN order: successive elements of the matrix are stored into progressively significant bits starting from the least significant
+ex: matrix
 110000101001100
 101011100101111
 100...
@@ -134,7 +179,10 @@ becomes characters
 10011001
 00111010
 ...
-i.e. first character is hex_43='C'*/
+i.e. first character is hex_43='C'
+* @param output array of chars
+* @param matrix of bits
+*/
 void binary_to_char(char* output_data, mat_GF2& X);
 
 /**
