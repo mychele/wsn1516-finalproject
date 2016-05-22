@@ -30,15 +30,15 @@ where a granularity of minimum $M$ ms is set (in~\cite{rfc6298} $M = 1000$ ms, w
 %\subsubsection*{Sender}
 \textbf{Sender} -- Flow diagram for the sender is in Fig.~\ref{fig:sender}. The retransmission policy is a stop and wait per block, i.e. until a block is not successfully received packets for that block are sent. Both for the RF and LT implementations a rate $K/N$ is set to guarantee a certain probability of successful decoding. 
 
-Given a certain $K$, the sender reads a portion of the file and creates $N$ coded packets (as \texttt{NCpacket} objects). Then it sends them as UDP packets and starts waiting for an acknowledgment from the receiver. When an ack is received, the sender checks for the number $P$ of packets still needed. If this is 0, it continues with the next block to be sent, otherwise it sends $P$ new encoded packets. In the payload of the first transmitted packet the sender reserves 4 byte to communicate the receiver the file size, so that this terminates correctly once the whole file is received. 
+Given a certain $K$, the sender reads a portion of the file and creates $N$ coded packets (as \texttt{NCpacket} objects). Then it sends them as UDP packets and starts waiting for an acknowledgment from the receiver. When an ACK is received, the sender checks for the number $P$ of packets still needed. If this is 0, it continues with the next block to be sent, otherwise it sends $P$ new encoded packets. In the payload of the first transmitted packet the sender reserves 4 byte to communicate the receiver the file size, so that this terminates correctly once the whole file is received. 
 
 %\subsubsection*{Receiver}
 \textbf{Receiver} -- The receiver flow diagram is in Fig.~\ref{fig:receiver}. 
-For each block of data, the receiver waits for the reception of $N$ packets, then it attempts to decode them. If successful, it appends to the output file the decoded chunk of data and starts waiting for the next block. If not, it behaves differently in LT and RF implementations. In the latter, when running Gauss elimination, it is possible to know the number $P$ of linearly dependent encoding vectors. Therefore the receiver sends an ack to the sender carrying $P$. When new packets are received, they are all used for decoding, until at least $N$ %TODO check 
+For each block of data, the receiver waits for the reception of $N$ packets, then it attempts to decode them. If successful, it appends to the output file the decoded chunk of data and starts waiting for the next block. If not, it behaves differently in LT and RF implementations. In the latter, when running Gauss elimination, it is possible to know the number $P$ of linearly dependent encoding vectors. Therefore the receiver sends an ACK to the sender carrying $P$. When new packets are received, they are all used for decoding, until at least $N$ %TODO check 
 linearly independent packets are found.
-With LT, instead, this is not possible, therefore an entire new block is queried by sending an ack with $P=N$ to the sender. A possible improvement is to retransmit only a fraction of the $N$ packets and combine them with a random subset of the already received packets. However, if the ratio $K/N$ is low enough, the probability of unsuccessful decoding can be made as small as desired. 
+With LT, instead, this is not possible, therefore an entire new block is queried by sending an ACK with $P=N$ to the sender. A possible improvement is to retransmit only a fraction of the $N$ packets and combine them with a random subset of the already received packets. However, if the ratio $K/N$ is low enough, the probability of unsuccessful decoding can be made as small as desired. 
 
-The receiver uses different timers for different events. The first (called \texttt{pg} in Fig.~\ref{fig:receiver}) measures the time between the reception of two packets, in order to perform packet gap detection. If a packet is expected and the timer expires, the receiver assumes it was lost. Since the receiver has to collect $N$ packets before decoding, if the number of received packets $R$ is lower than $N$ then it sends an ack to the sender specifying the number of needed packets $P = N - R$. The second timer (\texttt{ack}) is used when waiting for the first packet after an ack. It thus waits for the ack to be received, new packets to be encoded and for the first to be delivered at the receiver (this interval is defined as a \textit{round trip time} (RTT)). If it expires, the ack is sent again. Both these timers use estimates provided by \texttt{TimeCounter} objects. For the second timer, however, a scaling factor is applied to the estimate $e$ to account for the fact that at each (re)transmission a different number of packets $P$ must be encoded, or a new chunk is read from file, thus different delays may be experienced. We observed that when the plain estimate $e$ was used the system was very aggressive and unneeded retransmissions were triggered. Therefore we applied the scaling factor of $100 \cdot P / N$ when $P < N$ or $10$ for $P = N$ which we observed offering a good tolerance against undesired retransmission while not degrading the goodput and throughput.
+The receiver uses different timers for different events. The first (called \texttt{pg} in Fig.~\ref{fig:receiver}) measures the time between the reception of two packets, in order to perform packet gap detection. If a packet is expected and the timer expires, the receiver assumes it was lost. Since the receiver has to collect $N$ packets before decoding, if the number of received packets $R$ is lower than $N$ then it sends an ACK to the sender specifying the number of needed packets $P = N - R$. The second timer (\texttt{ACK}) is used when waiting for the first packet after an ACK. It thus waits for the ACK to be received, new packets to be encoded and for the first to be delivered at the receiver (this interval is defined as a \textit{round trip time} (RTT)). If it expires, the ACK is sent again. Both these timers use estimates provided by \texttt{TimeCounter} objects. For the second timer, however, a scaling factor is applied to the estimate $e$ to account for the fact that at each (re)transmission a different number of packets $P$ must be encoded, or a new chunk is read from file, thus different delays may be experienced. We observed that when the plain estimate $e$ was used the system was very aggressive and unneeded retransmissions were triggered. Therefore we applied the scaling factor of $100 \cdot P / N$ when $P < N$ or $10$ for $P = N$ which we observed offering a good tolerance against undesired retransmission while not degrading the goodput and throughput.
 
 \textbf{PER estimation at sender} -- 
 The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \textit{Packet Error Rate} (PER) of the channel and tries to adapt to it. The estimation is done with a moving average on a window of past block transmissions. In particular the sender records the average number of packets $P_b$ needed to successfully transmit each block, and estimates the PER as $\hat{PER} = 1 - N/P_b$. Then once the sender needs to send $P$ packets, it sends $P/(1-\hat{PER})$ packets trying to prevent channel losses without needing retransmission. This lowers the efficiency of the system, but decreases the time needed to transmit the file. The estimation works better with the RF setup, since it uses many more blocks than the LT one.
@@ -56,8 +56,8 @@ The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \t
 	\node (read) [process, below right of=while, yshift=-1cm, xshift=1.2cm, align=center] {Read data, set\\packets needed $P = N$};
 	\node (send) [process, below of=read] {Encode and send $P$ packets};
 	\node (waitack) [process, left of=send, xshift=-4cm] {Wait for ACK};
-	\node (ack) [decision, below of=send, align=center, yshift=-1cm] {Packet needed\\$P$ = 0?};
-	\node (ackrx) [process, left of=ack, xshift=-4cm, align=center] {Update $P$};
+	\node (ACK) [decision, below of=send, align=center, yshift=-1cm] {Packet needed\\$P$ = 0?};
+	\node (ackrx) [process, left of=ACK, xshift=-4cm, align=center] {Update $P$};
 
 	\draw[arrow] (start) -- (setup);
 	\draw[arrow] (setup) -- (filesetup);
@@ -66,9 +66,9 @@ The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \t
 	\draw[arrow] (while) -- node[anchor=east] {no} (stop);
 	\draw[arrow] (read) -- (send);
 	\draw[arrow] (send) -- (waitack);
-	\draw[arrow] (ackrx) -- (ack);
-	\draw[arrow] (ack) -- node[anchor=east] {no} (send);
-	\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+1cm]send.south east) |- node[anchor=west] {$b$++} (while);
+	\draw[arrow] (ackrx) -- (ACK);
+	\draw[arrow] (ACK) -- node[anchor=east] {no} (send);
+	\draw[arrow] (ACK) -| node[anchor=west] {yes} ([xshift=+1cm]send.south east) |- node[anchor=west] {$b$++} (while);
 	\draw[darrow] (waitack) -- node[anchor=west] {Ack received} (ackrx);
 \end{tikzpicture}
 \caption{Sender flowchart}
@@ -95,37 +95,37 @@ The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \t
 
 		\node (success) [decision, below of=decode, align=center] {Successful\\decoding?};
 
-		\node (write) [process, below of=success, yshift=-1cm, align=center] {Write decoded chunk\\Send ack with $P=0$};
+		\node (write) [process, below of=success, yshift=-1cm, align=center] {Write decoded chunk\\Send ACK with $P=0$};
 
 		\node (timer) [below of=waitpck, align=center] {};
 
-		\node (sendack) [process, below of=timer, yshift=-0.3cm, align=center] {Send ack with\\$P=N-R$};
+		\node (sendack) [process, below of=timer, yshift=-0.3cm, align=center] {Send ACK with\\$P=N-R$};
 
-		\node (sendun) [process, below of=sendack, align=center] {Send ack with\\$P=N$};
+		\node (sendun) [process, below of=sendack, align=center] {Send ACK with\\$P=N$};
 
 		\draw[arrow] (start) -- (setup);	
 		\draw[arrow] (setup) -- (while);
-		\draw[arrow] (while) -- node[anchor=west] {no, T=\texttt{ack}} (waitpck);
+		\draw[arrow] (while) -- node[anchor=west] {no, T=\texttt{ACK}} (waitpck);
 		\draw[arrow] (while) -- node[anchor=north] {yes} (stop);
 		\draw[arrow] (recv) -- (numpck);
-		\draw[arrow] (numpck) -- node[anchor=east] {yes} (decode);
-		\draw[arrow] (numpck) -- node[anchor=south, yshift=+0.1cm] {no, T=\texttt{pg}} (waitpck);
+		\draw[arrow] (numpck) -- node[anchor=east] {no} (decode);
+		\draw[arrow] (numpck) -- node[anchor=south, yshift=+0.1cm] {yes, T=\texttt{pg}} (waitpck);
 		\draw[arrow] (decode) -- (success);
 		\draw[arrow] (success) -- node[anchor=east] {yes} (write);
 		\draw[arrow] (success) -- node[anchor=north] {no} (sendun);
-		\draw[arrow] (sendun) -| node[anchor=south, yshift=-0.7cm] {T=\texttt{ack}} ([xshift=+2cm]sendack.east) |-  (while);
-		\draw[arrow] (sendack) -- node[anchor=east] {T=\texttt{ack}} (waitpck);
+		\draw[arrow] (sendun) -| node[anchor=south, yshift=-0.7cm] {T=\texttt{ACK}} ([xshift=+2cm]sendack.east) |-  (while);
+		\draw[arrow] (sendack) -- node[anchor=east] {T=\texttt{ACK}} (waitpck);
 		\draw[arrow] (write) -| ([xshift=+3cm]sendack.east) |- ([yshift=+1cm]while.north east) -| (while.north);
 
 		\draw[darrow] (waitpck) -- node[anchor=south] {Receive packet} (recv);
 		\draw[darrow] (waitpck) -| ([xshift=+1cm]waitpck.south east) |- node[anchor=north east, yshift=0.6cm, rotate=270] {Timer expired} (sendack);
 
 		
-		%\draw[arrow] (ackrx) -- (ack);
-		%\draw[arrow] (ack) -- node[anchor=east] {no} (send);
-		%\draw[arrow] (ack) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- node[anchor=west] {$b$++} (while);
+		%\draw[arrow] (ackrx) -- (ACK);
+		%\draw[arrow] (ACK) -- node[anchor=east] {no} (send);
+		%\draw[arrow] (ACK) -| node[anchor=west] {yes} ([xshift=+0.25cm]send.south east) |- node[anchor=west] {$b$++} (while);
 	\end{tikzpicture}
-	\caption{Receiver flowchart. T can be a timer of three different kind, pg for packet gap detection, ack for RTT, new\_block for new blocks (RTT + read + encoding)}
+	\caption{Receiver flowchart. T can be a timer of two different kind: \texttt{pg} for packet gap detection and \texttt{ACK} for RTT (network RTT + encoding of new blocks)}
 	\label{fig:receiver}
 
 \end{subfigure}
@@ -137,9 +137,9 @@ The sender has also a \texttt{PER\_MODE}, if this is enabled it estimates the \t
 \subsection{Network Coding implementation}
 \textbf{Random Fountain} -- Once the receiver has collected a suitable amount of packets, these are passed to the \texttt{decoding\_function}. This functions arranges the encoding vectors in a matrix and tries to invert it using Gau{\ss}-Jordan elimination. In order to get an efficient implementation of this algorithm in $\mathds{G}\mathds{F}(2)$ we used objects of class \texttt{mat\_GF2} which is implemented in library \texttt{NTL} ~\cite{NTL}. We then check if on left part of the matrix we have a complete identity matrix. If it's the case, then we extract from the right part of the matrix the first $K$ rows, which give the inverse of the initial matrix. Using the inverse, we can then apply the inverse XOR transformation on the decoded packet payloads, and obtain the original uncoded data. In the other case, the function returns the number of missing rows to get $K$ independent ones. The inversion algorithm is then re-applied with the original plus the additional packets (unfortunately, there is no way to exploit the partial results of the failed Gau{\ss}-Jordan elimination to reduce the computations for the successive trials: the complexity is the same of starting from scratch).
 
-\textbf{Luby Trasnform} -- For the implementation of LT, we have to represent the graph of message passing. This is done by using two adjacency lists. This choice was made in order to minimize the computing time of the algorithm, even though it results quite expensive in terms of memory usage. Packets are then resolved according to the message passing algorithm. In this case, if the algorithm fails, there is no easy way to determine how many independent encoding vectors would still be needed in oder to complete the decoding. Because of this and the fact that theoretically, for $K$ sufficiently large, this event would be very unlikely, encouraged us to opt for a simpler system, in which if the decoding fails, then the receiver simply asks for another group of $N$ packets to the sender. 
+\textbf{Luby Transform} -- For the implementation of LT, we have to represent the graph of message passing. This is done by using two adjacency lists. This choice was made in order to minimize the computing time of the algorithm, even though it results quite expensive in terms of memory usage. Packets are then resolved according to the message passing algorithm. In this case, if the algorithm fails, there is no easy way to determine how many independent encoding vectors would still be needed in oder to complete the decoding. Because of this and the fact that theoretically, for $K$ sufficiently large, this event would be very unlikely, encouraged us to opt for a simpler system, in which if the decoding fails, then the receiver simply asks for another group of $N$ packets to the sender. 
 
 \subsection{Complications found}
-In the implementation of LT decoder we faced a tradeoff between memory consumption and computational complexity. We chose to optimize for the latter, this however constrained the possible $N$ and $K$ values to $K <= 5500$. Another issue was caused by the implementation of the \texttt{rand} function in C++, which is different in different implementations of the Standard Library. Therefore the same seed generates different pseudo random sequences when the operative systems of the sender is not the same of the receiver. We adopted the more modern C++11 \texttt{random} header which contains a Mersenne Twister which is platform independent.
+In the implementation of LT decoder we faced a tradeoff between memory consumption and computational complexity. We chose to optimize for the latter, this however constrained the possible $N$ and $K$ values to $K <= 5500$. Another issue was caused by the implementation of the \texttt{rand} function in C++, which is different in different implementations of the Standard Library. Therefore the same seed generates different pseudo random sequences when the operative systems of the sender is not the same of the receiver. We adopted the more modern C++11 \texttt{random} header which contains a Mersenne Twister which is platform independent, however the same problem arises with \texttt{random} distributions.
 
 
