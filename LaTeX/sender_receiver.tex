@@ -5,7 +5,7 @@ The objective of the project is to implement a network coding system that works 
 
 The system is composed of two main C++ scripts, sender and receiver, and of some utility classes which handle coding/decoding, time interval estimation, packet abstraction. We implemented two different version of the network coding system, one which relies on Random Fountain (RF), and another that uses Luby Transform coding (LT), which offers higher performances at a price of a more complex implementation. Let's describe as first the utilities, then how sender and receiver work (ARQ) and finally the details on the implementation of the network coding algorithms.
 
-\textbf{Utilities} -- The class \texttt{NCpacket} is an abstraction of an encoded packet, with a private variable (a \texttt{NCpacketContainer} struct) that stores an header of 32 bit, a sequence number (\texttt{blockID}) of 8 bit, and the payload (i.e. the encoded data) as an array of fixed size. 
+\textbf{Utilities} -- The class \texttt{NCpacket} is an abstraction of an encoded packet, with a private variable (a \newline \texttt{NCpacketContainer} struct) that stores an header of 32 bit, a sequence number (\texttt{blockID}) of 8 bit, and the payload (i.e. the encoded data) as an array of fixed size. 
 %A \texttt{NCpacket} can be created either from these three parameters or with the \texttt{blockID} and the whole chunk of uncoded data, and performs the encoding inside the constructor. 
 The header represents a seed which is given to a pseudo random number generator (pRNG) in order to create the same encoding vector at sender and receiver side. 
 
