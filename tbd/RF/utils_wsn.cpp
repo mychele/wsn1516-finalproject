@@ -344,31 +344,31 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
             char* pyl=data.at(i);
             for (int j=0; j<PAYLOAD_SIZE; j++)
             {
-                sum[j]=sum[j]^pyl[j];
+                sum[j]=sum[j]^pyl[j];	//perform bitwise XOR on the chars of the packet
 
             }
         }
-    }
-    memcpy(out_payload, &sum[0], PAYLOAD_SIZE);
+    }  
+    memcpy(out_payload, &sum[0], PAYLOAD_SIZE); //copy output in output variable
 }
 
 vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
 {
     vector<char*> out;
     vector<char> sum(PAYLOAD_SIZE);
-    for (int i=0; i<X.NumRows(); i++)
+    for (int i=0; i<X.NumRows(); i++)  //rows of X are encoding vectors
     {
-        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));
+        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));  //allocate memory for output
         std::fill(sum.begin(), sum.end(), 0);
         for (int j=0; j<X.NumCols(); j++)
         {
 
-            if (X[i][j]==1)
+            if (X[i][j]==1)   //1 at position j of encoding vector i
             {
-                char* pyl=encoded_data.at(j);
+                char* pyl=encoded_data.at(j);  //get packet j
                 for (int h=0; h<PAYLOAD_SIZE; h++)
                 {
-                    sum[h]=sum[h]^pyl[h];
+                    sum[h]=sum[h]^pyl[h]; //perform bitwise XOR
 
 
                 }
@@ -376,7 +376,7 @@ vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
             }
 
         }
-        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE);
+        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE); //copy output in output variable
     }
     return out;
 }

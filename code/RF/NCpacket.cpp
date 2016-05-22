@@ -8,8 +8,6 @@
 #include "utils_wsn.h"
 #include <bitset>
 
-// TODO: find a safer way to handle the payload array (for example check size!)
-
 NCpacket::NCpacket()
 {
     NCpacketContainer packet = NCpacketContainer();

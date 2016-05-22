@@ -44,7 +44,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     {
         mat_GF2 tmp_ev;
         tmp_ev=pckIt->getBinaryHeader();
-        //cout<<"seed :"<<pckIt->getHeader()<<"\n";
+	//append encoding vectors to create encoding matrix
         for (int s=0; s<K; s++)
         {
             M[i][s]=tmp_ev[0][s];
@@ -54,39 +54,40 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     }
     mat_GF2 M_id;
     M_id=append_identity(M);
+    //perform Gauss-Jordan elimination
     gauss(M_id);
     //index of last nonzero row
     int last_nonzero=N-1;
     int flag_nonzero=0;
     do
     {
-        flag_nonzero=0;
+        //check whether current row is made only by 0s
+	flag_nonzero=0;
         for (int j=0; j<K; j++)
         {
             if (M_id[last_nonzero][j]!=0)
                 flag_nonzero=1;
         }
+	//if current row is only made by 0s, decrease index of last nonzero row
         if (flag_nonzero==0)
             last_nonzero--;
         else break;
     }
     while (last_nonzero>=0);
-
+    //independent rows=index of last nonzero row+1
+    //remaining=number of rows missing to have K independent rows
     int remaining=K-1-last_nonzero;
+    // if there are K independent rows, get the decoding matrix and decode data
     if (remaining==0)
     {
         for (int j=K-1; j>=0; j--)
         {
             for (int i=j-1; i>=0; i--)
             {
-                if (M_id[i][j]==1)
+                //sum rows of indices i and j and put result at row i
+		if (M_id[i][j]==1)
                 {
                     M_id[i] += M_id[j];
-                    // for (int s=0; s<M_id.NumCols(); s++)
-                    // {
-                    //     M_id[i][s]=M_id[i][s]+M_id[j][s];
-                    // }
-
                 }
 
             }
@@ -98,8 +99,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     }
     out.first=remaining;
     out.second=decoded_data;
-    //cout<<"still "<<remaining<<" needed packets\n";
-    decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)
+    decoded_data.clear();
     return out;
 }
 

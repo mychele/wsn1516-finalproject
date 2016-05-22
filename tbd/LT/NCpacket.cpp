@@ -23,7 +23,7 @@ NCpacket::NCpacket(unsigned int header, unsigned char block_ID, char* payload)
 
 NCpacket::NCpacket(int header, unsigned char block_ID, std::vector<int> encoding_vector, vector<char*> *data) {
     packet.header = header;
-    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
+    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));
     // create payload
     XOR_encode(&encoding_vector, data, tmp);
     // store payload and ev

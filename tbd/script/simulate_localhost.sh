@@ -16,6 +16,7 @@ do
 		echo "K_TB_SIZE=$K_TB_SIZE_VAL" >> "report".log
 		echo "N_TB_SIZE=$N_TB_SIZE_VAL" >> "report".log
 		make clear
+		#changes in source files K_TB_SIZE_VALUE and N_TB_SIZE_VALUE with actual values, and recompiles
 		sed "s/K_TB_SIZE_VALUE/$K_TB_SIZE_VAL/g" NCpacket.h.template > NCpacket.h.tmp
 		sed "s/N_TB_SIZE_VALUE/$N_TB_SIZE_VAL/g" NCpacket.h.tmp > NCpacket.h
 		make all

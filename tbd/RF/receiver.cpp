@@ -135,9 +135,7 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    // TODO localhost
     if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
-    // TODO network - uncomment the following and comment above
     //hints.ai_flags = AI_PASSIVE;
     //if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {

@@ -159,8 +159,8 @@ mat_GF2 decoded_data(mat_GF2& encoded_data_matrix,mat_GF2& inverse_matrix);
 void write_matrix(mat_GF2& X, bool id_appended);
 
 /**
-* truncates the matrix resulting from Gaussian-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
-* @param input matrix
+* truncates the matrix resulting from Gauss-Jordan elimination by deleting the left part of the matrix (identity matrix) and the rows exceeding the rank
+* @param matrix resulting as output of Gauss-Jordan elimination (inverse + identity matrix)
 * @param rank of the inverse
 * @return truncated matrix (inverse)
 */
