@@ -54,7 +54,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
     }
     mat_GF2 M_id;
     M_id=append_identity(M);
-    //perform Gauss-Jordan elimination
+    //perform Gauss elimination to put matrix in row echelon form (in order to easily check the rank)
     gauss(M_id);
     //index of last nonzero row
     int last_nonzero=N-1;
@@ -84,7 +84,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
         {
             for (int i=j-1; i>=0; i--)
             {
-                //sum rows of indices i and j and put result at row i
+		//matrix is in row echelon form and of rank K. Sum rows of indices i and j and put result at row i, to get identity matrix on the left, and therefore inverse matrix on the right (matrix is said to be in reduced row echelon form)
 		if (M_id[i][j]==1)
                 {
                     M_id[i] += M_id[j];

@@ -146,7 +146,7 @@ mat_GF2 encoded_data(mat_GF2& data_matrix,mat_GF2& encoding_matrix);
 /**
 * decode data according to an encoded data matrix and the pseudo-inverse of the encoding matrix
 * @param matrix of encoded data
-* @param psedo-inverse (i.e. the biggest full-rank matrix given by Gauss-Jordan elimination)
+* @param psedo-inverse (i.e. the biggest full-rank matrix given by Gauss-Jordan elimination and truncation)
 * @return matrix of dencoded data
 */
 mat_GF2 decoded_data(mat_GF2& encoded_data_matrix,mat_GF2& inverse_matrix);
