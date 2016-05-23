@@ -1,4 +1,4 @@
-The LT and RF folders contain respectively the code to run LT and RF network coding systems. Notice that, according to how the /etc/hosts file on the hosting machine is configured, when switching from localhost to a real network the receiver must be adapted (see TODO at lines 136-140 in receiver.cpp file). RF code needs also an installation of NTL (http://www.shoup.net/ntl/) with correct paths in the Makefile.
+The LT and RF folders contain respectively the code to run LT and RF network coding systems. Notice that, according to how the /etc/hosts file on the hosting machine is configured, when switching from localhost to a real network the receiver must be adapted (see ALTERNATIVE at line 140 in receiver.cpp file). RF code needs also an installation of NTL (http://www.shoup.net/ntl/) with correct paths in the Makefile.
 
 The script folder contains 3 different scripts. 
 - simulate_localhost.sh must be placed in LT folder, and launches a simulation campaign for different N, K and PERs. 

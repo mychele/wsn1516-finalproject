@@ -138,7 +138,9 @@ int main(int argc, char *argv[])
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
+    // ALTERNATIVE for localhost
     if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
+    // ALTERNATIVE for non localhost
     //hints.ai_flags = AI_PASSIVE;
     //if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {
