@@ -10,9 +10,9 @@
 typedef std::pair<int, std::vector<char*>> packetNeededAndVector ;
 
 /**
-* decode the received packets (extract encoding vectors and decode)
+* decode the received packets (extract encoding vectors and decode). It relies on some methods 
+* of utils_wsn
 * @param vector of packets
-* @param object with RSD utils
 * @returns number of packets needed to complete decoding and vector of decoded packets
 */
 
