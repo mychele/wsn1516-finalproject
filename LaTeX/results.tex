@@ -19,7 +19,7 @@
 	\caption{Average time to decode a packet vs relative redundancy}
 	\label{fig:decoding_time_rel}
 \end{subfigure}
-\caption{Average time to decode a packet, , for different $K$. Notice that y axis is in logarithmic scale}
+\caption{Average time to decode a packet, for different $K$. Notice that y axis is in logarithmic scale.}
 \label{fig:dc_all}
 \end{figure}
 
@@ -38,7 +38,7 @@ Wi-Fi&1467&100\\
 Network&1467&100\\
 \bottomrule
 \end{tabular}
-\captionof{table}{Experimental setups}
+\captionof{table}{Main experimental setups.}
 \end{center}
 The payload size of Wi-Fi and network is dictated by the MTU size, in order to avoid IP packet fragmentation which degrades the performance. 
 We remark that with these settings we are able to transmit a file of size up to 2.25 PB in localhost and 1.61 PB over Wi-Fi or network (if we have no redundancy and we adjust the number of bytes used to communicate the file size).\\
@@ -57,7 +57,7 @@ transmission\_time&$\searrow$& & $\nearrow$&$\nearrow$\\ \hline
 decoding\_time&$\nearrow$&$\sim \searrow$&&independent\\ 
 \bottomrule
 \end{tabular}
-\captionof{table}{Monotonicities}
+\captionof{table}{Monotonicities.}
 \end{center}
 
 In Fig. \ref{fig:dc_all} we show the decoding time (localhost scenario) for a set of values of $K$ and redundancy. Clearly, in general this time decreases as we increase redundancy, since there are more connections in the graph of message passing, and therefore at each iteration we are able to resolve more nodes. Hence less iterations are needed to decode the packets. However, as we can see from Fig.\ref{fig:decoding_time_rel}, with the redundancy above a certain value the time to read and write the graph for message passing (which increases with $N$) becomes dominant over the time (number of iterations) needed for message passing itself, and therefore the decoding time increases. Nevertheless, this increase is much less significant than the decrease at low relative redundancies, and for practical purposes we can assume that decoding time from a certain value on stays constant. Roughly speaking, we can see that around a value of relative redundancy $\frac{N}{K}=1.5$ there is a change in regime: the derivative of the decoding time according to redundancy changes dramatically. In particular as we approach 1 the increase in decoding time is exponential. We also remark (in part by guessing the behavior of the lines if we were able to explore the whole interval of redundancies for all values of $K$) that, if we fix a given relative redundancy, the decoding time increases with $K$.
@@ -91,7 +91,7 @@ In Fig. \ref{fig:dc_all} we show the decoding time (localhost scenario) for a se
 	\caption{$K=5500$}
 	\label{fig:lh_good_5500}
 \end{subfigure}
-\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup}
+\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup.}
 \label{fig:goodput_aggr}
 \end{figure}
 
@@ -124,7 +124,7 @@ In Fig. \ref{fig:dc_all} we show the decoding time (localhost scenario) for a se
 	\caption{$K=5500$}
 	\label{fig:lh_eff_5500}
 \end{subfigure}
-\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup}
+\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, aggressive setup.}
 \label{fig:efficiency_aggr}
 \end{figure}
 
@@ -146,7 +146,7 @@ In Fig. \ref{fig:dc_all} we show the decoding time (localhost scenario) for a se
 	\caption{Efficiency for $K=3500$, using PER estimation}
 	\label{fig:pm1_efficiency}
 \end{subfigure}
-\caption{Goodput and efficiency for $K=3500$, using PER estimation, aggressive setup}
+\caption{Goodput and efficiency for $K=3500$, using PER estimation, aggressive setup.}
 \label{fig:pm1}
 \end{figure}
 
@@ -210,7 +210,7 @@ In Figures \ref{fig:goodput_nonaggr} and  \ref{fig:eff_nonaggr} we show results 
 	\caption{$K=5500$}
 	\label{fig:lh_good_5500_eff}
 \end{subfigure}
-\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency oriented setup}
+\caption{Goodput for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency-oriented setup.}
 \label{fig:goodput_nonaggr}
 \end{figure}
 
@@ -243,7 +243,7 @@ In Figures \ref{fig:goodput_nonaggr} and  \ref{fig:eff_nonaggr} we show results 
 	\caption{$K=5500$}
 	\label{fig:lh_eff_5500_eff}
 \end{subfigure}
-\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency oriented setup}
+\caption{Efficiency for $K \in \{1000, 3500, 5500\}$ in localhost, efficiency-oriented setup.}
 \label{fig:eff_nonaggr}
 \end{figure}
 
@@ -309,9 +309,10 @@ In Figures \ref{fig:goodput_nonaggr} and  \ref{fig:eff_nonaggr} we show results 
 	\caption{Throughput}
 	\label{fig:wifi_thr_lsnr_3500}
 \end{subfigure}
-\caption{Comparison between setup with \textit{high SNR} and setup with \textit{low SNR}, for $K=3500$}
+\caption{Comparison between setup with \textit{high SNR} and setup with \textit{low SNR}, for $K=3500$.}
 \label{fig:wifi_lsnr_3500}
 \end{figure}
+
 \begin{figure}[!hp]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -341,9 +342,10 @@ In Figures \ref{fig:goodput_nonaggr} and  \ref{fig:eff_nonaggr} we show results 
 	\caption{Throughput}
 	\label{fig:net_thr}
 \end{subfigure}
-\caption{Metrics for Net simulation}
+\caption{Metrics for Network simulation.}
 \label{fig:net}
 \end{figure}
+
 \begin{figure}[!h]
 \centering
 \begin{subfigure}{0.23\textwidth}
@@ -375,7 +377,7 @@ In Figures \ref{fig:goodput_nonaggr} and  \ref{fig:eff_nonaggr} we show results 
 	\caption{Decoding time per packet}
 	\label{fig:RFLT_dectime}
 \end{subfigure}
-\caption{Comparison between LT, $K=3500$ \& $N=4500$, and RF, $K=12$ \& $N=17$}
+\caption{Comparison between LT ($K=3500$, $N=4500$) and RF ($K=12$, $N=17$).}
 \label{fig:RFLT}
 \end{figure}
 

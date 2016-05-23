@@ -43,7 +43,7 @@ The receiver uses different timers for different events. The first (called \text
 The sender has also a \texttt{PER\_MODE}. If this is enabled it estimates the \textit{Packet Error Rate} (PER) of the channel and tries to adapt to it. The estimation is done with a moving average on a window of past block transmissions. In particular the sender records the average number of packets $P_b$ needed to successfully transmit each block, and estimates the PER as $\widehat{PER} = 1 - N/P_b$. Then, once the sender needs to send $P$ packets, it sends $P/(1-\widehat{PER})$ packets trying to prevent channel losses without needing retransmissions. This lowers the efficiency of the system, but decreases the time needed to send the file. The estimation works better with the RF setup, since it transmits many more blocks than the LT one, of smaller size, thus it reacts more quickly to changes in the PER.
 
 \begin{sidewaysfigure}
-\captionsetup{justification=centering,margin=3cm}
+\captionsetup{justification=centering,margin=1cm}
 
 \begin{subfigure}{0.5\hsize}\centering
     \begin{tikzpicture}[node distance = 2cm, scale=0.8, every node/.style={scale=0.8}]
@@ -112,12 +112,12 @@ The sender has also a \texttt{PER\_MODE}. If this is enabled it estimates the \t
 		\draw[arrow] (decode) -- (success);
 		\draw[arrow] (success) -- node[anchor=east] {yes} (write);
 		\draw[arrow] (success) -- node[anchor=north] {no} (sendun);
-		\draw[arrow] (sendun) -| node[anchor=south, yshift=-0.7cm] {T=\texttt{ACK}} ([xshift=+2cm]sendack.east) |-  (while);
+		\draw[arrow] (sendun) -| node[anchor=south, yshift=-0.7cm] {T=\texttt{ACK}} ([xshift=+2cm]sendack.east) |-  ([yshift=+0.5cm]waitpck.east);
 		\draw[arrow] (sendack) -- node[anchor=east] {T=\texttt{ACK}} (waitpck);
-		\draw[arrow] (write) -| ([xshift=+3cm]sendack.east) |- ([yshift=+1cm]while.north east) -| (while.north);
+		\draw[arrow] (write) -| ([xshift=+3cm]sendack.east) |- (while.east);
 
 		\draw[darrow] (waitpck) -- node[anchor=south] {Receive packet} (recv);
-		\draw[darrow] (waitpck) -| ([xshift=+1cm]waitpck.south east) |- node[anchor=north east, yshift=0.6cm, rotate=270] {Timer expired} (sendack);
+		\draw[darrow] ([yshift=-0.5cm]waitpck.east) -| ([xshift=+1cm]waitpck.south east) |- node[anchor=north east, yshift=0.6cm, rotate=270] {Timer expired} (sendack);
 
 		
 		%\draw[arrow] (ackrx) -- (ACK);
