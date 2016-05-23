@@ -17,7 +17,7 @@ do
 	for i in `seq 1 100`;
 	do
 		echo $i >> "report".log
-		./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background
+		./receiver outputfile $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background
 		sleep 1
 		./sender localhost localhost $1 $PER>> "logtx".txt # $1 is filename
 		#simulate $1 $2

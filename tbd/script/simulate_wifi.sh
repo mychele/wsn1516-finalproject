@@ -24,9 +24,9 @@ do
 			echo $i >> report.log
 			sshpass -p remotepassword ssh michele@192.168.2.105 "echo $i >> ./repos/wsn1516-finalproject/code/LT-wifi/report.log"
 			sshpass -p remotepassword ssh michele@192.168.2.107 "echo $i >> ./wsn1516-finalproject/code/LT-wifi/report.log"
-			sshpass -p remotepassword ssh michele@192.168.2.105 "timeout 180 ./repos/wsn1516-finalproject/code/LT-wifi/receiver audio.wav $PER >> logrx.txt" & # $1 is filename, $2 is PER, in background. 					Timeout of 240 s. Killed if timeout
+			sshpass -p remotepassword ssh michele@192.168.2.105 "timeout 180 ./repos/wsn1516-finalproject/code/LT-wifi/receiver outputfile $PER >> logrx.txt" & # $1 is filename, $2 is PER, in background. 					Timeout of 240 s. Killed if timeout
 			sleep 3
-			sshpass -p remotepassword ssh michele@192.168.2.107 "timeout 180 ./wsn1516-finalproject/code/LT-wifi/sender 192.168.2.107 192.168.2.105 ./wsn1516-finalproject/code/LT/audio.wav $PER >> logtx.txt" 	# $1 is filename
+			sshpass -p remotepassword ssh michele@192.168.2.107 "timeout 180 ./wsn1516-finalproject/code/LT-wifi/sender 192.168.2.107 192.168.2.105 ./wsn1516-finalproject/code/LT/outputfile $PER >> logtx.txt" 	# $1 is filename
 
 			status=$? # $? is exit status of timeout command: 0 if no timeout, 124 otherwise
 			echo "exit status of timeout: "$status >> report.log

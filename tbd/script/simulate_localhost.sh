@@ -34,7 +34,7 @@ do
 			while [ $i -le 10 ]
 			do
 				echo $i >> "report".log
-				timeout 240 ./receiver audio.wav $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background. 					Timeout of 240 s. Killed if timeout
+				timeout 240 ./receiver outputfile $PER >> "logrx".txt & # $1 is filename, $2 is PER, in background. 					Timeout of 240 s. Killed if timeout
 				sleep 1
 				timeout 240 ./sender localhost localhost $1 $PER >> "logtx".txt # $1 is filename
 				#simulate $1 $2

@@ -12,3 +12,4 @@ where PER is a value of PER that you want to simulate, and the sender on the oth
 ./sender localhost localhost filename PER
 where PER is used just to logging purposes. 
 Update the verb variable in sender and receiver to change the verbosity of the output.
+In order to lauch a script simply place it in the correct directory and call ./scriptname filename. It produces as output a file named fileoutput.

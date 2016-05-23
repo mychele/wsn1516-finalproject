@@ -36,7 +36,7 @@ increment=${arr_increment[$increment_index]}
 N=$((K+increment))
 echo $trial_index >> "report".log
 ../../compile.sh $K $increment
-timeout 240 ../../receiver ../../audio.wav 0 >> "logrx".txt
+timeout 240 ../../receiver ../../outputfile 0 >> "logrx".txt
 status=$?
 echo "exit status of timeout: "$status >> "report".log
 if [ $status -eq 124 ]
