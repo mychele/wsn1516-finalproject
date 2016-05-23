@@ -84,7 +84,7 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> packetVector)
         {
             for (int i=j-1; i>=0; i--)
             {
-		//matrix is in row echelon form and of rank K. Sum rows of indices i and j and put result at row i, to get identity matrix on the left, and therefore inverse matrix on the right (matrix is said to be in reduced row echelon form)
+		//matrix is in row echelon form and of rank K. Perform row sums in order to get identity matrix on the left, and therefore inverse matrix on the right (matrix is said to be in reduced row echelon form)
 		if (M_id[i][j]==1)
                 {
                     M_id[i] += M_id[j];
