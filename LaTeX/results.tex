@@ -167,7 +167,7 @@ because the decoding time does not depend on PER. If we assume that the transmis
 \begin{equation*}
 \begin{split}
 [delay(N,PER')-delay(N',PER')]-[delay(N,PER)-delay(N',PER)]=\\ 
-=\alpha\frac{\ln(N)}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}-\alpha\frac{\ln(N')}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}=\frac{K}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}\ln{\frac{N}{N'}}<0
+=\alpha\frac{\ln(N)}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}-\alpha\frac{\ln(N')}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}=\frac{\alpha}{\ln PER \ln PER'}\ln{\frac{PER'}{PER}}\ln{\frac{N}{N'}}<0
 \end{split}
 \end{equation*}
 since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER increases, and since the goodput depends on the inverse of the delay, the gap in goodput decreases as PER increases.
