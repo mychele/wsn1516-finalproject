@@ -163,7 +163,7 @@ We also remark that the difference in goodput for a given $K$ and two values of 
 =[tx\_time(N,PER')-tx\_time(N,PER)]-[tx\_time(N',PER')-tx\_time(N',PER)]
 \end{split}
 \end{equation*}
-because the decoding time does not depend on PER. If we assume that the transmission time in localhost is a linear function of the number of retransmissions (we call $\alpha$ the constant of linearity), which is justified by the fact that in localhost, given the high rate, the time to transmit a set of packets weakly depend of the number of packets (within reasonable limits), and that the number of packets left to transmit is a geometric sequence in the number of retransmission $r$, we can write $N\cdot PER^r=c \Rightarrow r=-\frac{\ln(N)-\ln(c)}{\ln(PER)}$, where $c$ is a small constant at which we consider that all packets have been received (e.g. $c=0.1$. Therefore
+because the decoding time does not depend on PER. Let's assume that the transmission time in localhost is a linear function of the number of retransmissions (we call $\alpha$ the constant of linearity), which is justified by the fact that in localhost, given the high rate, the time to transmit a set of packets weakly depend of the number of packets (within reasonable limits). If, moreover, we model the number of packets left to transmit is a geometric sequence in the number of retransmission $r$, then we can write $N\cdot PER^r=c \Rightarrow r=-\frac{\ln(N)-\ln(c)}{\ln(PER)}$, where $c$ is a small constant at which we consider that all packets have been received (e.g. $c=0.1$. Therefore
 \begin{equation*}
 \begin{split}
 [delay(N,PER')-delay(N',PER')]-[delay(N,PER)-delay(N',PER)]=\\ 
@@ -171,13 +171,6 @@ because the decoding time does not depend on PER. If we assume that the transmis
 \end{split}
 \end{equation*}
 since $N>N'$ and $1>PER>PER'>0$. Therefore the gap in delay increases as PER increases, and since the goodput depends on the inverse of the delay, the gap in goodput decreases as PER increases.
-\MP{
-	Why $K$? For the delay, if we have 1 + r transmissions, $D(N, PER) = N(1 - \frac{\ln(N)}{\ln(PER)})$. In this case, the final formula is
-	$$
-		\ln\frac{P'}{P}\frac{1}{\ln P' \ln P} \left( N\ln N - N'\ln N' \right) < 0
-	$$
-	Anyway, if there is enough space I would add some of the steps to the solution, to make it simpler to understand
-}
 \SO{check following section on pm1}
 In Fig. \ref{fig:pm1} we show the result we obtain by enabling the PER estimation mode. In this mode, the sender tries to estimate the PER, in order to improve system performances. We see that effectively we have quite a significant increase in goodput, while the efficiency remains approximately the same (except for the case $PER=0$, which gives some estimation troubles, probably due to convergence problems of estimators). Therefore we have that our PER estimation method proves to be quite useful, even though performances don't change dramatically.\\  
 \MP{Something on efficiency oriented setup? For example: In the efficiency oriented setup the minimum timeout for packet gap detection is set to 100 ms. It can be seen that efficiency slightly increases, but the difference is minimal, due to limitations of the localhost experiment (?). The goodput however shows a different behavior for $PER \ge 0.1$... I can add something more tomorrow}
