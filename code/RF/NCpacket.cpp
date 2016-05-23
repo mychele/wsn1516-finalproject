@@ -26,13 +26,12 @@ NCpacket::NCpacket(vector<char*> data, unsigned char block_ID)
     // create encoding vector
     packet.header=rand();
     mat_GF2 encoding_vector=rand_create_matrix(1,K_TB_SIZE,packet.header);
-    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
+    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));
     // create payload
     XOR_encode(encoding_vector, data, tmp);
     // store payload and ev
     memcpy(packet.payload, tmp, PAYLOAD_SIZE);
     packet.block_ID = block_ID;
-     //write_matrix(encoding_vector,0);
 }
 
 void

@@ -16,7 +16,7 @@ NCpacketHelper::NCpacketHelper(int K, double c_rsd, double delta_rsd) {
 	//m_randomDevice; // device entropy
 	m_eng = std::mt19937(m_randomDevice());
     m_distr01 = std::uniform_real_distribution<double>(0.0, 1.0); // it will create uniform random number in range 0,1 
-    m_distr0k = std::uniform_int_distribution<int>(0, m_K - 1); //TODO check limits
+    m_distr0k = std::uniform_int_distribution<int>(0, m_K - 1);
 }
 
 void

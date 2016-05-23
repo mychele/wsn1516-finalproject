@@ -24,6 +24,7 @@ class TimeCounter {
 	int m_alpha;
 	int m_alpha_den;
 	int m_k;
+	int m_minimumValue;
 
 public:
 

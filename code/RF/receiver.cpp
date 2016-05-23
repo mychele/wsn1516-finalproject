@@ -41,10 +41,14 @@ struct ReceiveReturn
 
 /**
  * Send an ACK to the address in sockaddr_storage
+ * @param the number of packets needed
+ * @param current block_ID
+ * @param the sender address
+ * @return the number of byte sent, or -1 if there was an error
  */
 int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr_storage sender_addr)
 {
-    // get info on sender
+    // get info on sender from the sockaddr_storage structure
     int status;
     struct addrinfo ack_hints, *ack_res, *p_iter;
     memset(&ack_hints, 0, sizeof ack_hints);
@@ -53,16 +57,14 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
     char s[INET6_ADDRSTRLEN];
     char p[2];
     inet_ntop(sender_addr.ss_family, get_in_addr((struct sockaddr *)&sender_addr), s, sizeof s);
-    // std::cout << "host: " << s;
     std::string ack_port = std::to_string(ntohs(get_in_port((struct sockaddr *)&sender_addr)));
-    // std::cout << "\nport: " << ack_port << "\n";
     if ((status = getaddrinfo(
                       s,
                       ack_port.c_str(),
                       &ack_hints, &ack_res)) != 0)
     {
         fprintf(stderr, "ACK getaddrinfo: %s\n", gai_strerror(status));
-        return 2;
+        return -1;
     }
 
     // at this point res is a linked structure filled with useful data
@@ -86,7 +88,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
     if (p_iter == NULL)   //no valid address was found
     {
         std::cout << "receiver: unable to create ACK socket\n";
-        return 2;
+        return -1;
     }
 
     // send ack
@@ -107,7 +109,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
 
 int main(int argc, char *argv[])
 {
-	bool verb = 0;
+	bool verb = 1;
 
     // for testing and simulation
     std::random_device rd; // obtain a random number from hardware
@@ -133,9 +135,9 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
-    //hints.ai_flags = AI_PASSIVE;
-    // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
     if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
+    //hints.ai_flags = AI_PASSIVE;
+    //if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {
         fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;
@@ -244,12 +246,22 @@ int main(int argc, char *argv[])
 		    FD_ZERO(&readfds);
 		    FD_SET(sockfd, &readfds);
 		    if (!ack_flag && !new_block_flag) { // consider as timeout the estimated gap between packets
-		    	tv = timeConversion(10*packetGapCounter.get()); // use a new estimate to initialize the timeout
-			} else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
-				tv = timeConversion(10*rrtCounter.get());
-			} else if (new_block_flag) {
-				tv = timeConversion(1000*rrtCounter.get());
-			}
+                //if(verb) {std::cout << "Packet gap timeout " << packetGapCounter.get().count()/1000 << " ms\n"; }
+                tv = timeConversion(packetGapCounter.get()); // use a new estimate to initialize the timeout
+            } else if (ack_flag && !new_block_flag) { // consider as timeout the RTT estimate
+                if(packets_needed > 0) {
+                    double scaling_factor = (double)100*packets_needed/N_TB_SIZE;
+                    //if(verb){std::cout << "scaling_factor applied = " << scaling_factor << "\n";}
+                    //if(verb){std::cout << "Timeout = " << (scaling_factor*rrtCounter.get().count()/1000) << "ms\n";}
+                    int timeout = (int)(scaling_factor*rrtCounter.get().count());
+                    if(verb){std::cout << "Timeout applied = " << timeout/1000 << "ms\n";}
+                    tv = timeConversion(std::chrono::microseconds(timeout));
+                } else {
+                    tv = timeConversion(rrtCounter.get());
+                }
+            } else if (new_block_flag) {
+                tv = timeConversion(10*rrtCounter.get());
+            }
 			int select_ret = select(32, &readfds, NULL, NULL, &tv);
 			if (select_ret > 0) {
 				if(first_packet_rx == 1) {
@@ -343,7 +355,7 @@ int main(int argc, char *argv[])
                     std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
                     if (output_file.is_open())
                     {
-                        if(first_block_rx)
+                        if(first_block_rx) // it contains the file size
                         {
                             char* first_payload = *v_iter;
                             // store file length
@@ -394,6 +406,7 @@ int main(int argc, char *argv[])
                 rx_block_ID = (decoded_info.first == 0) ? (rx_block_ID = (rx_block_ID+1)%UCHAR_MAX) : rx_block_ID;
             }
         }
+        // update stats
         end_block_decoding = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
         if (verb) {std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";}
@@ -407,6 +420,7 @@ int main(int argc, char *argv[])
     }
     end_file_rx_and_decoding= std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
+    // print output stats
     if(verb) {
         std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_and_rx_block/num_blocks << "s \n";
         std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";
@@ -423,7 +437,7 @@ int main(int argc, char *argv[])
                   << dropped_packets << " "
                   << total_received_packets << " "
                   << total_received_dropped_packets - dropped_packets - total_received_packets << " "
-                  << (double)dropped_packets/total_received_dropped_packets << " "<< argv[2]<<" "<<K_TB_SIZE<< " "<< N_TB_SIZE<<"\n";
+                  << (double)dropped_packets/total_received_dropped_packets << " "<< PER  <<" "<<K_TB_SIZE<< " "<< N_TB_SIZE<<"\n";
     }
     free(receive_buffer);
     close(sockfd);

@@ -1,5 +1,6 @@
 /**
- * This is the header file for NCpacket
+ * This is a template for the header file for NCpacket, which is used 
+ * to automatically configure the system via the scripts in the script folder.
  */
 #include <stdio.h>
 #include <string.h>

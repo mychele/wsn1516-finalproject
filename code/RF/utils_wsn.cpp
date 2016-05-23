@@ -25,8 +25,7 @@ extern std::vector<NCpacket> memoryToVector(char *buffer, int size)
     {
         return toBeReturned;
     }
-    //std::cout << "In memoryToVector\n";
-    //std::cout << buffer << "\n\n\n";
+    
     for (int i = 0; i < K_TB_SIZE; i++)
     {
         unsigned int header = 50000+1;
@@ -47,8 +46,7 @@ extern std::vector<char *> memoryToCharVector(char *buffer, int size)
     {
         return toBeReturned;
     }
-    //std::cout << "In memoryToVector\n";
-    //std::cout << buffer << "\n\n\n";
+    
     for (int i = 0; i < K_TB_SIZE; i++)
     {
         toBeReturned.push_back(buffer); //insert at the end, so that the first entry will be the first pck
@@ -78,7 +76,6 @@ extern NCpacket deserialize(char *buffer)
     packet.setHeader(header);
     packet.setBlockID(*(buffer + sizeof(int)));
     packet.setPayload(buffer + sizeof(int) + sizeof(char));
-    //std::cout << packet << "\n";
     return packet;
 }
 
@@ -89,6 +86,7 @@ extern int sendall(int sockfd_send, char *send_buffer, int *byte_to_send, addrin
     int byte_sent = 0;
     int byte_left = *byte_to_send;
 
+    // send data, possibly in one chunk
     while (total_byte_sent < *byte_to_send)
     {
         byte_sent = sendto(sockfd_send, send_buffer+total_byte_sent,
@@ -105,7 +103,7 @@ extern int sendall(int sockfd_send, char *send_buffer, int *byte_to_send, addrin
     return byte_sent==-1? -1:0; // return failure or success
 }
 
-// get sockaddr, IPv4 or IPv6: (from beej's guide)
+// get sockaddr, IPv4 or IPv6: (from beej's netC++ guide)
 extern void *get_in_addr(struct sockaddr *sa)
 {
     if (sa->sa_family == AF_INET)
@@ -115,7 +113,7 @@ extern void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-// get inport, IPv4 or IPv6:
+// get inport, IPv4 or IPv6: (from beej's netC++ guide)
 extern in_port_t get_in_port(struct sockaddr *sa)
 {
     if (sa->sa_family == AF_INET)
@@ -160,7 +158,7 @@ struct timeval timeConversion(std::chrono::microseconds d)
 void rand_initialize_matrix(mat_GF2& X, int const r, int const c, int const seed)
 {
     std::mt19937 eng(seed); // seed the generator
-    // TODO a good practice is to use a distribution, however they are not consistent in different OS
+    // a good practice is to use a distribution, however they are not consistent in different OS
     for (int i=0; i<r; i++)
     {
         for (int j=0; j<c; j++)
@@ -278,7 +276,6 @@ mat_GF2 decoded_data(mat_GF2& encoded_data_matrix,mat_GF2& inverse_matrix)
 
 void binary_to_char(char* output_data, mat_GF2& X)
 {
-    //char* data=(char*)malloc(sizeof(X[0][0])*X.NumCols()*X.NumRows());
     bitset<8> bits;
     bits.reset();
     int s=0;
@@ -294,7 +291,6 @@ void binary_to_char(char* output_data, mat_GF2& X)
             s++;
             if (s%8==0)
             {
-                //cout<<bits<<endl;
                 output_data[q]=static_cast<char>(bits.to_ulong());
                 bits.reset();
                 s=0;
@@ -325,7 +321,6 @@ unsigned int binary_to_unsigned_int(mat_GF2& X)
             s++;
             if (s%32==0)
             {
-                //cout<<bits<<endl;
                 out=static_cast<unsigned int>(bits.to_ulong());
                 bits.reset();
                 s=0;
@@ -349,31 +344,31 @@ void XOR_encode(mat_GF2& X, vector<char*>& data, char* out_payload)
             char* pyl=data.at(i);
             for (int j=0; j<PAYLOAD_SIZE; j++)
             {
-                sum[j]=sum[j]^pyl[j];
+                sum[j]=sum[j]^pyl[j];	//perform bitwise XOR on the chars of the packet
 
             }
         }
-    }
-    memcpy(out_payload, &sum[0], PAYLOAD_SIZE);
+    }  
+    memcpy(out_payload, &sum[0], PAYLOAD_SIZE); //copy output in output variable
 }
 
 vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
 {
     vector<char*> out;
     vector<char> sum(PAYLOAD_SIZE);
-    for (int i=0; i<X.NumRows(); i++)
+    for (int i=0; i<X.NumRows(); i++)  //rows of X are encoding vectors
     {
-        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));
+        out.push_back((char *)calloc(PAYLOAD_SIZE, sizeof(char)));  //allocate memory for output
         std::fill(sum.begin(), sum.end(), 0);
         for (int j=0; j<X.NumCols(); j++)
         {
 
-            if (X[i][j]==1)
+            if (X[i][j]==1)   //1 at position j of encoding vector i
             {
-                char* pyl=encoded_data.at(j);
+                char* pyl=encoded_data.at(j);  //get packet j
                 for (int h=0; h<PAYLOAD_SIZE; h++)
                 {
-                    sum[h]=sum[h]^pyl[h];
+                    sum[h]=sum[h]^pyl[h]; //perform bitwise XOR
 
 
                 }
@@ -381,7 +376,7 @@ vector<char*> XOR_decode(mat_GF2& X, vector<char*>& encoded_data)
             }
 
         }
-        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE);
+        memcpy(out.at(i), &sum[0], PAYLOAD_SIZE); //copy output in output variable
     }
     return out;
 }

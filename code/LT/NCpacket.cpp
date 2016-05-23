@@ -8,8 +8,6 @@
 #include "utils_wsn.h"
 #include <bitset>
 
-// TODO: find a safer way to handle the payload array (for example check size!)
-
 NCpacket::NCpacket()
 {
     NCpacketContainer packet = NCpacketContainer();
@@ -25,7 +23,7 @@ NCpacket::NCpacket(unsigned int header, unsigned char block_ID, char* payload)
 
 NCpacket::NCpacket(int header, unsigned char block_ID, std::vector<int> encoding_vector, vector<char*> *data) {
     packet.header = header;
-    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));  //needs to be preallocated
+    char *tmp=(char *)calloc(PAYLOAD_SIZE,sizeof(char));
     // create payload
     XOR_encode(&encoding_vector, data, tmp);
     // store payload and ev
@@ -86,6 +84,7 @@ NCpacket::getInfoSizeNCpacket() const
 char*
 NCpacket::serialize()
 {
+    // serialize the private variable into a char array, and return the pointer.
     char* returnPointer = (char *) calloc(this->getInfoSizeNCpacket(), sizeof(char));
     packu32((unsigned char*)returnPointer, packet.header);
     *(returnPointer + sizeof(unsigned int)) = packet.block_ID;
@@ -99,6 +98,7 @@ std::ostream& operator<<(std::ostream &strm, const NCpacket &packet_ext)
     const char *payload_pointer = packet_ext.getPayload();
     int header_pck = packet_ext.getHeader();
     strm << "\nNCpacket:\nheader = " << header_pck; 
+    // uncomment to print also the payload, output may be very verbose
     // for(int i = 0; i < PAYLOAD_SIZE; i++) {
     //     strm << (int)payload_pointer[i] << "\n";
     // }

@@ -43,10 +43,14 @@ struct ReceiveReturn
 
 /**
  * Send an ACK to the address in sockaddr_storage
+ * @param the number of packets needed
+ * @param current block_ID
+ * @param the sender address
+ * @return the number of byte sent, or -1 if there was an error
  */
 int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr_storage sender_addr)
 {
-    // get info on sender
+    // get info on sender from the sockaddr_storage structure
     int status;
     struct addrinfo ack_hints, *ack_res, *p_iter;
     memset(&ack_hints, 0, sizeof ack_hints);
@@ -55,16 +59,14 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
     char s[INET6_ADDRSTRLEN];
     char p[2];
     inet_ntop(sender_addr.ss_family, get_in_addr((struct sockaddr *)&sender_addr), s, sizeof s);
-    // std::cout << "host: " << s;
     std::string ack_port = std::to_string(ntohs(get_in_port((struct sockaddr *)&sender_addr)));
-    // std::cout << "\nport: " << ack_port << "\n";
     if ((status = getaddrinfo(
                       s,
                       ack_port.c_str(),
                       &ack_hints, &ack_res)) != 0)
     {
         fprintf(stderr, "ACK getaddrinfo: %s\n", gai_strerror(status));
-        return 2;
+        return -1;
     }
 
     // at this point res is a linked structure filled with useful data
@@ -88,7 +90,7 @@ int sendack(unsigned int packets_needed, unsigned char block_ID, struct sockaddr
     if (p_iter == NULL)   //no valid address was found
     {
         std::cout << "receiver: unable to create ACK socket\n";
-        return 2;
+        return -1;
     }
 
     // send ack
@@ -136,8 +138,11 @@ int main(int argc, char *argv[])
     hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
-    // TODO localhost instead of NULL or this computer by using hints.ai_flags= AI_PASSIVE
-    if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
+    // ALTERNATIVE for localhost
+    if ((status = getaddrinfo("localhost", RECEIVER_PORT, &hints, &res)) != 0)
+    // ALTERNATIVE for non localhost
+    //hints.ai_flags = AI_PASSIVE;
+    //if ((status = getaddrinfo(NULL, RECEIVER_PORT, &hints, &res)) != 0)
     {
         fprintf(stderr, "first getaddrinfo: %s\n", gai_strerror(status));
         return 2;
@@ -303,6 +308,7 @@ int main(int argc, char *argv[])
 					    	ack_flag = 0;
 				    	}
 				        packet = deserialize((char *)receive_buffer);
+                        // uncomment to print binary headers
 				        // std::vector<int> bheader = nchelper->getBinaryHeader(packet.getHeader());
 				        // std::cout << bheader.size() << "\n";
 				        // for(std::vector<int>::iterator iter = bheader.begin(); iter != bheader.end(); ++iter) 
@@ -320,7 +326,7 @@ int main(int argc, char *argv[])
 	                        // send ack to tell that this blockID was received correctly
 	                        sendack(0, packet.getBlockID(), sender_addr);
 	                    }
-                	} else {
+                	} else { // received a packet for an already decoded block
                 		dropped_packets++;
                 	}
 			    }
@@ -356,18 +362,17 @@ int main(int argc, char *argv[])
             	ack_packet_tx = min_val;
                 // try to decode and update packets needed
                 std::chrono::time_point<std::chrono::system_clock> start_packet_decoder = std::chrono::system_clock::now();
-                decoded_info = packet_decoder(&nc_vector, nchelper);
+                decoded_info = packet_decoder(&nc_vector, nchelper); // call the decoder
                 end_packet_decoder = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds_packet_decoder = end_packet_decoder-start_packet_decoder;
-                //std::cout<<"Elapsed time to execute decoding function : "<<elapsed_seconds_packet_decoder.count()<<" s\n";
-                // if decode is successful, write
+                // if decode is successful, write output file with new chunk of decoded data
                 if (decoded_info.first==0)
                 {
                     std::vector<char *>::iterator v_iter = decoded_info.second.begin();
                     std::ofstream output_file (argv[1], std::ios::out | std::ios::app | std::ios::binary);
                     if (output_file.is_open())
                     {
-                        if(first_block_rx)
+                        if(first_block_rx) // it contains the file size
                         {
                             char* first_payload = *v_iter;
                             // store file length
@@ -422,6 +427,7 @@ int main(int argc, char *argv[])
                 num_failed_decoding = (decoded_info.first == 0) ? (num_failed_decoding) : (num_failed_decoding + 1);
             }
         }
+        // update stats
         end_block_decoding = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds_block_decoding = end_block_decoding-start_block_decoding;
         if (verb) {std::cout << "Decoded blockID " << (int) (rx_block_ID-1)%UCHAR_MAX << "\n";}
@@ -435,6 +441,7 @@ int main(int argc, char *argv[])
     }
     end_file_rx_and_decoding= std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_rx_decoding = end_file_rx_and_decoding-start_file_rx;
+    // print output stats
     if(verb) {
         std::cout << "Average block decoding time over "<<num_blocks<<" blocks : " << (double)total_time_decoding_and_rx_block/num_blocks << "s \n";
         std::cout << "Elapsed time to rx and decode whole file (of "<<(double)FILE_LENGTH/(1000000)<<" Mbytes) : " << elapsed_seconds_file_rx_decoding.count() << " s \n";

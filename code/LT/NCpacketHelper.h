@@ -1,6 +1,7 @@
 /**
  * It initializes and keeps in memory the
- * Robust Soliton Distribution, so that is computed just once
+ * Robust Soliton Distribution, so that is computed just once.
+ * It has methods to return NCpacket objects
  */
 
 #include <random>

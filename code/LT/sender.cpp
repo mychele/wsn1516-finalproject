@@ -28,9 +28,22 @@
 
 typedef std::pair<int, unsigned char> ackPayload;
 
+/**
+ * Encode and send data contained in a std::vector<char*>
+ * @param raw data to send
+ * @param how many packets
+ * @param socket file descriptor
+ * @param the addrinfo structure (pointer to)
+ * @param the current block_ID
+ * @param a pointer to the NCpacketHelper object
+ * @return the number of packets sent
+ */
 int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_send,
 	struct addrinfo *p_iter, unsigned char block_ID, NCpacketHelper *nchelper) {
 	int sentPackets = 0;
+	// timeout for the write buffer, i.e. if after 10 s there is no space to write in the buffer 
+	// another packet is queued for transmission. Set to an high value on purpose, the buffer
+	// is usually always writeable
 	std::chrono::seconds timeout = std::chrono::seconds(10);
 
 	// encoding of packetNumber packets
@@ -43,18 +56,17 @@ int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_s
 	if(packetVector.size() > 0) {
 		// send these packets
 		for(std::vector<NCpacket>::iterator pckIt = packetVector.begin(); pckIt != packetVector.end(); ++pckIt) {
-			char *serializedPacket = pckIt->serialize();
+			char *serializedPacket = pckIt->serialize(); // serialize the packet
 			int byte_to_send = pckIt->getInfoSizeNCpacket();
 			int byte_sent;
 			struct timeval tv = timeConversion(std::chrono::duration_cast<std::chrono::microseconds>(timeout));
-			fd_set writefds;
+			fd_set writefds; // set the socket
 		    FD_ZERO(&writefds);
 		    FD_SET(sockfd_send, &writefds);
 		    
-			int select_ret = select(32, NULL, &writefds, NULL, &tv);
+			int select_ret = select(32, NULL, &writefds, NULL, &tv); // check if the write buffer is free
 			if (select_ret > 0) {
-				//std::cout << "Select > 0\n";
-				if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) {
+				if((byte_sent = sendall(sockfd_send, serializedPacket, &byte_to_send, p_iter)) == -1) { // send packets
 					perror("sender: tx socket");
 					std::cout << "Sent only " << byte_sent << " byte because of an error\n";
 				} else {
@@ -64,13 +76,19 @@ int sendPackets(std::vector<char*> *input_vector, int packetNumber, int sockfd_s
 				std::cout << "Send timeout, retry later";
 				packetVector.push_back(*pckIt);
 			}
-			free(serializedPacket);
+			free(serializedPacket); // free the buffer with the serialized packet
 		}
 		packetVector.clear();
 	}
 	return sentPackets;
 }
 
+/**
+ * Receive an ACK
+ * @param the socket file descriptor
+ * @param the timeout
+ * @return an ackPayload with packets needed and blockID
+ */
 ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	// things needed to receive ACKs
 	int ack_rec_bytes;
@@ -78,7 +96,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 	unsigned char ack_block_ID;
 	// create receive buffer
 	void* ack_buffer = calloc(2*sizeof(int), sizeof(char));
-	// select things
+	// set select call and socket
 	struct timeval tv = timeConversion(std::chrono::duration_cast<std::chrono::microseconds>(timeout));
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -93,6 +111,7 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
 			packets_needed = -1;
 		}
 		else {
+			// ack received, read data 
 			unsigned char *receive_buffer = (unsigned char*)ack_buffer;
 			packets_needed = unpacku32(receive_buffer);
 			ack_block_ID = *(receive_buffer + sizeof(int));
@@ -101,12 +120,12 @@ ackPayload receiveACK(int sockfd_send, std::chrono::nanoseconds timeout) {
     else if (select_ret == 0) { // timeout!
         packets_needed = -1;
         ack_block_ID = 0;
-    } else {
+    } else { // error
 		packets_needed = -2;
         ack_block_ID = 0;
     }
     free(ack_buffer);
-	ackPayload toBeReturned(packets_needed, ack_block_ID);
+	ackPayload toBeReturned(packets_needed, ack_block_ID); // create pair to be returned
 	return toBeReturned;
 }
 
@@ -116,7 +135,6 @@ int main(int argc, char const *argv[])
 {
 	bool verb = 1;
 
-	srand(time(NULL));
 	// read input
 	if (argc != 5) {
 		std::cout << "usage: sender hostname dstname filename PER";
@@ -163,12 +181,13 @@ int main(int argc, char const *argv[])
 	double PPoverhead = 0;
 	double PER_estimate = 0;
 	bool no_history = 1;
-	int PPO_history = 150;
+	int PPO_history = 2;
 	bool PER_mode = 0;
 	double alpha = 0.1;
 
 	// -------------------------------------------- Chrono and timeout values ---------------------------------------
-	auto timeout_span = std::chrono::seconds(1000);
+	auto timeout_span = std::chrono::seconds(30); // this timeout is triggered when no ACK is receiver.
+	// It has a fixed value, higher than the one of the receiver, and should expire only of the receiver is hang/not responsive
 	std::chrono::time_point<std::chrono::system_clock> start_file_tx, end_file_tx;
 
 	// ---------------------------------------------- NCpacketHelper -----------------------------------------------
@@ -208,6 +227,7 @@ int main(int argc, char const *argv[])
 		    	// read K_TB_SIZE packets of PAYLOAD_SIZE byte
 		    	input_file.read((char *)input_buffer, PAYLOAD_SIZE*K_TB_SIZE);
 		    }
+		    // create the vector with uncoded payloads
 	    	std::vector<char *> input_vector = memoryToCharVector(input_buffer, K_TB_SIZE*PAYLOAD_SIZE);
 	    	unsigned int packets_needed = N_TB_SIZE;
 	    	packet_needed_per_block_ID[(int)block_ID] = packets_needed;
@@ -218,7 +238,7 @@ int main(int argc, char const *argv[])
 		    		// encode and send them
 		    		if(verb){std::cout << "send " << packet_needed_per_block_ID[(int)block_ID] << "\n";}
 		    		packet_sent_per_block_ID[block_ID] += sendPackets(&input_vector, (PER_mode ? std::ceil((double)packets_needed/(1-PER_estimate)) : packets_needed), sockfd_send, p_iter, block_ID, nchelper);
-		    	}
+		    	} // if the ACK is not for this block, discard it
 		    	// start measuring time to correctly receive an ACK
 		    	auto tx_begin = std::chrono::high_resolution_clock::now();
 		    	// wait for ACK, it will specify how many packets are needed
@@ -247,23 +267,23 @@ int main(int argc, char const *argv[])
 		    		}
 		    		packet_needed_per_block_ID[(int)ack_block_ID] = packets_needed;
 
-		    		// change timeout_span dynamically only when an ACK is received after a tx
 		    		auto tx_end = std::chrono::high_resolution_clock::now();
 		    	}
-		    	th_ACK.join(); // clean up
+		    	th_ACK.join(); // clean up the thread
 	    	} while (packet_needed_per_block_ID[(int)block_ID] != 0);
 	    	// free buffer
 	    	free(input_buffer);
 	    	sentPackets += packet_sent_per_block_ID[block_ID];
 
-	    	// the following code only measures the PER, it does not have influence on the number of packet sent
+	    	// the following code only measures the PER, it does not have influence on the number of packet sent with PER mode 0
 	    	if(no_history) { // not enough packets yet to create an history
 	    		int total_sent = 0;
 	    		for(int block_index = 0; block_index <= (int)block_ID; ++block_index) {
 	    			total_sent += packet_sent_per_block_ID[block_index];
 	    		}
-	    		PPoverhead = (double)total_sent/(block_ID+1);
+	    		PPoverhead = (double)total_sent/(block_ID+1); // packet overhead
 	    		PER_estimate = alpha*(1 - (double)N_TB_SIZE/PPoverhead) + (1-alpha)*PER_estimate;
+	    		PER_estimate = PER_estimate > 0 ? PER_estimate : 0;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
 	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    		no_history = (block_ID >= PPO_history) ? 0 : 1;
@@ -284,8 +304,9 @@ int main(int argc, char const *argv[])
 	    				total_sent += packet_sent_per_block_ID[block_index];
 	    			}
 	    		}
-	    		PPoverhead = (double)total_sent/(PPO_history);
+	    		PPoverhead = (double)total_sent/(PPO_history); // packet overhead
 	    		PER_estimate = alpha*(1 - (double)N_TB_SIZE/PPoverhead) + (1-alpha)*PER_estimate;
+	    		PER_estimate = PER_estimate > 0 ? PER_estimate : 0;
 	    		if(verb) {std::cout << "Packet per block_ID " << PPoverhead << "\n";}
 	    		if(verb) {std::cout << "Possible PER " << PER_estimate << "\n";}
 	    	}
@@ -297,13 +318,13 @@ int main(int argc, char const *argv[])
 	}
 	end_file_tx = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds_file_tx = end_file_tx-start_file_tx;
+    // output block
     if(verb) {
 		std::cout << "packet_sent = " << sentPackets <<"\n";
 		std::cout << "packet_in_file = " << file_length/PAYLOAD_SIZE + 1 << "\n"; // it does not consider the zero padding of the last block
 		std::cout << "elapsed time = " << elapsed_seconds_file_tx.count() << "s\n";
 		std::cout << "goodput = " << (double)file_length*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
 		std::cout << "throughput = " << (double)sentPackets*PAYLOAD_SIZE*8/(elapsed_seconds_file_tx.count()*1000000) << " Mbits\n";
-		std::cout << "PER_estimate = " << PER_estimate << "\n";	
 	} else {
 		std::cout << sentPackets << " "
 				  << file_length/PAYLOAD_SIZE + 1 << " "

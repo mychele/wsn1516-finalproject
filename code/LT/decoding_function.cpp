@@ -32,14 +32,15 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
     for(std::vector<NCpacket>::iterator pckIt = packetVector->begin(); pckIt != packetVector->end(); ++pckIt)
     {
         M.push_back(nchelper->getBinaryHeader(pckIt->getHeader()));
-        //cout<<"seed :"<<pckIt->getHeader()<<"\n";
         encoded_payloads.push_back(pckIt->getPayload());
     }
-
+    //each element of u gives the vector of incoming nodes for current right node, i.e. UNCODED pcks that are combined in packet corresponding to the element
     std::vector<std::vector<unsigned short int> > u(N_TB_SIZE);
+    //each element of e gives the vector of ENCODED packets whose XOR combination is equivalent the encoded packet correspondng to the element (XOR combinations on the right)
     std::vector<std::vector<unsigned short int> > e(N_TB_SIZE);
-    //vector of outcoming nodes for each left node, representing and unecoded data pck
+    //each element of v gives a vector of outcoming nodes for left node corresponding to the current element, which represents an UNCODED data pck
     std::vector<std::vector<unsigned short int> > v(K_TB_SIZE);
+    //each element of d gives the vector of ENCODED packets needed to decode the packet corresponding to the element (XOR combinations on the left)
     std::vector<std::vector<unsigned short int> > d(K_TB_SIZE);
     int degree = 0;
     int pos = 0;
@@ -61,9 +62,8 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
             out.first=1;
             return out;
         }
-    }
-
-    bool something_done=0;
+    }   
+    bool something_done=0; //check whether during an iteration of message passing some node
     unsigned short int pivot;
     //edge: left node (pivot), right node
     std::vector<unsigned short int> pivot_vector;
@@ -72,46 +72,43 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
     {
         something_done=0;
         for (int i=0; i<N_TB_SIZE; i++)
-        {
-            //one edge: remove it and note how left node is decoded (vectors d and e)
-            if (u[i].size()==1)
+        {      
+            if (u[i].size()==1) //one edge: remove it and note how left node is decoded (vectors d and e)
             {
                 something_done=1;
                 pivot=u[i].back();
                 pivot_vector.push_back(pivot);
-                //aggiungi il nodo stesso
-                e[i].push_back(i);
-                u[i].pop_back();
-                //altrimenti il nodo di sinistra è già stato decodificato in precedenza, e non c'è bisogno di farlo nuovamente
-                if (d[pivot].size()==0)
+                e[i].push_back(i); //add the node itself
+                u[i].pop_back(); 
+                if (d[pivot].size()==0) //otherwise left node had already been decoded previously, threfore there's no need to do it again
                 {
                     for (int k=0; k<e[i].size(); k++)
                         d[pivot].push_back(e[i].at(k));
                 }
-                //la combinazione di XOR a e[i] viene cancellata e poi riscritta al passaggio successivo (eliminazione degli archi da sinistra a destra).
-                //questo non è un problema poiché la combinazione di XOR a sinistra non viene mai aggiornata (viene cioè creata una volta in corrispondenza
-                //di una eliminazione da destra a sinistra, e poi rimane sempre uguale
-                //il motivo è che così non si deve memorizzare il nodo a destra i al quale punta il nodo pivot a sinistra (altrimenti quando si aggiornano gli
-                //XOR a destra verrebbe i XOR i
+		/*
+		the combination of XOR at e[i] is erased and rewritten at the successive passage 
+		(elimination of arcs from left to right). This is not a problem, since the combination of XOR on the left
+		is never updated (i.e. it is created once in correspondance of an elimination from right to left, and then remains
+		always the same).
+		The reason of doing so is that in this way we don't have to memorize the right node i to which node pivot 
+		on the left points (otherwise, if we didn't do that, when XOR on the right are updated, we would have i XOR i)
+		*/
                 e[i].clear();
             }
         }
         while (pivot_vector.size()>0 && something_done)
         {
             pivot=pivot_vector.back();
-            //cout<<"pivot is "<<pivot<<endl;
             pivot_vector.pop_back();
             for (int j=v[pivot].size()-1; j>=0; j--)
-            {
-                //current right node
-                current_node=v[pivot].back();
-                //aggiorna gli XOR a destra (aggiungi la codifica del nodo pivot)
-                for (int k=0; k<d[pivot].size(); k++)
+            {    
+                current_node=v[pivot].back(); //current right node   
+                for (int k=0; k<d[pivot].size(); k++) //update XOR on the right (add coding yielded by node pivot)
                 {
                     e[current_node].push_back(d[pivot].at(k));
 
                 }
-                //elimina l'arco (due archi orientati) che collega v[pivot] a v[pivot].at(j)
+                //detele arc (i.e. two oriented arcs) linking v[pivot] to v[pivot].at(j)
                 v[pivot].pop_back();
                 for (int k=0; k<u[current_node].size(); k++)
                 {
@@ -127,19 +124,19 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
         }
 
     }
-    while (something_done);
+    while (something_done); //continue until there is an iteration when nothing is done (i.e. message passing stops)
+    
     for (int i=0; i<K_TB_SIZE; i++)
     {
-        if (d[i].size()==0)
+        if (d[i].size()==0) //an uncoded packet has not been resolved by message passing (i.e. no combination of encoded packets that give the uncoded packet has been found)
         {
-            out.first=N_TB_SIZE;
+            out.first=N_TB_SIZE; //the algorithm has failed: return N_TB_SIZE: no decoding is possible
             return out;
         }
 
     }
-    std::vector<bitset<N_TB_SIZE>> M_inv = std::vector<bitset<N_TB_SIZE>>(K_TB_SIZE);
-
-    for (int i=0; i<d.size(); i++)
+    std::vector<bitset<N_TB_SIZE>> M_inv = std::vector<bitset<N_TB_SIZE>>(K_TB_SIZE);   
+    for (int i=0; i<d.size(); i++) //according to the XOR combinations found by the message passing algorithm, build the decoding matrix
     {
         for (int j=0; j<d[i].size(); j++)
         {
@@ -147,10 +144,10 @@ packetNeededAndVector packet_decoder(std::vector<NCpacket> *packetVector, NCpack
 
         }
     }
-    decoded_data=XOR_decode(M_inv, encoded_payloads);
-    out.first=0;
+    decoded_data=XOR_decode(M_inv, encoded_payloads); //decode the payloads
+    out.first=0; //decoding successful: no more packets are needed for this block
     out.second=decoded_data;
-    decoded_data.clear(); //io l'ho lasciato perché funziona lo stesso: evidentemente out.second=decoded_data fa una copia dei dati (mi aspettavo un passaggio del riferimento, ma tant'è...)
+    decoded_data.clear(); 
     return out;
 
 }
