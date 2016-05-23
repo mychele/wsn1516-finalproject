@@ -181,7 +181,7 @@ int main(int argc, char const *argv[])
 	double PPoverhead = 0;
 	double PER_estimate = 0;
 	bool no_history = 1;
-	int PPO_history = 150;
+	int PPO_history = 2;
 	bool PER_mode = 0;
 	double alpha = 0.1;
 
